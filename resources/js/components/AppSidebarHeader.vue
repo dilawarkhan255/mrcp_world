@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
+import ThemeToggle from '@/components/ThemeToggle.vue';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import type { BreadcrumbItemType } from '@/types';
 
@@ -14,7 +15,7 @@ defineProps<{
     >
         <div class="flex items-center gap-2">
             <SidebarTrigger class="-ml-1" />
-            <template v-if="breadcrumbs.length > 0">
+            <template v-if="breadcrumbs && breadcrumbs.length > 0">
                 <Breadcrumb>
                     <BreadcrumbList>
                         <template v-for="(item, index) in breadcrumbs" :key="index">
@@ -34,5 +35,6 @@ defineProps<{
                 </Breadcrumb>
             </template>
         </div>
+        <ThemeToggle class="ml-auto" />
     </header>
 </template>
