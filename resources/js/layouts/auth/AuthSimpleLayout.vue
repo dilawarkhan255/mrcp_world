@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { APP_NAME } from '@/lib/brand';
 import AppLogoIcon from '@/components/AppLogoIcon.vue';
 import { Link } from '@inertiajs/vue3';
 
@@ -15,9 +16,9 @@ defineProps<{
                 <div class="flex flex-col items-center gap-4">
                     <Link :href="route('home')" class="flex flex-col items-center gap-2 font-medium">
                         <div class="mb-1 flex h-9 w-9 items-center justify-center rounded-md">
-                            <AppLogoIcon class="size-9 fill-current text-[var(--foreground)] dark:text-white" />
+                            <AppLogoIcon class="size-9 text-primary" />
                         </div>
-                        <span class="sr-only">{{ title }}</span>
+                        <span class="font-heading text-lg font-semibold">{{ APP_NAME }}</span>
                     </Link>
                     <div class="space-y-2 text-center">
                         <h1 class="text-xl font-medium">{{ title }}</h1>
