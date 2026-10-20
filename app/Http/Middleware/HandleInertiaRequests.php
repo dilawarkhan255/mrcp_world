@@ -2,49 +2,27 @@
 
 namespace App\Http\Middleware;
 
-use Illuminate\Foundation\Inspiring;
+use App\Models\Exam;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
 {
-    /**
-     * The root template that's loaded on the first page visit.
-     *
-     * @see https://inertiajs.com/server-side-setup#root-template
-     *
-     * @var string
-     */
+    /** @var string */
     protected $rootView = 'app';
 
-    /**
-     * Determines the current asset version.
-     *
-     * @see https://inertiajs.com/asset-versioning
-     */
-    public function version(Request $request): ?string
-    {
-        return parent::version($request);
-    }
-
-    /**
-     * Define the props that are shared by default.
-     *
-     * @see https://inertiajs.com/shared-data
-     *
-     * @return array<string, mixed>
-     */
+    /** @return array<string, mixed> */
     public function share(Request $request): array
     {
-        [$message, $author] = str(Inspiring::quotes()->random())->explode('-');
-
-        return array_merge(parent::share($request), [
+        $exams = $request->user() ? Exam::where('is_active', true)->orderBy('id')->get(['id', 'name', 'slug']) : collect();
+        $current = $exams->firstWhere('id', $request->session()->get('exam_id')) ?? $exams->first();
+        return [
             ...parent::share($request),
             'name' => config('app.name'),
-            'quote' => ['message' => trim($message), 'author' => trim($author)],
-            'auth' => [
-                'user' => $request->user(),
-            ],
-        ]);
+            'auth' => ['user' => $request->user()],
+            'exams' => $exams,
+            'currentExam' => $current,
+            'navigation' => $request->user() ? config('student.groups') : [],
+        ];
     }
 }
