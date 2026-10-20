@@ -4,6 +4,8 @@
 
 Source: https://github.com/Whbbit1999/shadcn-vue-admin
 
+Revision: db05525b4ddc92006ee28c4327678e12917f2646
+
 Adapted only: sidebar shell/navigation, dashboard stat-card structure, data-table rendering/pagination, and theme menu. Uses the Laravel starter kit primitives and appearance persistence. No sample data or other template features are included.
 
 MIT License
