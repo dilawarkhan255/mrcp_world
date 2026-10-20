@@ -23,3 +23,7 @@ yarn-error.log
 /.zed
 
 /.idea/
+
+/public/js/filament/
+/public/css/filament/
+/storage/framework/cache/phpstan/
