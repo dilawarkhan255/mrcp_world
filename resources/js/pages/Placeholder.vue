@@ -1,0 +1,12 @@
+<script setup lang="ts">
+import { Head } from '@inertiajs/vue3';
+import { Construction } from 'lucide-vue-next';
+import AppLayout from '@/layouts/AppLayout.vue';
+defineProps<{ title: string; href: string }>();
+</script>
+<template>
+    <Head :title="title" />
+    <AppLayout :breadcrumbs="[{ title, href }]">
+        <div class="p-6 md:p-10"><p class="text-xs font-semibold uppercase tracking-widest text-primary">Your learning space</p><h1 class="mt-3 text-3xl font-semibold">{{ title }}</h1><div class="mt-8 rounded-xl border border-dashed bg-card px-6 py-16 text-center"><Construction class="mx-auto size-9 text-primary" /><h2 class="mt-4 text-lg font-semibold">Coming soon</h2><p class="mt-2 text-sm text-muted-foreground">This area will be available in a future phase.</p></div></div>
+    </AppLayout>
+</template>

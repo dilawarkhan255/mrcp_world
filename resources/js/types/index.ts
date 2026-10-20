@@ -16,7 +16,13 @@ export interface NavItem {
     isActive?: boolean;
 }
 
+export interface Exam { id: number; name: string; slug: string; }
+export interface NavigationGroup { title: string; icon: string; items: { title: string; href: string }[]; }
 export interface SharedData {
+    [key: string]: unknown;
+    exams: Exam[];
+    currentExam: Exam | null;
+    navigation: NavigationGroup[];
     name: string;
     quote: { message: string; author: string };
     auth: Auth;
