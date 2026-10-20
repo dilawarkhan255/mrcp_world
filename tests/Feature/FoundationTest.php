@@ -80,3 +80,14 @@ it('denies students direct resource component access', function () {
     Livewire::test(ManageExams::class)->assertForbidden();
     Livewire::test(ManageCategories::class)->assertForbidden();
 });
+
+it('routes staff logins to the panel and exposes management navigation only to staff', function (string $role, string $destination, bool $canManage) {
+    $user = User::factory()->create();
+    $user->assignRole($role);
+    $this->post('/login', ['email' => $user->email, 'password' => 'password'])->assertRedirect($destination);
+    $this->get('/dashboard')->assertInertia(fn (Assert $page) => $page->where('auth.canManageContent', $canManage));
+})->with([
+    ['admin', '/admin', true],
+    ['editor', '/admin', true],
+    ['student', '/dashboard', false],
+]);

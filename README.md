@@ -40,7 +40,7 @@ php artisan serve --host=127.0.0.1 --port=8000
 npm run dev -- --host 127.0.0.1
 ~~~
 
-Open http://127.0.0.1:8000. The student home is /dashboard; the admin panel is /admin. Vite serves development assets at http://127.0.0.1:5173. For queued jobs, run php artisan queue:work in another terminal. The Windows setup intentionally avoids Pail (which requires pcntl) and CLI server workers.
+Open http://127.0.0.1:8000. The student home is /dashboard; the admin panel is /admin. Normal login sends verified admins/editors to /admin. Their student sidebar also includes Admin panel, Manage exams and Manage categories links. Vite serves development assets at http://127.0.0.1:5173. For queued jobs, run php artisan queue:work in another terminal. The Windows setup intentionally avoids Pail (which requires pcntl) and CLI server workers.
 
 For built assets without Vite, stop the dev server, remove a stale public/hot file if one remains, and run npm run build. The PHP server is still required.
 

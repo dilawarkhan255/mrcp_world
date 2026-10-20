@@ -20,7 +20,10 @@ class HandleInertiaRequests extends Middleware
         return [
             ...parent::share($request),
             'name' => config('app.name'),
-            'auth' => ['user' => $request->user()],
+            'auth' => [
+                'user' => $request->user(),
+                'canManageContent' => $request->user()?->can('viewAny', Exam::class) ?? false,
+            ],
             'exams' => $exams,
             'currentExam' => $current,
             'navigation' => $request->user() ? config('student.groups') : [],

@@ -1,6 +1,7 @@
 import type { LucideIcon } from 'lucide-vue-next';
 
 export interface Auth {
+    canManageContent: boolean;
     user: User;
 }
 

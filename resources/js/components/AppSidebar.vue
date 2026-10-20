@@ -21,7 +21,7 @@ import {
 } from '@/components/ui/sidebar';
 import type { SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/vue3';
-import { BookOpen, Bookmark, Brain, ChevronRight, LayoutGrid, ListChecks } from 'lucide-vue-next';
+import { BookOpen, Bookmark, Brain, ChevronRight, FolderCog, GraduationCap, LayoutGrid, ListChecks, Shield } from 'lucide-vue-next';
 import { computed } from 'vue';
 const page = usePage<SharedData>();
 const { state, isMobile, setOpenMobile } = useSidebar();
@@ -83,6 +83,23 @@ const closeMobile = () => setOpenMobile(false);
                         </DropdownMenu>
                     </SidebarMenuItem>
                 </template>
+            </SidebarMenu>
+            <SidebarMenu v-if="page.props.auth.canManageContent" class="mt-3 border-t pt-3">
+                <SidebarMenuItem
+                    ><SidebarMenuButton as-child tooltip="Admin panel"
+                        ><a href="/admin"><Shield /><span>Admin panel</span></a></SidebarMenuButton
+                    ></SidebarMenuItem
+                >
+                <SidebarMenuItem
+                    ><SidebarMenuButton as-child tooltip="Manage exams"
+                        ><a href="/admin/exams"><GraduationCap /><span>Manage exams</span></a></SidebarMenuButton
+                    ></SidebarMenuItem
+                >
+                <SidebarMenuItem
+                    ><SidebarMenuButton as-child tooltip="Manage categories"
+                        ><a href="/admin/categories"><FolderCog /><span>Manage categories</span></a></SidebarMenuButton
+                    ></SidebarMenuItem
+                >
             </SidebarMenu>
         </SidebarContent>
         <SidebarFooter class="border-t"><NavUser /></SidebarFooter>
