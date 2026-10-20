@@ -1,6 +1,6 @@
-# MRCP World — Phase 1 Foundation
+# MRCP World — Foundation and question practice
 
-Laravel 12 with the official Laravel Vue starter kit: Inertia 2, Vue 3, TypeScript, Tailwind CSS and shadcn-vue. Filament v3 provides the editor/admin panel. Phase 2 has not been started; learning content, practice sessions, statistics and the activity heatmap remain placeholders.
+Laravel 12 with the official Laravel Vue starter kit: Inertia 2, Vue 3, TypeScript, Tailwind CSS and shadcn-vue. Filament v3 provides the editor/admin panel. The foundation is complete. Following the expanded request, MCQ/past-paper management, streamed CSV/XLSX imports, question-bank practice, saved sessions and practice statistics are implemented. Textbooks, flashcards, timed mocks and the activity heatmap remain placeholders. See [Content workflow](docs/CONTENT_WORKFLOW.md) for the complete admin-to-student workflow.
 
 ## Windows / XAMPP prerequisites
 
@@ -40,7 +40,7 @@ php artisan serve --host=127.0.0.1 --port=8000
 npm run dev -- --host 127.0.0.1
 ~~~
 
-Open http://127.0.0.1:8000. The student home is /dashboard; the admin panel is /admin. Normal login sends verified admins/editors to /admin. Their student sidebar also includes Admin panel, Manage exams and Manage categories links. Vite serves development assets at http://127.0.0.1:5173. For queued jobs, run php artisan queue:work in another terminal. The Windows setup intentionally avoids Pail (which requires pcntl) and CLI server workers.
+Open http://127.0.0.1:8000. The student home is /dashboard; the admin panel is /admin. Normal login sends verified admins/editors to /admin. Their student sidebar also includes Admin panel, Manage exams and Manage categories links. Vite serves development assets at http://127.0.0.1:5173. For uploads and queued jobs, run php artisan queue:listen --queue=imports,default --timeout=1200 --tries=3 --memory=256 in another terminal. The Windows setup intentionally avoids Pail (which requires pcntl) and CLI server workers.
 
 For built assets without Vite, stop the dev server, remove a stale public/hot file if one remains, and run npm run build. The PHP server is still required.
 
@@ -56,7 +56,7 @@ These accounts are created only when APP_ENV=local. They are preverified. Existi
 
 New registrations receive the student role on the server and must verify their email before accessing the student app. Login locks out a given email/IP after five failed attempts for 60 seconds. The Filament login also has its built-in rate limiting. Only verified editors and admins may access the panel or its Exam/Category resources; model policies enforce resource access too.
 
-Seeded exams: MRCP Part 1 and MRCP Part 2 Written. Categories belong to an exam and have a unique slug within that exam. Exams with categories cannot be deleted. The exam switcher queries active exams and stores selection in the session, falling back to the first active exam if the previous choice becomes unavailable. No category/sample learning data is seeded.
+Seeded exams: MRCP Part 1 and MRCP Part 2 Written. Categories belong to an exam and have a unique slug within that exam. Exams with categories cannot be deleted. The exam switcher queries active exams and stores selection in the session, falling back to the first active exam if the previous choice becomes unavailable. No category/sample learning data is seeded. Admins create categories and add or import their own MCQs through /admin/questions, /admin/past-papers and /admin/question-imports.
 
 ## Quality checks
 
@@ -96,14 +96,14 @@ Ensure Apache loads its vhost configuration and mod_rewrite, restart Apache, set
 
 ## Redis later
 
-Predis is installed so PHP does not need the phpredis extension. When a Redis server is available, set CACHE_STORE=redis, SESSION_DRIVER=redis, QUEUE_CONNECTION=redis, REDIS_CLIENT=predis and the REDIS_HOST/REDIS_PORT/REDIS_PASSWORD values in .env. Run php artisan config:clear and restart long-running queue workers. No application code change is needed; existing database sessions/cache/jobs do not transfer automatically.
+Predis is installed so PHP does not need the phpredis extension. When a Redis server is available, set CACHE_STORE=redis, SESSION_DRIVER=redis, QUEUE_CONNECTION=redis, REDIS_CLIENT=predis and the REDIS_HOST/REDIS_PORT/REDIS_PASSWORD values in .env. Run php artisan config:clear and restart long-running queue workers. Set REDIS_QUEUE_RETRY_AFTER=1260 for long-running imports. No application code change is needed; existing database sessions/cache/jobs do not transfer automatically.
 
 ## Template adaptations and attribution
 
 Reference: https://github.com/Whbbit1999/shadcn-vue-admin, revision db05525b4ddc92006ee28c4327678e12917f2646. It was cloned outside this project at C:/Windows/Temp/mrcp-shadcn-vue-admin.
 
 - Collapsible sidebar shell and navigation: AppSidebar.vue, using starter-kit sidebar primitives, Inertia Link, and server-provided navigation. The original team switcher was replaced with database exams.
-- Dashboard stat-card structure: StatCard.vue. Values are honest placeholders with no imported statistics.
+- Dashboard stat-card structure: StatCard.vue. Values now use the signed-in student’s saved practice statistics; no template sample statistics are imported.
 - Reusable data table: DataTable.vue. Adapted rendering, empty/loading states and pagination to TanStack Vue Table v8, with sorting/filtering and toolbar/empty slots. Previous sessions shows its empty state.
 - Light/dark/system theme menu: ThemeToggle.vue, integrated with the starter kit's appearance persistence.
 

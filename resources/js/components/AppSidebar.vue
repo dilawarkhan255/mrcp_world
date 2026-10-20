@@ -100,6 +100,21 @@ const closeMobile = () => setOpenMobile(false);
                         ><a href="/admin/categories"><FolderCog /><span>Manage categories</span></a></SidebarMenuButton
                     ></SidebarMenuItem
                 >
+                <SidebarMenuItem
+                    ><SidebarMenuButton as-child tooltip="Manage questions"
+                        ><a href="/admin/questions"><ListChecks /><span>Manage questions</span></a></SidebarMenuButton
+                    ></SidebarMenuItem
+                >
+                <SidebarMenuItem
+                    ><SidebarMenuButton as-child tooltip="Past papers"
+                        ><a href="/admin/past-papers"><BookOpen /><span>Manage past papers</span></a></SidebarMenuButton
+                    ></SidebarMenuItem
+                >
+                <SidebarMenuItem
+                    ><SidebarMenuButton as-child tooltip="Bulk MCQ uploads"
+                        ><a href="/admin/question-imports"><FolderCog /><span>Bulk MCQ uploads</span></a></SidebarMenuButton
+                    ></SidebarMenuItem
+                >
             </SidebarMenu>
         </SidebarContent>
         <SidebarFooter class="border-t"><NavUser /></SidebarFooter>

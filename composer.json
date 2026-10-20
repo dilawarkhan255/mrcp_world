@@ -14,6 +14,7 @@
         "inertiajs/inertia-laravel": "^2.0",
         "laravel/framework": "^12.0",
         "laravel/tinker": "^2.10.1",
+        "openspout/openspout": "4.*",
         "predis/predis": "3.*",
         "spatie/laravel-permission": "6.*",
         "tightenco/ziggy": "^2.4"
@@ -60,7 +61,7 @@
         ],
         "dev": [
             "Composer\\Config::disableProcessTimeout",
-            "npx concurrently --kill-others -c \"#0B6E78,#F2A93B,#0F1B2D\" \"php artisan serve --host=127.0.0.1 --port=8000\" \"php artisan queue:work --tries=1\" \"npm run dev -- --host 127.0.0.1\" --names=server,queue,vite"
+            "npx concurrently --kill-others -c \"#0B6E78,#F2A93B,#0F1B2D\" \"php artisan serve --host=127.0.0.1 --port=8000\" \"php artisan queue:listen --queue=imports,default --timeout=1200 --tries=3 --memory=256\" \"npm run dev -- --host 127.0.0.1\" --names=server,queue,vite"
         ],
         "test": [
             "@php artisan config:clear",

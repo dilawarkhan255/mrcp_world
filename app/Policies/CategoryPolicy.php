@@ -29,6 +29,6 @@ class CategoryPolicy
 
     public function delete(User $user, Category $record): bool
     {
-        return $this->viewAny($user);
+        return $this->viewAny($user) && ! $record->questions()->withTrashed()->exists();
     }
 }

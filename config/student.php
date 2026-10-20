@@ -5,6 +5,7 @@ return [
         ['title' => 'Home', 'icon' => 'LayoutGrid', 'items' => [['title' => 'Home', 'href' => '/dashboard']]],
         ['title' => 'Questions', 'icon' => 'ListChecks', 'items' => [
             ['title' => 'Question bank', 'href' => '/questions/bank'],
+            ['title' => 'Past papers', 'href' => '/questions/past-papers'],
             ['title' => 'Previous sessions', 'href' => '/questions/sessions'],
             ['title' => 'Mock exams', 'href' => '/questions/mocks'],
             ['title' => 'Review questions', 'href' => '/questions/review'],

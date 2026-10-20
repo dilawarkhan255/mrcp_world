@@ -1,16 +1,26 @@
 <?php
 
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\PracticeController;
+use App\Http\Controllers\QuestionTemplateController;
 use App\Http\Controllers\SelectExamController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', fn () => Inertia::render('Welcome'))->name('home');
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/dashboard', fn () => Inertia::render('Dashboard'))->name('dashboard');
+    Route::get('/dashboard', DashboardController::class)->name('dashboard');
     Route::post('/exam', SelectExamController::class)->name('exam.select');
+    Route::get('/questions/bank', [PracticeController::class, 'bank'])->name('questions.bank');
+    Route::get('/questions/past-papers', [PracticeController::class, 'papers'])->name('questions.papers');
+    Route::get('/questions/sessions', [PracticeController::class, 'index'])->name('practice.index');
+    Route::post('/questions/sessions', [PracticeController::class, 'store'])->middleware('throttle:10,1')->name('practice.store');
+    Route::get('/questions/sessions/{session}', [PracticeController::class, 'show'])->name('practice.show');
+    Route::post('/questions/sessions/{session}/answer/{position}', [PracticeController::class, 'answer'])->middleware('throttle:120,1')->whereNumber('position')->name('practice.answer');
+    Route::get('/admin/mcq-template', QuestionTemplateController::class)->name('imports.template');
     foreach (config('student.groups') as $group) {
         foreach ($group['items'] as $item) {
-            if ($item['href'] !== '/dashboard') {
+            if (! in_array($item['href'], ['/dashboard', '/questions/bank', '/questions/sessions', '/questions/past-papers'])) {
                 Route::get($item['href'], fn () => Inertia::render('Placeholder', $item));
             }
         }

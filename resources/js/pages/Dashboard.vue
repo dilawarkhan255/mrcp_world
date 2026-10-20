@@ -3,9 +3,10 @@ import StatCard from '@/components/StatCard.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { SharedData } from '@/types';
 import { Head, Link, usePage } from '@inertiajs/vue3';
-import { ArrowUpRight, BookOpen, Brain, CalendarDays, CheckCircle2, Flame, ListChecks, Target } from 'lucide-vue-next';
+import { ArrowUpRight, BookOpen, Brain, CalendarDays, CheckCircle2, ListChecks, ListTodo, Target } from 'lucide-vue-next';
 import { computed } from 'vue';
 const page = usePage<SharedData>();
+defineProps<{ stats: { answered: number; correct: number; sessions: number; completed: number } }>();
 const firstName = computed(() => page.props.auth.user.name.split(' ')[0]);
 const tools = [
     {
@@ -46,10 +47,30 @@ const tools = [
                 }}</span>
             </section>
             <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                <StatCard title="Questions answered" value="—" description="Your practice will appear here" :icon="CheckCircle2" />
-                <StatCard title="Accuracy" value="—" description="Insights after your first session" :icon="Target" />
-                <StatCard title="Study streak" value="—" description="Build a steady revision habit" :icon="Flame" />
-                <StatCard title="Days studied" value="—" description="A view of your consistency" :icon="CalendarDays" />
+                <StatCard
+                    title="Questions answered"
+                    :value="stats.answered.toLocaleString()"
+                    description="Across your saved sessions"
+                    :icon="CheckCircle2"
+                />
+                <StatCard
+                    title="Accuracy"
+                    :value="stats.answered ? Math.round((stats.correct / stats.answered) * 100) + '%' : '—'"
+                    description="Correct answers / submitted answers"
+                    :icon="Target"
+                />
+                <StatCard
+                    title="Sessions completed"
+                    :value="stats.completed.toLocaleString()"
+                    description="Completed practice sessions"
+                    :icon="ListTodo"
+                />
+                <StatCard
+                    title="In progress"
+                    :value="(stats.sessions - stats.completed).toLocaleString()"
+                    description="Resume in Previous sessions"
+                    :icon="CalendarDays"
+                />
             </div>
             <section class="overflow-hidden rounded-xl border bg-card shadow-sm">
                 <div class="flex flex-wrap items-center justify-between gap-3 border-b px-6 py-5">
@@ -87,13 +108,15 @@ const tools = [
                         <p class="mt-2 min-h-10 text-sm leading-relaxed text-muted-foreground">{{ tool.description }}</p>
                         <div class="mt-6 flex items-center justify-between">
                             <span class="text-xs font-semibold text-primary">{{ tool.label }}</span
-                            ><span class="text-[10px] uppercase tracking-wider text-muted-foreground">Coming soon</span>
+                            ><span class="text-[10px] uppercase tracking-wider text-muted-foreground">{{
+                                tool.title === 'Question bank' ? 'Ready' : 'Coming soon'
+                            }}</span>
                         </div>
                     </Link>
                 </div>
             </section>
             <p class="text-xs text-muted-foreground">
-                Foundation preview · Your learning content and progress tracking will arrive in a future phase.
+                Question practice and saved sessions are available. Textbooks, knowledge tutor and the activity heatmap are coming later.
             </p>
         </div>
     </AppLayout>

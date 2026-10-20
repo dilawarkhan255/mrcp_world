@@ -19,7 +19,7 @@ import { Head, Link } from '@inertiajs/vue3';
                 <Link href="/register" class="rounded-lg bg-primary px-6 py-3 font-semibold text-primary-foreground">Create account</Link
                 ><Link href="/login" class="rounded-lg border bg-card px-6 py-3 font-semibold">Log in</Link>
             </div>
-            <p class="mt-6 text-xs text-muted-foreground">Foundation preview · Learning content is coming soon.</p>
+            <p class="mt-6 text-xs text-muted-foreground">MCQ practice, past papers and saved study sessions.</p>
         </section>
     </main>
 </template>
