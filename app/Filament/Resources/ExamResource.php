@@ -6,6 +6,7 @@ use App\Filament\Resources\ExamResource\Pages;
 use App\Models\Exam;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Resources\Pages\PageRegistration;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -13,7 +14,9 @@ use Filament\Tables\Table;
 class ExamResource extends Resource
 {
     protected static ?string $model = Exam::class;
+
     protected static ?string $navigationIcon = 'heroicon-o-academic-cap';
+
     public static function form(Form $form): Form
     {
         return $form->schema([
@@ -22,6 +25,7 @@ class ExamResource extends Resource
             Forms\Components\Toggle::make('is_active')->default(true),
         ]);
     }
+
     public static function table(Table $table): Table
     {
         return $table->columns([
@@ -33,6 +37,10 @@ class ExamResource extends Resource
             Tables\Actions\DeleteAction::make()->visible(fn (Exam $record): bool => ! $record->categories()->exists()),
         ]);
     }
-    /** @return array<string, \Filament\Resources\Pages\PageRegistration> */
-    public static function getPages(): array { return ['index' => Pages\ManageExams::route('/')]; }
+
+    /** @return array<string, PageRegistration> */
+    public static function getPages(): array
+    {
+        return ['index' => Pages\ManageExams::route('/')];
+    }
 }

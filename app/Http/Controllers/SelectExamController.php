@@ -12,6 +12,7 @@ class SelectExamController extends Controller
     {
         $data = $request->validate(['exam_id' => ['required', 'integer', Rule::exists('exams', 'id')->where('is_active', true)]]);
         $request->session()->put('exam_id', (int) $data['exam_id']);
+
         return back();
     }
 }

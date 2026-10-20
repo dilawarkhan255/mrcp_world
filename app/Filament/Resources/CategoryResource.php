@@ -7,6 +7,7 @@ use App\Models\Category;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Forms\Get;
+use Filament\Resources\Pages\PageRegistration;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -15,7 +16,9 @@ use Illuminate\Validation\Rules\Unique;
 class CategoryResource extends Resource
 {
     protected static ?string $model = Category::class;
+
     protected static ?string $navigationIcon = 'heroicon-o-folder';
+
     public static function form(Form $form): Form
     {
         return $form->schema([
@@ -25,6 +28,7 @@ class CategoryResource extends Resource
                 ->unique(ignoreRecord: true, modifyRuleUsing: fn (Unique $rule, Get $get): Unique => $rule->where('exam_id', $get('exam_id'))),
         ]);
     }
+
     public static function table(Table $table): Table
     {
         return $table->columns([
@@ -35,6 +39,10 @@ class CategoryResource extends Resource
             Tables\Filters\SelectFilter::make('exam')->relationship('exam', 'name'),
         ])->actions([Tables\Actions\EditAction::make(), Tables\Actions\DeleteAction::make()]);
     }
-    /** @return array<string, \Filament\Resources\Pages\PageRegistration> */
-    public static function getPages(): array { return ['index' => Pages\ManageCategories::route('/')]; }
+
+    /** @return array<string, PageRegistration> */
+    public static function getPages(): array
+    {
+        return ['index' => Pages\ManageCategories::route('/')];
+    }
 }

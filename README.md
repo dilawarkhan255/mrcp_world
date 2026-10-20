@@ -30,7 +30,7 @@ CACHE_STORE=database, SESSION_DRIVER=database and QUEUE_CONNECTION=database use 
 
 ## Run locally
 
-Use two PowerShell terminals in the project folder:
+Use two PowerShell terminals in the project folder (or run composer dev to start PHP, Vite and a queue worker together):
 
 ~~~powershell
 php artisan serve --host=127.0.0.1 --port=8000

@@ -1,6 +1,7 @@
 <?php
 
 namespace Database\Factories;
+
 use App\Models\Category;
 use App\Models\Exam;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -13,6 +14,7 @@ class CategoryFactory extends Factory
     public function definition(): array
     {
         $name = fake()->unique()->words(2, true);
+
         return ['exam_id' => Exam::factory(), 'name' => $name, 'slug' => Str::slug($name)];
     }
 }

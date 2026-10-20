@@ -16,6 +16,7 @@ class HandleInertiaRequests extends Middleware
     {
         $exams = $request->user() ? Exam::where('is_active', true)->orderBy('id')->get(['id', 'name', 'slug']) : collect();
         $current = $exams->firstWhere('id', $request->session()->get('exam_id')) ?? $exams->first();
+
         return [
             ...parent::share($request),
             'name' => config('app.name'),

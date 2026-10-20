@@ -45,7 +45,6 @@
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
             "@php artisan package:discover --ansi",
-            "@php artisan filament:upgrade",
             "@php artisan filament:upgrade"
         ],
         "post-update-cmd": [
@@ -61,7 +60,7 @@
         ],
         "dev": [
             "Composer\\Config::disableProcessTimeout",
-            "npx concurrently -c \"#93c5fd,#c4b5fd,#fb7185,#fdba74\" \"php artisan serve\" \"php artisan queue:listen --tries=1\" \"php artisan pail --timeout=0\" \"npm run dev\" --names=server,queue,logs,vite"
+            "npx concurrently --kill-others -c \"#0B6E78,#F2A93B,#0F1B2D\" \"php artisan serve --host=127.0.0.1 --port=8000\" \"php artisan queue:work --tries=1\" \"npm run dev -- --host 127.0.0.1\" --names=server,queue,vite"
         ],
         "test": [
             "@php artisan config:clear",

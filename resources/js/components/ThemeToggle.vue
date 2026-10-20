@@ -1,9 +1,9 @@
 <script setup lang="ts">
 // Adapted from shadcn-vue-admin toggle-theme.vue (MIT).
-import { Moon, Sun, SunMoon } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useAppearance } from '@/composables/useAppearance';
+import { Moon, Sun, SunMoon } from 'lucide-vue-next';
 const { updateAppearance } = useAppearance();
 </script>
 <template>

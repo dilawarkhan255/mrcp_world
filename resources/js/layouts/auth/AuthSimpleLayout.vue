@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { APP_NAME } from '@/lib/brand';
 import AppLogoIcon from '@/components/AppLogoIcon.vue';
+import { APP_NAME } from '@/lib/brand';
 import { Link } from '@inertiajs/vue3';
 
 defineProps<{
