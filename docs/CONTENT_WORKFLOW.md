@@ -51,9 +51,10 @@ Validation failures show a readable failed status. Transient infrastructure fail
 - Choose one answer and submit. The server saves and scores it, then returns the correct option and explanation. These answers are absent from the unanswered question response.
 - **Previous sessions** lets the student resume unfinished sessions or review completed answers. Only submitted choices are saved. An answer cannot be changed after submission. Repeated identical submissions do not increment the score twice.
 - **Mock exams** are timed papers from the same published bank. A preset or custom question count and duration sets a server-side deadline; the countdown in the browser only mirrors it. Answers submitted after the deadline are rejected, the mock closes on the next request, and unanswered questions stay unanswered and unscored. Correct answers are hidden until the mock is closed, so a mock behaves like an exam rather than a practice set.
+- **Review questions** lists the questions whose most recent saved answer was wrong, with the chosen answer, the correct answer and the explanation. A question leaves the queue as soon as it is answered correctly in a later session. The queue can be practised as a session of up to 50 questions.
 - Dashboard question, accuracy and session counts reflect saved practice for the selected exam.
 
-Textbooks, flashcards, review queues, comment threads, activity heatmaps and PDF/Word extraction remain separate future work; they are not represented as completed features.
+Textbooks, flashcards, comment threads, activity heatmaps and PDF/Word extraction remain separate future work; they are not represented as completed features.
 
 ## Large datasets and capacity
 
@@ -61,6 +62,7 @@ Textbooks, flashcards, review queues, comment threads, activity heatmaps and PDF
 - CSV is read with a file stream and XLSX with OpenSpout. Neither imports the complete workbook into an in-memory array. At most 100 rows are staged for an upsert transaction.
 - Category IDs are resolved once per batch. The database enforces unique exam/question codes, foreign keys and category/paper relationships.
 - Composite indexes support published questions by exam, category and paper, plus per-user session history. The admin code search is prefix-based. Student lists use simple pagination with 20 records and no total-count pagination query.
+- The review queue reads the newest saved answer per question through one grouped subquery per student and exam, so a large answer history is not scanned per page.
 - Session creation loads at most 100 questions; the practice response contains one question. Correct answers are scored under a session row lock.
 - A mock closes on its stored deadline, not on a browser event. The deadline is checked inside the same row lock that scores an answer, so a late submission cannot slip through a concurrent request.
 - Imports run in a worker separate from HTTP request processing. Use supervised worker restarts, backups, disk monitoring and database connection limits when deploying. These controls reduce risk; they do not guarantee crash-free operation at arbitrary volume.

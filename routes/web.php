@@ -4,6 +4,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\MockExamController;
 use App\Http\Controllers\PracticeController;
 use App\Http\Controllers\QuestionTemplateController;
+use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\SelectExamController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -23,10 +24,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/questions/mocks/{session}', [MockExamController::class, 'show'])->name('mocks.show');
     Route::post('/questions/mocks/{session}/answer/{position}', [MockExamController::class, 'answer'])->middleware('throttle:120,1')->whereNumber('position')->name('mocks.answer');
     Route::post('/questions/mocks/{session}/finish', [MockExamController::class, 'finish'])->name('mocks.finish');
+    Route::get('/questions/review', [ReviewController::class, 'index'])->name('review.index');
+    Route::post('/questions/review/practice', [ReviewController::class, 'store'])->middleware('throttle:10,1')->name('review.store');
     Route::get('/admin/mcq-template', QuestionTemplateController::class)->name('imports.template');
     foreach (config('student.groups') as $group) {
         foreach ($group['items'] as $item) {
-            if (! in_array($item['href'], ['/dashboard', '/questions/bank', '/questions/sessions', '/questions/past-papers', '/questions/mocks'])) {
+            if (! in_array($item['href'], ['/dashboard', '/questions/bank', '/questions/sessions', '/questions/past-papers', '/questions/mocks', '/questions/review'])) {
                 Route::get($item['href'], fn () => Inertia::render('Placeholder', $item));
             }
         }

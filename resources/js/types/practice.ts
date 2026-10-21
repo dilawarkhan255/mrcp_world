@@ -51,3 +51,13 @@ export interface NavigatorItem {
     position: number;
     answered: boolean;
 }
+export interface ReviewItem {
+    id: number;
+    body: string;
+    options: Record<string, string>;
+    student_option: string | null;
+    correct_option: string;
+    explanation: string | null;
+    wrong_count: number;
+    last_answered_at: string | null;
+}
