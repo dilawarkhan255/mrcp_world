@@ -2,12 +2,21 @@
 import StatCard from '@/components/StatCard.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { SharedData } from '@/types';
+import type { TrendPoint } from '@/types/practice';
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import { ArrowUpRight, BookOpen, Brain, CalendarDays, CheckCircle2, ListChecks, ListTodo, Target } from 'lucide-vue-next';
 import { computed } from 'vue';
+const props = defineProps<{ stats: { answered: number; correct: number; sessions: number; completed: number }; trend: TrendPoint[] }>();
 const page = usePage<SharedData>();
-defineProps<{ stats: { answered: number; correct: number; sessions: number; completed: number } }>();
 const firstName = computed(() => page.props.auth.user.name.split(' ')[0]);
+const maxAnswered = computed(() => Math.max(1, ...props.trend.map((point) => point.answered)));
+const trendAnswered = computed(() => props.trend.reduce((total, point) => total + point.answered, 0));
+function barHeight(answered: number): string {
+    return Math.round((answered / maxAnswered.value) * 100) + '%';
+}
+function shortDay(day: string): string {
+    return new Date(day).toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
+}
 const tools = [
     {
         title: 'Question bank',
@@ -76,15 +85,27 @@ const tools = [
                 <div class="flex flex-wrap items-center justify-between gap-3 border-b px-6 py-5">
                     <div>
                         <h2 class="font-semibold">Your study activity</h2>
-                        <p class="mt-1 text-xs text-muted-foreground">Every session is a step forward.</p>
+                        <p class="mt-1 text-xs text-muted-foreground">Answers submitted in the last 14 days.</p>
                     </div>
-                    <span class="rounded-full bg-secondary px-3 py-1 text-[11px] font-semibold text-secondary-foreground">Coming soon</span>
+                    <Link href="/questions/performance" class="text-xs font-semibold text-primary">Full performance →</Link>
                 </div>
                 <div class="px-6 py-7">
-                    <div aria-hidden="true" class="grid grid-flow-col grid-rows-7 gap-1.5 overflow-hidden">
-                        <span v-for="cell in 182" :key="cell" class="aspect-square min-h-2 rounded-sm bg-muted" />
+                    <div class="flex h-24 items-end gap-1.5">
+                        <div v-for="point in trend" :key="point.day" class="flex flex-1 flex-col items-center gap-2">
+                            <div class="flex w-full flex-1 items-end">
+                                <div
+                                    class="w-full rounded-t bg-primary/80"
+                                    :style="{ height: barHeight(point.answered) }"
+                                    :title="point.day + ': ' + point.answered + ' answers'"
+                                />
+                            </div>
+                            <span class="text-[10px] text-muted-foreground">{{ shortDay(point.day) }}</span>
+                        </div>
                     </div>
-                    <p class="mt-5 text-sm text-muted-foreground">Your activity heatmap will appear here when tracking becomes available.</p>
+                    <p class="mt-5 text-sm text-muted-foreground">
+                        <template v-if="trendAnswered">You answered {{ trendAnswered }} questions in the last 14 days.</template>
+                        <template v-else>No answers saved in the last 14 days. Start a session to build your streak.</template>
+                    </p>
                 </div>
             </section>
             <section>
@@ -116,7 +137,8 @@ const tools = [
                 </div>
             </section>
             <p class="text-xs text-muted-foreground">
-                Question practice and saved sessions are available. Textbooks, knowledge tutor and the activity heatmap are coming later.
+                Question practice, saved sessions, mock exams and performance reporting are available. Textbooks and the knowledge tutor are coming
+                later.
             </p>
         </div>
     </AppLayout>

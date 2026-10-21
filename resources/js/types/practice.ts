@@ -86,3 +86,20 @@ export interface WeakQuestion {
     body: string;
     wrong_count: number;
 }
+export interface CommentThread {
+    id: number;
+    body: string;
+    created_at: string | null;
+    is_hidden: boolean;
+    is_pinned: boolean;
+    author: string;
+    author_role: string;
+    is_mine: boolean;
+    question: { id: number; code: string; body: string } | null;
+    replies: CommentThread[];
+}
+export interface CommentQuestion {
+    id: number;
+    code: string;
+    body: string;
+}

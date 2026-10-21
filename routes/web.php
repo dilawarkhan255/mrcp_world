@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CommentController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\MockExamController;
 use App\Http\Controllers\PerformanceController;
@@ -28,10 +29,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/questions/review', [ReviewController::class, 'index'])->name('review.index');
     Route::post('/questions/review/practice', [ReviewController::class, 'store'])->middleware('throttle:10,1')->name('review.store');
     Route::get('/questions/performance', [PerformanceController::class, 'index'])->name('performance.index');
+    Route::get('/questions/comments', [CommentController::class, 'index'])->name('comments.index');
+    Route::post('/questions/comments', [CommentController::class, 'store'])->middleware('throttle:20,1')->name('comments.store');
+    Route::post('/questions/comments/{comment}/reply', [CommentController::class, 'reply'])->middleware('throttle:20,1')->name('comments.reply');
+    Route::post('/questions/comments/{comment}/moderate', [CommentController::class, 'moderate'])->middleware('throttle:30,1')->name('comments.moderate');
     Route::get('/admin/mcq-template', QuestionTemplateController::class)->name('imports.template');
     foreach (config('student.groups') as $group) {
         foreach ($group['items'] as $item) {
-            if (! in_array($item['href'], ['/dashboard', '/questions/bank', '/questions/sessions', '/questions/past-papers', '/questions/mocks', '/questions/review', '/questions/performance'])) {
+            if (! in_array($item['href'], ['/dashboard', '/questions/bank', '/questions/sessions', '/questions/past-papers', '/questions/mocks', '/questions/review', '/questions/performance', '/questions/comments'])) {
                 Route::get($item['href'], fn () => Inertia::render('Placeholder', $item));
             }
         }

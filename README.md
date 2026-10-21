@@ -1,6 +1,6 @@
 # MRCP World — Foundation and question practice
 
-Laravel 12 with the official Laravel Vue starter kit: Inertia 2, Vue 3, TypeScript, Tailwind CSS and shadcn-vue. Filament v3 provides the editor/admin panel. The foundation is complete. Following the expanded request, MCQ/past-paper management, streamed CSV/XLSX imports, question-bank practice, saved sessions, practice statistics, timed mock exams, a wrong-answer review queue and performance analytics are implemented. Textbooks, flashcards, comment threads and the activity heatmap remain placeholders. See [Content workflow](docs/CONTENT_WORKFLOW.md) for the complete admin-to-student workflow.
+Laravel 12 with the official Laravel Vue starter kit: Inertia 2, Vue 3, TypeScript, Tailwind CSS and shadcn-vue. Filament v3 provides the editor/admin panel. The foundation is complete. Following the expanded request, MCQ/past-paper management, streamed CSV/XLSX imports, question-bank practice, saved sessions, practice statistics, timed mock exams, a wrong-answer review queue, performance analytics and question comment threads are implemented. Textbooks, flashcards and bookmarks remain placeholders. See [Content workflow](docs/CONTENT_WORKFLOW.md) for the complete admin-to-student workflow.
 
 ## Windows / XAMPP prerequisites
 
@@ -104,7 +104,7 @@ Reference: https://github.com/Whbbit1999/shadcn-vue-admin, revision db05525b4ddc
 
 - Collapsible sidebar shell and navigation: AppSidebar.vue, using starter-kit sidebar primitives, Inertia Link, and server-provided navigation. The original team switcher was replaced with database exams.
 - Dashboard stat-card structure: StatCard.vue. Values now use the signed-in student’s saved practice statistics; no template sample statistics are imported.
-- Reusable data table: DataTable.vue. Adapted rendering, empty/loading states and pagination to TanStack Vue Table v8, with sorting/filtering and toolbar/empty slots. Previous sessions shows its empty state.
+- Reusable data table: DataTable.vue. Adapted rendering, empty/loading states and pagination to TanStack Vue Table v8, with sorting/filtering and toolbar/empty slots. The student lists use server-side pagination instead, so the component is kept for client-side tables.
 - Light/dark/system theme menu: ThemeToggle.vue, integrated with the starter kit's appearance persistence.
 
 No vue-router, mock auth, AI talk, apps, i18n, sample data or unrelated template features were imported. The complete upstream MIT notice is retained in THIRD_PARTY_LICENSES.md. No PassMedicine assets or content are used.

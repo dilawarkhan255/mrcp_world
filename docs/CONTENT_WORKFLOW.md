@@ -53,9 +53,10 @@ Validation failures show a readable failed status. Transient infrastructure fail
 - **Mock exams** are timed papers from the same published bank. A preset or custom question count and duration sets a server-side deadline; the countdown in the browser only mirrors it. Answers submitted after the deadline are rejected, the mock closes on the next request, and unanswered questions stay unanswered and unscored. Correct answers are hidden until the mock is closed, so a mock behaves like an exam rather than a practice set.
 - **Review questions** lists the questions whose most recent saved answer was wrong, with the chosen answer, the correct answer and the explanation. A question leaves the queue as soon as it is answered correctly in a later session. The queue can be practised as a session of up to 50 questions.
 - **Performance** reports the answered and correct totals, the accuracy, the session and mock counts, the study streak, a 14-day answer trend, the accuracy per category and the most missed questions. All figures are read from the saved answers of the selected exam.
-- Dashboard question, accuracy and session counts reflect saved practice for the selected exam.
+- **Comment threads** lets any verified student ask about a published question and reply to other students. A thread is created from a question found by code or wording; only published questions of the selected exam can be discussed. Editors and admins can hide or pin a thread. A hidden thread stays visible to its author and to moderators and is removed from every other student's list.
+- Dashboard question, accuracy and session counts reflect saved practice for the selected exam, and the dashboard activity strip shows the real answers of the last 14 days.
 
-Textbooks, flashcards, comment threads, activity heatmaps and PDF/Word extraction remain separate future work; they are not represented as completed features.
+Textbooks, flashcards, bookmarks, activity heatmaps and PDF/Word extraction remain separate future work; they are not represented as completed features.
 
 ## Large datasets and capacity
 
@@ -65,6 +66,7 @@ Textbooks, flashcards, comment threads, activity heatmaps and PDF/Word extractio
 - Composite indexes support published questions by exam, category and paper, plus per-user session history. The admin code search is prefix-based. Student lists use simple pagination with 20 records and no total-count pagination query.
 - The review queue reads the newest saved answer per question through one grouped subquery per student and exam, so a large answer history is not scanned per page.
 - Performance aggregates run over the saved answers of one student and exam. Days are grouped in UTC; the MySQL connection is pinned to `+00:00` so the database, PHP and SQLite agree on the day boundary.
+- Comment visibility is applied in the query, not in the browser. A thread list is one page of top-level comments for the selected exam with their replies loaded in one query.
 - Session creation loads at most 100 questions; the practice response contains one question. Correct answers are scored under a session row lock.
 - A mock closes on its stored deadline, not on a browser event. The deadline is checked inside the same row lock that scores an answer, so a late submission cannot slip through a concurrent request.
 - Imports run in a worker separate from HTTP request processing. Use supervised worker restarts, backups, disk monitoring and database connection limits when deploying. These controls reduce risk; they do not guarantee crash-free operation at arbitrary volume.
