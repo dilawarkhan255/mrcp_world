@@ -12,7 +12,7 @@ class ExamPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->hasVerifiedEmail() && $user->hasAnyRole(['editor', 'admin']);
+        return $user->can('content.exams.manage');
     }
 
     public function view(User $user, Exam $record): bool

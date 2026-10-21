@@ -27,3 +27,6 @@ yarn-error.log
 /public/js/filament/
 /public/css/filament/
 /storage/framework/cache/phpstan/
+
+# Stakpak session files
+.stakpak/session*

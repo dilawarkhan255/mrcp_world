@@ -10,7 +10,7 @@ import { landingCopy, landingSeo } from '@/content/landing';
 import PublicLayout from '@/layouts/PublicLayout.vue';
 import type { SharedData } from '@/types';
 import type { LandingExam, LandingHistogram, LandingPlanGroup } from '@/types/landing';
-import { Head, usePage } from '@inertiajs/vue3';
+import { Head } from '@inertiajs/vue3';
 import { computed } from 'vue';
 const props = defineProps<{
     appName: string;
@@ -18,9 +18,8 @@ const props = defineProps<{
     plans: LandingPlanGroup[];
     histogram: LandingHistogram;
 }>();
-const page = usePage<SharedData>();
 const demoSlug = computed(() => props.exams[0]?.slug ?? null);
-const ogImage = computed(() => `${page.props.ziggy.url}/brand/mrcp-world-logo.png`);
+const ogImage = computed(() => `${window.Ziggy?.url ?? ''}/brand/mrcp-world-logo.png`);
 </script>
 <template>
     <Head :title="landingSeo.title">

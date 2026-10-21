@@ -9,7 +9,7 @@ class CategoryPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->hasVerifiedEmail() && $user->hasAnyRole(['editor', 'admin']);
+        return $user->can('content.categories.manage');
     }
 
     public function view(User $user, Category $record): bool

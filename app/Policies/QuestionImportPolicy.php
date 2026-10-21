@@ -9,7 +9,7 @@ class QuestionImportPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->hasVerifiedEmail() && $user->hasAnyRole(['editor', 'admin']);
+        return $user->can('content.imports.view');
     }
 
     public function view(User $user, QuestionImport $record): bool

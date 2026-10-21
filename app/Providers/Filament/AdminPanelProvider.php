@@ -28,7 +28,8 @@ class AdminPanelProvider extends PanelProvider
             ->path('admin')
             ->login()
             ->brandName(fn (): string => (string) config('app.name'))
-            ->brandLogo(asset('logo.svg'))
+            ->brandLogo(asset('brand/mrcp-world-mark.png'))
+            ->favicon(asset('brand/mrcp-world-mark.png'))
             ->font('Manrope')
             ->colors([
                 'primary' => Color::hex('#0B6E78'),

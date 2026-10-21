@@ -12,13 +12,18 @@ use App\Http\Controllers\QuestionTemplateController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\SelectExamController;
 use App\Http\Controllers\SitemapController;
+use App\Http\Controllers\UserTableController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', [LandingController::class, 'index'])->name('home');
 Route::get('/exams/{slug}/demo', [ExamDemoController::class, 'show'])->name('landing.demo');
 Route::get('/terms', fn () => Inertia::render('Legal/Terms', ['appName' => (string) config('app.name')]))->name('legal.terms');
-Route::get('/privacy', fn () => Inertia::render('Legal/Privacy', ['appName' => (string) config('app.name')]))->name('legal.privacy');
+Route::get('/privacy', fn () => Inertia::render('Legal/Privacy', [
+    'appName' => (string) config('app.name'),
+    'summary' => (string) config('privacy.summary'),
+    'sections' => (array) config('privacy.sections'),
+]))->name('legal.privacy');
 Route::get('/contact', fn () => Inertia::render('Legal/Page', [
     'appName' => (string) config('app.name'),
     'title' => 'Contact',
@@ -57,6 +62,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('/revision/bookmarks/{bookmark}', [BookmarkController::class, 'destroy'])->name('bookmarks.destroy');
     Route::post('/revision/bookmarks/practice', [BookmarkController::class, 'practice'])->middleware('throttle:10,1')->name('bookmarks.practice');
     Route::get('/admin/mcq-template', QuestionTemplateController::class)->name('imports.template');
+    Route::get('/admin/users/data', UserTableController::class)->name('admin.users.data');
     foreach (config('student.groups') as $group) {
         foreach ($group['items'] as $item) {
             if (! in_array($item['href'], ['/dashboard', '/questions/bank', '/questions/sessions', '/questions/past-papers', '/questions/mocks', '/questions/review', '/questions/performance', '/questions/comments', '/revision/bookmarks'])) {

@@ -11,7 +11,7 @@ class PastPaperPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->hasVerifiedEmail() && $user->hasAnyRole(['editor', 'admin']);
+        return $user->can('content.papers.manage');
     }
 
     public function view(User $user, PastPaper $record): bool

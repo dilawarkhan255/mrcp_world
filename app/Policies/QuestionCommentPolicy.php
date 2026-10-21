@@ -13,15 +13,15 @@ class QuestionCommentPolicy
         return $user->hasVerifiedEmail();
     }
 
-    /** Only editors and admins may hide or pin a comment. */
+    /** Editors and admins may moderate the threads. */
     public function moderate(User $user): bool
     {
-        return $user->hasVerifiedEmail() && $user->hasAnyRole(['editor', 'admin']);
+        return $user->can('community.comments.moderate');
     }
 
     public function viewAny(User $user): bool
     {
-        return $user->hasVerifiedEmail();
+        return $user->can('community.comments.moderate');
     }
 
     public function view(User $user, QuestionComment $record): bool
