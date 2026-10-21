@@ -82,7 +82,7 @@ class MockExamController extends Controller
                 'expires_at' => $session->expires_at?->toIso8601String(),
                 'duration_seconds' => $session->duration_seconds,
             ],
-            'question' => $practice->question($session, $position),
+            'question' => $practice->question($session, $position, $request->user()),
             'navigator' => $practice->navigator($session),
             'serverTime' => now()->toIso8601String(),
         ]);

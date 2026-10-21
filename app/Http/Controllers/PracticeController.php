@@ -75,7 +75,7 @@ class PracticeController extends Controller
 
         return Inertia::render('questions/Practice', [
             'session' => $session->only(['id', 'total_questions', 'answered_count', 'correct_count', 'completed_at']),
-            'question' => $practice->question($session, $position),
+            'question' => $practice->question($session, $position, $request->user()),
         ]);
     }
 

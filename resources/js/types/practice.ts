@@ -17,6 +17,9 @@ export interface PracticeQuestion {
     body: string;
     options: Record<string, string>;
     selected_option: string | null;
+    question_id?: number;
+    is_bookmarked?: boolean;
+    bookmark_id?: number | null;
     result?: { is_correct: boolean; correct_option: string; explanation: string | null };
 }
 export interface MockPreset {
@@ -102,4 +105,13 @@ export interface CommentQuestion {
     id: number;
     code: string;
     body: string;
+}
+export interface BookmarkItem {
+    id: number;
+    question_id: number;
+    code: string | null;
+    body: string | null;
+    category: string | null;
+    note: string | null;
+    created_at: string | null;
 }

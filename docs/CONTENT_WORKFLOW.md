@@ -54,9 +54,10 @@ Validation failures show a readable failed status. Transient infrastructure fail
 - **Review questions** lists the questions whose most recent saved answer was wrong, with the chosen answer, the correct answer and the explanation. A question leaves the queue as soon as it is answered correctly in a later session. The queue can be practised as a session of up to 50 questions.
 - **Performance** reports the answered and correct totals, the accuracy, the session and mock counts, the study streak, a 14-day answer trend, the accuracy per category and the most missed questions. All figures are read from the saved answers of the selected exam.
 - **Comment threads** lets any verified student ask about a published question and reply to other students. A thread is created from a question found by code or wording; only published questions of the selected exam can be discussed. Editors and admins can hide or pin a thread. A hidden thread stays visible to its author and to moderators and is removed from every other student's list.
+- **Bookmarks and notes** saves a question from a practice or mock session with a personal note. One bookmark per question is kept, the note can be edited or removed, and the bookmarked questions can be practised as one session.
 - Dashboard question, accuracy and session counts reflect saved practice for the selected exam, and the dashboard activity strip shows the real answers of the last 14 days.
 
-Textbooks, flashcards, bookmarks, activity heatmaps and PDF/Word extraction remain separate future work; they are not represented as completed features.
+Textbooks, flashcards, activity heatmaps and PDF/Word extraction remain separate future work; they are not represented as completed features.
 
 ## Large datasets and capacity
 

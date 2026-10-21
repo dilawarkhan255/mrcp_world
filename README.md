@@ -1,6 +1,6 @@
 # MRCP World — Foundation and question practice
 
-Laravel 12 with the official Laravel Vue starter kit: Inertia 2, Vue 3, TypeScript, Tailwind CSS and shadcn-vue. Filament v3 provides the editor/admin panel. The foundation is complete. Following the expanded request, MCQ/past-paper management, streamed CSV/XLSX imports, question-bank practice, saved sessions, practice statistics, timed mock exams, a wrong-answer review queue, performance analytics and question comment threads are implemented. Textbooks, flashcards and bookmarks remain placeholders. See [Content workflow](docs/CONTENT_WORKFLOW.md) for the complete admin-to-student workflow.
+Laravel 12 with the official Laravel Vue starter kit: Inertia 2, Vue 3, TypeScript, Tailwind CSS and shadcn-vue. Filament v3 provides the editor/admin panel. The foundation is complete. Following the expanded request, MCQ/past-paper management, streamed CSV/XLSX imports, question-bank practice, saved sessions, practice statistics, timed mock exams, a wrong-answer review queue, performance analytics, question comment threads and bookmarks with notes are implemented. Textbooks and flashcards remain placeholders. See [Content workflow](docs/CONTENT_WORKFLOW.md) for the complete admin-to-student workflow.
 
 ## Windows / XAMPP prerequisites
 

@@ -7,6 +7,7 @@ import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 const props = defineProps<{ session: MockSession; question: PracticeQuestion; navigator: NavigatorItem[]; serverTime: string }>();
 const form = useForm({ option: props.question.selected_option || '' });
+const bookmark = useForm({ question_id: 0 });
 watch(
     () => props.question,
     (question) => {
@@ -56,6 +57,15 @@ const alreadyAnswered = computed(() => props.question.selected_option !== null);
 function save() {
     form.post('/questions/mocks/' + props.session.id + '/answer/' + props.question.position);
 }
+function toggleBookmark() {
+    if (!props.question.question_id) return;
+    if (props.question.bookmark_id) {
+        bookmark.delete('/revision/bookmarks/' + props.question.bookmark_id);
+        return;
+    }
+    bookmark.question_id = props.question.question_id;
+    bookmark.post('/revision/bookmarks');
+}
 </script>
 <template>
     <Head :title="'Mock exam #' + session.id" />
@@ -82,6 +92,9 @@ function save() {
                         {{ clock }}
                     </div>
                     <Button v-if="!isCompleted" variant="outline" @click="confirming = true">Finish mock</Button>
+                    <Button v-if="question.question_id" variant="outline" size="sm" :disabled="bookmark.processing" @click="toggleBookmark">{{
+                        question.is_bookmarked ? 'Bookmarked' : 'Bookmark'
+                    }}</Button>
                     <Link href="/questions/mocks" class="rounded-lg border bg-card px-4 py-2 text-sm">Leave</Link>
                 </div>
             </div>

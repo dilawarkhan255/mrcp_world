@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\BookmarkController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\MockExamController;
@@ -33,10 +34,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/questions/comments', [CommentController::class, 'store'])->middleware('throttle:20,1')->name('comments.store');
     Route::post('/questions/comments/{comment}/reply', [CommentController::class, 'reply'])->middleware('throttle:20,1')->name('comments.reply');
     Route::post('/questions/comments/{comment}/moderate', [CommentController::class, 'moderate'])->middleware('throttle:30,1')->name('comments.moderate');
+    Route::get('/revision/bookmarks', [BookmarkController::class, 'index'])->name('bookmarks.index');
+    Route::post('/revision/bookmarks', [BookmarkController::class, 'store'])->middleware('throttle:30,1')->name('bookmarks.store');
+    Route::patch('/revision/bookmarks/{bookmark}', [BookmarkController::class, 'update'])->name('bookmarks.update');
+    Route::delete('/revision/bookmarks/{bookmark}', [BookmarkController::class, 'destroy'])->name('bookmarks.destroy');
+    Route::post('/revision/bookmarks/practice', [BookmarkController::class, 'practice'])->middleware('throttle:10,1')->name('bookmarks.practice');
     Route::get('/admin/mcq-template', QuestionTemplateController::class)->name('imports.template');
     foreach (config('student.groups') as $group) {
         foreach ($group['items'] as $item) {
-            if (! in_array($item['href'], ['/dashboard', '/questions/bank', '/questions/sessions', '/questions/past-papers', '/questions/mocks', '/questions/review', '/questions/performance', '/questions/comments'])) {
+            if (! in_array($item['href'], ['/dashboard', '/questions/bank', '/questions/sessions', '/questions/past-papers', '/questions/mocks', '/questions/review', '/questions/performance', '/questions/comments', '/revision/bookmarks'])) {
                 Route::get($item['href'], fn () => Inertia::render('Placeholder', $item));
             }
         }

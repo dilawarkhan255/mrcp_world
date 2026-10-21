@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Bookmark;
 use App\Models\Exam;
 use App\Models\PracticeSession;
 use App\Models\Question;
@@ -82,6 +83,29 @@ class PracticeService
         }, 3);
     }
 
+    /**
+     * Start a session from a chosen set of questions, for example a review
+     * queue or the bookmarks of a student.
+     *
+     * @param  list<int>  $questionIds
+     */
+    public function startFromQuestions(User $user, Exam $exam, array $questionIds, string $mode = PracticeSession::MODE_REVIEW): PracticeSession
+    {
+        $questionIds = array_values(array_unique(array_map('intval', $questionIds)));
+        if ($questionIds === []) {
+            throw ValidationException::withMessages(['question_ids' => 'Choose at least one question.']);
+        }
+        if (count($questionIds) > self::MAX_QUESTIONS) {
+            throw ValidationException::withMessages(['question_ids' => 'Choose at most 100 questions.']);
+        }
+        $available = Question::published()->where('exam_id', $exam->id)->whereIn('id', $questionIds)->pluck('id')->all();
+        if ($available === []) {
+            throw ValidationException::withMessages(['question_ids' => 'None of these questions are available.']);
+        }
+
+        return $this->start($user, $exam, count($available), null, null, $mode, null, $available);
+    }
+
     public function answer(PracticeSession $session, int $position, string $option): void
     {
         DB::transaction(function () use ($session, $position, $option) {
@@ -129,9 +153,9 @@ class PracticeService
      * The question shown to the student. A mock only reveals the correct answer
      * once the mock is closed, so the student is not given feedback mid-exam.
      *
-     * @return array{position: int, body: string, options: array<string, string>, selected_option: string|null, result?: array{is_correct: bool, correct_option: string, explanation: string|null}}
+     * @return array{position: int, body: string, options: array<string, string>, selected_option: string|null, question_id?: int, is_bookmarked?: bool, bookmark_id?: int|null, result?: array{is_correct: bool, correct_option: string, explanation: string|null}}
      */
-    public function question(PracticeSession $session, int $position): array
+    public function question(PracticeSession $session, int $position, ?User $user = null): array
     {
         $item = $session->items()->where('position', $position)->firstOrFail();
         $snapshot = $item->snapshot;
@@ -141,6 +165,12 @@ class PracticeService
             'options' => $snapshot['options'],
             'selected_option' => $item->selected_option,
         ];
+        if ($item->question_id !== null) {
+            $bookmark = $user === null ? null : Bookmark::where('user_id', $user->id)->where('question_id', $item->question_id)->first();
+            $payload['question_id'] = $item->question_id;
+            $payload['is_bookmarked'] = $bookmark !== null;
+            $payload['bookmark_id'] = $bookmark?->id;
+        }
         $reveal = $session->mode === PracticeSession::MODE_MOCK ? $session->completed_at !== null : true;
         if ($reveal && $item->answered_at !== null) {
             $payload['result'] = [

@@ -125,11 +125,7 @@ class ReviewService
         if (count($questionIds) > self::MAX_REVIEW_QUESTIONS) {
             throw ValidationException::withMessages(['question_ids' => 'Review at most 50 questions at a time.']);
         }
-        $available = Question::published()->where('exam_id', $exam->id)->whereIn('id', $questionIds)->pluck('id')->all();
-        if ($available === []) {
-            throw ValidationException::withMessages(['question_ids' => 'None of these questions are available for review.']);
-        }
 
-        return app(PracticeService::class)->start($user, $exam, count($available), null, null, PracticeSession::MODE_REVIEW, null, $available);
+        return app(PracticeService::class)->startFromQuestions($user, $exam, $questionIds, PracticeSession::MODE_REVIEW);
     }
 }

@@ -7,6 +7,7 @@ import { Head, Link, useForm } from '@inertiajs/vue3';
 import { computed, watch } from 'vue';
 const props = defineProps<{ session: SessionSummary; question: PracticeQuestion }>();
 const form = useForm({ option: props.question.selected_option || '' });
+const bookmark = useForm({ question_id: 0 });
 watch(
     () => props.question,
     (question) => {
@@ -17,6 +18,15 @@ watch(
 const percentage = computed(() => Math.round((props.session.answered_count / props.session.total_questions) * 100));
 function submit() {
     form.post('/questions/sessions/' + props.session.id + '/answer/' + props.question.position, { preserveScroll: true });
+}
+function toggleBookmark() {
+    if (!props.question.question_id) return;
+    if (props.question.bookmark_id) {
+        bookmark.delete('/revision/bookmarks/' + props.question.bookmark_id);
+        return;
+    }
+    bookmark.question_id = props.question.question_id;
+    bookmark.post('/revision/bookmarks');
 }
 </script>
 <template>
@@ -30,7 +40,12 @@ function submit() {
         <div class="mx-auto w-full max-w-4xl space-y-6 p-6 md:p-10">
             <div class="flex flex-wrap items-center justify-between gap-3">
                 <h1 class="text-xl font-semibold">Question {{ question.position }} of {{ session.total_questions }}</h1>
-                <Link href="/questions/sessions" class="text-sm font-semibold text-primary">Leave session</Link>
+                <div class="flex items-center gap-4">
+                    <Button v-if="question.question_id" variant="outline" size="sm" :disabled="bookmark.processing" @click="toggleBookmark">{{
+                        question.is_bookmarked ? 'Bookmarked' : 'Bookmark'
+                    }}</Button>
+                    <Link href="/questions/sessions" class="text-sm font-semibold text-primary">Leave session</Link>
+                </div>
             </div>
             <div>
                 <div class="mb-2 flex justify-between text-xs text-muted-foreground">
