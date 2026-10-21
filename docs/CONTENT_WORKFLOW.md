@@ -50,9 +50,10 @@ Validation failures show a readable failed status. Transient infrastructure fail
 - Select 1–100 questions per session. If fewer match, the session contains the available questions. Session creation uses an indexed random starting point with wraparound, not a full-table random sort; it is not a statistically uniform sample.
 - Choose one answer and submit. The server saves and scores it, then returns the correct option and explanation. These answers are absent from the unanswered question response.
 - **Previous sessions** lets the student resume unfinished sessions or review completed answers. Only submitted choices are saved. An answer cannot be changed after submission. Repeated identical submissions do not increment the score twice.
+- **Mock exams** are timed papers from the same published bank. A preset or custom question count and duration sets a server-side deadline; the countdown in the browser only mirrors it. Answers submitted after the deadline are rejected, the mock closes on the next request, and unanswered questions stay unanswered and unscored. Correct answers are hidden until the mock is closed, so a mock behaves like an exam rather than a practice set.
 - Dashboard question, accuracy and session counts reflect saved practice for the selected exam.
 
-Textbooks, flashcards, timed mock exams, heatmaps and PDF/Word extraction remain separate future work; they are not represented as completed features.
+Textbooks, flashcards, review queues, comment threads, activity heatmaps and PDF/Word extraction remain separate future work; they are not represented as completed features.
 
 ## Large datasets and capacity
 
@@ -61,6 +62,7 @@ Textbooks, flashcards, timed mock exams, heatmaps and PDF/Word extraction remain
 - Category IDs are resolved once per batch. The database enforces unique exam/question codes, foreign keys and category/paper relationships.
 - Composite indexes support published questions by exam, category and paper, plus per-user session history. The admin code search is prefix-based. Student lists use simple pagination with 20 records and no total-count pagination query.
 - Session creation loads at most 100 questions; the practice response contains one question. Correct answers are scored under a session row lock.
+- A mock closes on its stored deadline, not on a browser event. The deadline is checked inside the same row lock that scores an answer, so a late submission cannot slip through a concurrent request.
 - Imports run in a worker separate from HTTP request processing. Use supervised worker restarts, backups, disk monitoring and database connection limits when deploying. These controls reduce risk; they do not guarantee crash-free operation at arbitrary volume.
 
 Verified locally: a 1,200-row CSV uses 12 question upserts; tests cover real upload-to-worker processing, XLSX, invalid rows, retries, published visibility, access control, saved sessions, answer secrecy and score idempotency. This is a regression check, not a production concurrency or million-row benchmark. Capacity must be load-tested against the target hosting and expected traffic.

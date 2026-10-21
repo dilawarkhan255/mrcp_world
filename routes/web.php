@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\MockExamController;
 use App\Http\Controllers\PracticeController;
 use App\Http\Controllers\QuestionTemplateController;
 use App\Http\Controllers\SelectExamController;
@@ -17,10 +18,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/questions/sessions', [PracticeController::class, 'store'])->middleware('throttle:10,1')->name('practice.store');
     Route::get('/questions/sessions/{session}', [PracticeController::class, 'show'])->name('practice.show');
     Route::post('/questions/sessions/{session}/answer/{position}', [PracticeController::class, 'answer'])->middleware('throttle:120,1')->whereNumber('position')->name('practice.answer');
+    Route::get('/questions/mocks', [MockExamController::class, 'index'])->name('mocks.index');
+    Route::post('/questions/mocks', [MockExamController::class, 'store'])->middleware('throttle:10,1')->name('mocks.store');
+    Route::get('/questions/mocks/{session}', [MockExamController::class, 'show'])->name('mocks.show');
+    Route::post('/questions/mocks/{session}/answer/{position}', [MockExamController::class, 'answer'])->middleware('throttle:120,1')->whereNumber('position')->name('mocks.answer');
+    Route::post('/questions/mocks/{session}/finish', [MockExamController::class, 'finish'])->name('mocks.finish');
     Route::get('/admin/mcq-template', QuestionTemplateController::class)->name('imports.template');
     foreach (config('student.groups') as $group) {
         foreach ($group['items'] as $item) {
-            if (! in_array($item['href'], ['/dashboard', '/questions/bank', '/questions/sessions', '/questions/past-papers'])) {
+            if (! in_array($item['href'], ['/dashboard', '/questions/bank', '/questions/sessions', '/questions/past-papers', '/questions/mocks'])) {
                 Route::get($item['href'], fn () => Inertia::render('Placeholder', $item));
             }
         }

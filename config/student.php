@@ -24,4 +24,13 @@ return [
             ['title' => 'Bookmarks and notes', 'href' => '/revision/bookmarks'],
         ]],
     ],
+    'mocks' => [
+        'presets' => [
+            ['title' => 'Quick check', 'questions' => 10, 'minutes' => 10],
+            ['title' => 'Short mock', 'questions' => 20, 'minutes' => 30],
+            ['title' => 'Full mock', 'questions' => 40, 'minutes' => 90],
+        ],
+        'max_questions' => 100,
+        'max_minutes' => 180,
+    ],
 ];

@@ -67,21 +67,15 @@ class PracticeController extends Controller
         ]);
     }
 
-    public function show(Request $request, PracticeSession $session): Response
+    public function show(Request $request, PracticeSession $session, PracticeService $practice): Response
     {
         abort_unless($session->user_id === $request->user()?->id, 403);
         $data = $request->validate(['position' => ['nullable', 'integer', 'min:1', 'max:'.$session->total_questions]]);
-        $position = isset($data['position']) ? (int) $data['position'] : ($session->items()->whereNull('answered_at')->orderBy('position')->value('position') ?? $session->total_questions);
-        $item = $session->items()->where('position', $position)->firstOrFail();
-        $snapshot = $item->snapshot;
-        $question = ['position' => $item->position, 'body' => $snapshot['body'], 'options' => $snapshot['options'], 'selected_option' => $item->selected_option];
-        if ($item->answered_at !== null) {
-            $question['result'] = ['is_correct' => $item->is_correct, 'correct_option' => $snapshot['correct_option'], 'explanation' => $snapshot['explanation']];
-        }
+        $position = isset($data['position']) ? (int) $data['position'] : $practice->nextPosition($session);
 
         return Inertia::render('questions/Practice', [
             'session' => $session->only(['id', 'total_questions', 'answered_count', 'correct_count', 'completed_at']),
-            'question' => $question,
+            'question' => $practice->question($session, $position),
         ]);
     }
 

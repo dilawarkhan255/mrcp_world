@@ -12,6 +12,12 @@ use Illuminate\Validation\ValidationException;
 
 class PracticeService
 {
+    public const MAX_QUESTIONS = 100;
+
+    public const MIN_DURATION_SECONDS = 60;
+
+    public const MAX_DURATION_SECONDS = 10800;
+
     /** @return Builder<Question> */
     public function questions(int $examId, ?int $categoryId = null, ?int $paperId = null): Builder
     {
@@ -20,14 +26,31 @@ class PracticeService
             ->when($paperId, fn (Builder $query) => $query->where('past_paper_id', $paperId));
     }
 
-    public function start(User $user, Exam $exam, int $limit, ?int $categoryId, ?int $paperId): PracticeSession
-    {
-        if ($limit < 1 || $limit > 100) {
+    /**
+     * @param  list<int>|null  $questionIds  Restrict the session to these question ids, in the given order.
+     */
+    public function start(
+        User $user,
+        Exam $exam,
+        int $limit,
+        ?int $categoryId,
+        ?int $paperId,
+        string $mode = PracticeSession::MODE_PRACTICE,
+        ?int $durationSeconds = null,
+        ?array $questionIds = null,
+    ): PracticeSession {
+        if ($limit < 1 || $limit > self::MAX_QUESTIONS) {
             throw ValidationException::withMessages(['count' => 'Choose 1–100 questions.']);
         }
+        if ($durationSeconds !== null && ($durationSeconds < self::MIN_DURATION_SECONDS || $durationSeconds > self::MAX_DURATION_SECONDS)) {
+            throw ValidationException::withMessages(['minutes' => 'Choose a duration between 1 and 180 minutes.']);
+        }
 
-        return DB::transaction(function () use ($user, $exam, $limit, $categoryId, $paperId) {
+        return DB::transaction(function () use ($user, $exam, $limit, $categoryId, $paperId, $mode, $durationSeconds, $questionIds) {
             $base = $this->questions($exam->id, $categoryId, $paperId);
+            if ($questionIds !== null) {
+                $base = $base->whereIn('id', $questionIds);
+            }
             $min = (clone $base)->min('id');
             $max = (clone $base)->max('id');
             if ($min === null || $max === null) {
@@ -39,9 +62,12 @@ class PracticeService
             if ($questions->count() < $limit) {
                 $questions = $questions->concat((clone $base)->where('id', '<', $pivot)->orderBy('id')->limit($limit - $questions->count())->get());
             }
+            $startedAt = now();
             $session = PracticeSession::create([
                 'user_id' => $user->id, 'exam_id' => $exam->id, 'category_id' => $categoryId, 'past_paper_id' => $paperId,
-                'total_questions' => $questions->count(),
+                'mode' => $mode, 'total_questions' => $questions->count(),
+                'duration_seconds' => $durationSeconds, 'started_at' => $startedAt,
+                'expires_at' => $durationSeconds === null ? null : $startedAt->copy()->addSeconds($durationSeconds),
             ]);
             $items = [];
             foreach ($questions as $index => $question) {
@@ -60,6 +86,9 @@ class PracticeService
     {
         DB::transaction(function () use ($session, $position, $option) {
             $locked = PracticeSession::whereKey($session->id)->lockForUpdate()->firstOrFail();
+            if ($locked->expires_at !== null && $locked->expires_at->isPast()) {
+                throw ValidationException::withMessages(['option' => 'Time is up for this mock. Unanswered questions stay unanswered.']);
+            }
             $item = $locked->items()->where('position', $position)->firstOrFail();
             if ($item->answered_at !== null) {
                 if ($item->selected_option !== $option) {
@@ -80,5 +109,74 @@ class PracticeService
                 'completed_at' => $answered === $locked->total_questions ? now() : null,
             ]);
         }, 3);
+    }
+
+    /**
+     * Close a session that is no longer running. Answers already saved are kept;
+     * unanswered questions stay unanswered and are never scored.
+     */
+    public function close(PracticeSession $session): void
+    {
+        DB::transaction(function () use ($session) {
+            $locked = PracticeSession::whereKey($session->id)->lockForUpdate()->firstOrFail();
+            if ($locked->completed_at === null) {
+                $locked->update(['completed_at' => now()]);
+            }
+        }, 3);
+    }
+
+    /**
+     * The question shown to the student. A mock only reveals the correct answer
+     * once the mock is closed, so the student is not given feedback mid-exam.
+     *
+     * @return array{position: int, body: string, options: array<string, string>, selected_option: string|null, result?: array{is_correct: bool, correct_option: string, explanation: string|null}}
+     */
+    public function question(PracticeSession $session, int $position): array
+    {
+        $item = $session->items()->where('position', $position)->firstOrFail();
+        $snapshot = $item->snapshot;
+        $payload = [
+            'position' => $item->position,
+            'body' => $snapshot['body'],
+            'options' => $snapshot['options'],
+            'selected_option' => $item->selected_option,
+        ];
+        $reveal = $session->mode === PracticeSession::MODE_MOCK ? $session->completed_at !== null : true;
+        if ($reveal && $item->answered_at !== null) {
+            $payload['result'] = [
+                'is_correct' => $item->is_correct,
+                'correct_option' => $snapshot['correct_option'],
+                'explanation' => $snapshot['explanation'],
+            ];
+        }
+
+        return $payload;
+    }
+
+    /** The first unanswered position, or the last position when everything is answered. */
+    public function nextPosition(PracticeSession $session, ?int $after = null): int
+    {
+        $unanswered = $session->items()->whereNull('answered_at')->orderBy('position');
+        if ($after !== null) {
+            $next = (clone $unanswered)->where('position', '>', $after)->value('position');
+            if ($next !== null) {
+                return (int) $next;
+            }
+        }
+        $first = (clone $unanswered)->value('position');
+
+        return $first !== null ? (int) $first : $session->total_questions;
+    }
+
+    /**
+     * Per-question progress for the mock navigator.
+     *
+     * @return list<array{position: int, answered: bool}>
+     */
+    public function navigator(PracticeSession $session): array
+    {
+        return $session->items()->orderBy('position')->get(['position', 'answered_at'])
+            ->map(fn ($item): array => ['position' => $item->position, 'answered' => $item->answered_at !== null])
+            ->all();
     }
 }

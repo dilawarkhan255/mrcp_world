@@ -19,3 +19,35 @@ export interface PracticeQuestion {
     selected_option: string | null;
     result?: { is_correct: boolean; correct_option: string; explanation: string | null };
 }
+export interface MockPreset {
+    title: string;
+    questions: number;
+    minutes: number;
+}
+export interface MockLimits {
+    maxQuestions: number;
+    maxMinutes: number;
+}
+export interface MockAttempt {
+    id: number;
+    total_questions: number;
+    answered_count: number;
+    correct_count: number;
+    completed_at: string | null;
+    started_at: string | null;
+    duration_seconds: number | null;
+}
+export interface MockSession {
+    id: number;
+    total_questions: number;
+    answered_count: number;
+    correct_count: number;
+    completed_at: string | null;
+    started_at: string | null;
+    expires_at: string | null;
+    duration_seconds: number | null;
+}
+export interface NavigatorItem {
+    position: number;
+    answered: boolean;
+}
