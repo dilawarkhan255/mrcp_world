@@ -61,3 +61,28 @@ export interface ReviewItem {
     wrong_count: number;
     last_answered_at: string | null;
 }
+export interface PerformanceSummary {
+    answered: number;
+    correct: number;
+    accuracy: number;
+    sessions: number;
+    completed: number;
+    mocks: number;
+}
+export interface TrendPoint {
+    day: string;
+    answered: number;
+    correct: number;
+}
+export interface CategoryPerformance {
+    id: number;
+    name: string;
+    answered: number;
+    correct: number;
+    accuracy: number;
+}
+export interface WeakQuestion {
+    id: number;
+    body: string;
+    wrong_count: number;
+}
