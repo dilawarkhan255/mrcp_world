@@ -22,3 +22,20 @@ it('redirects admin to /admin after Filament login', function () {
         ->assertHasNoErrors()
         ->assertRedirect('/admin');
 });
+
+it('redirects admin to /admin/login after Filament logout', function () {
+    Filament::setCurrentPanel(Filament::getPanel('admin'));
+    
+    // Login first
+    Livewire::test(Login::class)
+        ->set('data.email', $this->admin->email)
+        ->set('data.password', 'password')
+        ->call('authenticate')
+        ->assertHasNoErrors()
+        ->assertRedirect('/admin');
+    
+    // Now test logout by calling the logout route directly
+    $this->actingAs($this->admin)
+        ->post('/admin/logout')
+        ->assertRedirect('/admin/login');
+});
