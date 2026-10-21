@@ -7,6 +7,7 @@ use App\Models\Question;
 use App\Services\ReviewService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -36,7 +37,9 @@ class ReviewController extends Controller
                     'correct_option' => $question->correct_option,
                     'explanation' => $question->explanation,
                     'wrong_count' => $counts[$question->id] ?? 1,
-                    'last_answered_at' => $lastAnswers[$question->id]['answered_at'] ?? null,
+                    'last_answered_at' => isset($lastAnswers[$question->id]['answered_at'])
+                        ? Carbon::parse($lastAnswers[$question->id]['answered_at'])->toIso8601String()
+                        : null,
                 ])->all(),
                 'current_page' => $queue->currentPage(),
                 'prev_page_url' => $queue->previousPageUrl(),

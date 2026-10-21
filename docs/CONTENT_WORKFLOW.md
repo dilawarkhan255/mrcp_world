@@ -66,6 +66,8 @@ Textbooks, flashcards, bookmarks, activity heatmaps and PDF/Word extraction rema
 - Composite indexes support published questions by exam, category and paper, plus per-user session history. The admin code search is prefix-based. Student lists use simple pagination with 20 records and no total-count pagination query.
 - The review queue reads the newest saved answer per question through one grouped subquery per student and exam, so a large answer history is not scanned per page.
 - Performance aggregates run over the saved answers of one student and exam. Days are grouped in UTC; the MySQL connection is pinned to `+00:00` so the database, PHP and SQLite agree on the day boundary.
+- Grouped queries list every selected column in the GROUP BY clause. SQLite accepts a looser form, but the MySQL/MariaDB server used here runs with `ONLY_FULL_GROUP_BY` and rejects it.
+- The automated tests run on an isolated SQLite database. Check the student pages against the local MySQL database as well before a release, because the two servers do not accept the same SQL.
 - Comment visibility is applied in the query, not in the browser. A thread list is one page of top-level comments for the selected exam with their replies loaded in one query.
 - Session creation loads at most 100 questions; the practice response contains one question. Correct answers are scored under a session row lock.
 - A mock closes on its stored deadline, not on a browser event. The deadline is checked inside the same row lock that scores an answer, so a late submission cannot slip through a concurrent request.
