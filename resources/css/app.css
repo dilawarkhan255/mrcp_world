@@ -80,3 +80,43 @@
         @apply outline outline-2 outline-offset-2 outline-ring;
     }
 }
+
+@layer base {
+    /*
+     | Landing page tokens. Every colour used by the public page comes from
+     | this list, so the palette is changed in one place.
+     */
+    :root {
+        --ink: #0f1b2d;
+        --teal: #0b6e78;
+        --dark-teal: #08515a;
+        --light-teal: #ddf0f1;
+        --amber: #f2a93b;
+        --amber-soft: #e0a44a;
+        --surface: #f4f7fa;
+        --muted-strong: #44546c;
+        --muted-soft: #5b6b82;
+        --track: #e6edf4;
+        --radius-card: 16px;
+        --radius-control: 10px;
+        --tint-teal-bg: #ddf0f1;
+        --tint-teal-fg: #08515a;
+        --tint-amber-bg: #fdf0dc;
+        --tint-amber-fg: #7a5411;
+        --tint-indigo-bg: #e7eafa;
+        --tint-indigo-fg: #3b4a8c;
+        --tint-plum-bg: #f6e6f0;
+        --tint-plum-fg: #7a3c63;
+    }
+}
+
+@layer components {
+    .landing-card {
+        @apply rounded-[16px] border bg-card;
+        border-color: var(--border);
+    }
+    .landing-control {
+        @apply rounded-[10px] border bg-background;
+        border-color: var(--border);
+    }
+}

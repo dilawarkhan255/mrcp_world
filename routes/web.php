@@ -3,16 +3,33 @@
 use App\Http\Controllers\BookmarkController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ExamDemoController;
+use App\Http\Controllers\LandingController;
 use App\Http\Controllers\MockExamController;
 use App\Http\Controllers\PerformanceController;
 use App\Http\Controllers\PracticeController;
 use App\Http\Controllers\QuestionTemplateController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\SelectExamController;
+use App\Http\Controllers\SitemapController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-Route::get('/', fn () => Inertia::render('Welcome'))->name('home');
+Route::get('/', [LandingController::class, 'index'])->name('home');
+Route::get('/exams/{slug}/demo', [ExamDemoController::class, 'show'])->name('landing.demo');
+Route::get('/terms', fn () => Inertia::render('Legal/Terms', ['appName' => (string) config('app.name')]))->name('legal.terms');
+Route::get('/privacy', fn () => Inertia::render('Legal/Privacy', ['appName' => (string) config('app.name')]))->name('legal.privacy');
+Route::get('/contact', fn () => Inertia::render('Legal/Page', [
+    'appName' => (string) config('app.name'),
+    'title' => 'Contact',
+    'intro' => 'How to reach the team behind MRCP World.',
+]))->name('contact');
+Route::get('/cookie-settings', fn () => Inertia::render('Legal/Page', [
+    'appName' => (string) config('app.name'),
+    'title' => 'Cookie settings',
+    'intro' => 'The cookies this site uses and how to change your choices.',
+]))->name('cookie-settings');
+Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
     Route::post('/exam', SelectExamController::class)->name('exam.select');

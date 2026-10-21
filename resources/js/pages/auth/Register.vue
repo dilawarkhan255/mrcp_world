@@ -8,6 +8,11 @@ import AuthBase from '@/layouts/AuthLayout.vue';
 import { Head, useForm } from '@inertiajs/vue3';
 import { LoaderCircle } from 'lucide-vue-next';
 
+const props = defineProps<{
+    selectedExam?: { name: string; slug: string } | null;
+    selectedPlan?: { name: string; price: string } | null;
+}>();
+
 const form = useForm({
     name: '',
     email: '',
@@ -25,6 +30,11 @@ const submit = () => {
 <template>
     <AuthBase title="Create an account" description="Enter your details below to create your account">
         <Head title="Register" />
+
+        <div v-if="selectedExam || selectedPlan" class="mb-6 rounded-lg border bg-muted/40 p-4 text-sm">
+            <p v-if="selectedExam" class="font-medium">You are registering for {{ selectedExam.name }}.</p>
+            <p v-if="selectedPlan" class="font-medium">Plan: {{ selectedPlan.name }} · {{ selectedPlan.price }}</p>
+        </div>
 
         <form @submit.prevent="submit" class="flex flex-col gap-6">
             <div class="grid gap-6">

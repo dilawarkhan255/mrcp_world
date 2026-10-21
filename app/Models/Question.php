@@ -14,7 +14,7 @@ class Question extends Model
     use SoftDeletes;
 
     /** @var list<string> */
-    protected $fillable = ['exam_id', 'category_id', 'past_paper_id', 'code', 'body', 'options', 'correct_option', 'explanation', 'is_published'];
+    protected $fillable = ['exam_id', 'category_id', 'past_paper_id', 'code', 'body', 'options', 'correct_option', 'explanation', 'is_published', 'is_demo', 'is_sample', 'difficulty'];
 
     /** @var list<string> */
     protected $hidden = ['correct_option', 'explanation'];
@@ -22,7 +22,7 @@ class Question extends Model
     /** @return array<string, string> */
     protected function casts(): array
     {
-        return ['options' => 'array', 'is_published' => 'boolean'];
+        return ['options' => 'array', 'is_published' => 'boolean', 'is_demo' => 'boolean', 'is_sample' => 'boolean', 'difficulty' => 'integer'];
     }
 
     protected static function booted(): void

@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\Exam;
+use App\Models\Plan;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
@@ -20,9 +22,15 @@ class RegisteredUserController extends Controller
     /**
      * Show the registration page.
      */
-    public function create(): Response
+    public function create(Request $request): Response
     {
-        return Inertia::render('auth/Register');
+        $exam = Exam::where('slug', $request->string('exam')->toString())->where('is_active', true)->first();
+        $plan = Plan::where('id', $request->integer('plan'))->where('is_active', true)->first();
+
+        return Inertia::render('auth/Register', [
+            'selectedExam' => $exam?->only(['name', 'slug']),
+            'selectedPlan' => $plan === null ? null : ['name' => $plan->name, 'price' => $plan->priceLabel()],
+        ]);
     }
 
     /**
