@@ -22,16 +22,20 @@ export interface Exam {
     name: string;
     slug: string;
 }
-export interface NavigationGroup {
+/** A node of the student sidebar, as defined in config/student.php. */
+export interface NavNode {
     title: string;
-    icon: string;
-    items: { title: string; href: string }[];
+    icon?: string;
+    href?: string | null;
+    /** Extra paths that keep this node active. */
+    match?: string[];
+    children?: NavNode[];
 }
 export interface SharedData {
     [key: string]: unknown;
     exams: Exam[];
     currentExam: Exam | null;
-    navigation: NavigationGroup[];
+    navigation: NavNode[];
     name: string;
     quote: { message: string; author: string };
     auth: Auth;

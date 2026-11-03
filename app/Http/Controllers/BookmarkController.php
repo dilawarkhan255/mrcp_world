@@ -20,12 +20,28 @@ class BookmarkController extends Controller
 
     public function index(Request $request, BookmarkService $bookmarks): Response
     {
+        return $this->list($request, $bookmarks, notesOnly: false);
+    }
+
+    /** The bookmarks that have a note: the same page, filtered. */
+    public function notes(Request $request, BookmarkService $bookmarks): Response
+    {
+        return $this->list($request, $bookmarks, notesOnly: true);
+    }
+
+    private function list(Request $request, BookmarkService $bookmarks, bool $notesOnly): Response
+    {
         $exam = $this->exam($request);
         $userId = (int) $request->user()?->id;
-        $list = $bookmarks->bookmarks($userId, $exam->id)->simplePaginate(20)->withQueryString();
+        $query = $bookmarks->bookmarks($userId, $exam->id);
+        if ($notesOnly) {
+            $query->whereNotNull('note');
+        }
+        $list = $query->simplePaginate(20)->withQueryString();
 
         return Inertia::render('revision/Bookmarks', [
             'exam' => $exam->only(['id', 'name']),
+            'notesOnly' => $notesOnly,
             'bookmarks' => [
                 'data' => $list->getCollection()->map(fn (Bookmark $bookmark): array => [
                     'id' => $bookmark->id,

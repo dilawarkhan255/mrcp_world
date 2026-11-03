@@ -4,7 +4,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import type { SharedData } from '@/types';
 import type { TrendPoint } from '@/types/practice';
 import { Head, Link, usePage } from '@inertiajs/vue3';
-import { ArrowUpRight, BookOpen, Brain, CalendarDays, CheckCircle2, ListChecks, ListTodo, Target } from 'lucide-vue-next';
+import { ArrowUpRight, BookOpen, CalendarDays, CheckCircle2, ListChecks, ListTodo, Target } from 'lucide-vue-next';
 import { computed } from 'vue';
 const props = defineProps<{ stats: { answered: number; correct: number; sessions: number; completed: number }; trend: TrendPoint[] }>();
 const page = usePage<SharedData>();
@@ -27,23 +27,16 @@ const tools = [
     },
     {
         title: 'Textbooks',
-        href: '/textbooks/high-yield',
+        href: '/textbooks',
         icon: BookOpen,
         description: 'Make room for the concepts that matter.',
         label: 'Explore textbooks',
     },
-    {
-        title: 'Knowledge tutor',
-        href: '/tutor/flashcards',
-        icon: Brain,
-        description: 'Keep key facts fresh with regular recall.',
-        label: 'Review your knowledge',
-    },
 ];
 </script>
 <template>
-    <Head title="Home" />
-    <AppLayout :breadcrumbs="[{ title: 'Home', href: '/dashboard' }]">
+    <Head title="Dashboard" />
+    <AppLayout :breadcrumbs="[{ title: 'Dashboard', href: '/dashboard' }]">
         <div class="mx-auto w-full max-w-7xl space-y-8 p-5 md:p-8 lg:p-10">
             <section class="flex flex-wrap items-end justify-between gap-4">
                 <div>
@@ -113,7 +106,7 @@ const tools = [
                     <h2 class="text-lg font-semibold">Make time for your next step</h2>
                     <span class="hidden text-xs text-muted-foreground sm:block">Your revision toolkit</span>
                 </div>
-                <div class="grid gap-5 lg:grid-cols-3">
+                <div class="grid gap-5 lg:grid-cols-2">
                     <Link
                         v-for="tool in tools"
                         :key="tool.title"
@@ -137,8 +130,7 @@ const tools = [
                 </div>
             </section>
             <p class="text-xs text-muted-foreground">
-                Question practice, saved sessions, mock exams and performance reporting are available. Textbooks and the knowledge tutor are coming
-                later.
+                Question practice, saved sessions, mock exams and performance reporting are available. Textbooks are coming later.
             </p>
         </div>
     </AppLayout>

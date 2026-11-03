@@ -27,8 +27,10 @@ class PracticeController extends Controller
 
         return Inertia::render('questions/Bank', [
             'exam' => $exam->only(['id', 'name']),
-            'categories' => Category::where('exam_id', $exam->id)->withCount(['questions' => fn ($query) => $query->published()])->orderBy('name')->simplePaginate(20)->withQueryString(),
-            'availableQuestions' => $practice->questions($exam->id)->count(),
+            'categories' => Category::where('exam_id', $exam->id)
+                ->withCount(['questions' => fn ($query) => $query->published()->whereNull('past_paper_id')])
+                ->orderBy('name')->simplePaginate(20)->withQueryString(),
+            'availableQuestions' => $practice->questions($exam->id, source: PracticeService::SOURCE_MAIN)->count(),
         ]);
     }
 
@@ -38,6 +40,9 @@ class PracticeController extends Controller
 
         return Inertia::render('questions/Papers', [
             'exam' => $exam->only(['id', 'name']),
+            'subjects' => Category::where('exam_id', $exam->id)
+                ->withCount(['questions' => fn ($query) => $query->published()->whereNotNull('past_paper_id')])
+                ->orderBy('name')->simplePaginate(20, ['*'], 'subjects')->withQueryString(),
             'papers' => PastPaper::where('exam_id', $exam->id)->where('is_published', true)->withCount(['questions' => fn ($query) => $query->published()])->orderByDesc('year')->orderByDesc('id')->simplePaginate(20)->withQueryString(),
         ]);
     }
@@ -49,10 +54,18 @@ class PracticeController extends Controller
             'count' => ['required', 'integer', 'min:1', 'max:100'],
             'category_id' => ['nullable', 'integer', Rule::exists('categories', 'id')->where('exam_id', $exam->id)],
             'past_paper_id' => ['nullable', 'integer', Rule::exists('past_papers', 'id')->where('exam_id', $exam->id)->where('is_published', true)],
+            'source' => ['nullable', 'string', Rule::in([PracticeService::SOURCE_MAIN, PracticeService::SOURCE_PAST])],
         ]);
         /** @var User $user */
         $user = $request->user();
-        $session = $practice->start($user, $exam, (int) $data['count'], isset($data['category_id']) ? (int) $data['category_id'] : null, isset($data['past_paper_id']) ? (int) $data['past_paper_id'] : null);
+        $session = $practice->start(
+            $user,
+            $exam,
+            (int) $data['count'],
+            isset($data['category_id']) ? (int) $data['category_id'] : null,
+            isset($data['past_paper_id']) ? (int) $data['past_paper_id'] : null,
+            source: $data['source'] ?? null,
+        );
 
         return redirect()->route('practice.show', $session);
     }

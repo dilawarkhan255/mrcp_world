@@ -4,14 +4,18 @@ use App\Http\Controllers\BookmarkController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExamDemoController;
+use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\MockExamController;
 use App\Http\Controllers\PerformanceController;
 use App\Http\Controllers\PracticeController;
 use App\Http\Controllers\QuestionTemplateController;
 use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\SearchController;
 use App\Http\Controllers\SelectExamController;
 use App\Http\Controllers\SitemapController;
+use App\Http\Controllers\SubjectController;
+use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\UserTableController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -40,6 +44,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/exam', SelectExamController::class)->name('exam.select');
     Route::get('/questions/bank', [PracticeController::class, 'bank'])->name('questions.bank');
     Route::get('/questions/past-papers', [PracticeController::class, 'papers'])->name('questions.papers');
+    Route::get('/questions/subjects/{slug}', [SubjectController::class, 'main'])->where('slug', '[a-z0-9-]+')->name('subjects.main');
+    Route::get('/questions/subjects/{slug}/past-papers', [SubjectController::class, 'past'])->where('slug', '[a-z0-9-]+')->name('subjects.past');
     Route::get('/questions/sessions', [PracticeController::class, 'index'])->name('practice.index');
     Route::post('/questions/sessions', [PracticeController::class, 'store'])->middleware('throttle:10,1')->name('practice.store');
     Route::get('/questions/sessions/{session}', [PracticeController::class, 'show'])->name('practice.show');
@@ -56,19 +62,21 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/questions/comments', [CommentController::class, 'store'])->middleware('throttle:20,1')->name('comments.store');
     Route::post('/questions/comments/{comment}/reply', [CommentController::class, 'reply'])->middleware('throttle:20,1')->name('comments.reply');
     Route::post('/questions/comments/{comment}/moderate', [CommentController::class, 'moderate'])->middleware('throttle:30,1')->name('comments.moderate');
+    Route::get('/questions/search', [SearchController::class, 'index'])->middleware('throttle:60,1')->name('search.index');
+    Route::post('/questions/search/practice', [SearchController::class, 'practice'])->middleware('throttle:10,1')->name('search.practice');
+    Route::get('/revision/notes', [BookmarkController::class, 'notes'])->name('bookmarks.notes');
     Route::get('/revision/bookmarks', [BookmarkController::class, 'index'])->name('bookmarks.index');
     Route::post('/revision/bookmarks', [BookmarkController::class, 'store'])->middleware('throttle:30,1')->name('bookmarks.store');
     Route::patch('/revision/bookmarks/{bookmark}', [BookmarkController::class, 'update'])->name('bookmarks.update');
     Route::delete('/revision/bookmarks/{bookmark}', [BookmarkController::class, 'destroy'])->name('bookmarks.destroy');
     Route::post('/revision/bookmarks/practice', [BookmarkController::class, 'practice'])->middleware('throttle:10,1')->name('bookmarks.practice');
+    Route::get('/subscription', [SubscriptionController::class, 'index'])->name('subscription.index');
+    Route::get('/feedback', [FeedbackController::class, 'index'])->name('feedback.index');
+    Route::post('/feedback', [FeedbackController::class, 'store'])->middleware('throttle:5,1')->name('feedback.store');
     Route::get('/admin/mcq-template', QuestionTemplateController::class)->name('imports.template');
     Route::get('/admin/users/data', UserTableController::class)->name('admin.users.data');
-    foreach (config('student.groups') as $group) {
-        foreach ($group['items'] as $item) {
-            if (! in_array($item['href'], ['/dashboard', '/questions/bank', '/questions/sessions', '/questions/past-papers', '/questions/mocks', '/questions/review', '/questions/performance', '/questions/comments', '/revision/bookmarks'])) {
-                Route::get($item['href'], fn () => Inertia::render('Placeholder', $item));
-            }
-        }
+    foreach (config('student.placeholders') as $href => $title) {
+        Route::get($href, fn () => Inertia::render('Placeholder', ['title' => $title, 'href' => $href]));
     }
 });
 

@@ -17,8 +17,8 @@ function selectExam(examId: number) {
             ><DropdownMenu>
                 <DropdownMenuTrigger as-child
                     ><SidebarMenuButton size="lg" :tooltip="page.props.currentExam?.name || 'Choose exam'"
-                        ><GraduationCap class="text-primary" /><span class="grid text-left"
-                            ><span class="text-[10px] uppercase tracking-wider text-muted-foreground">Your exam</span
+                        ><GraduationCap class="text-sidebar-primary" /><span class="grid text-left group-data-[collapsible=icon]:hidden"
+                            ><span class="text-[10px] uppercase tracking-wider text-white/75">Your exam</span
                             ><span class="truncate text-xs font-semibold">{{ page.props.currentExam?.name || 'Choose exam' }}</span></span
                         ></SidebarMenuButton
                     ></DropdownMenuTrigger

@@ -19,12 +19,20 @@ class PracticeService
 
     public const MAX_DURATION_SECONDS = 10800;
 
+    /** Main MCQ bank: questions that do not belong to a past paper. */
+    public const SOURCE_MAIN = 'main';
+
+    /** Past paper MCQs: questions that belong to a past paper. */
+    public const SOURCE_PAST = 'past';
+
     /** @return Builder<Question> */
-    public function questions(int $examId, ?int $categoryId = null, ?int $paperId = null): Builder
+    public function questions(int $examId, ?int $categoryId = null, ?int $paperId = null, ?string $source = null): Builder
     {
         return Question::published()->where('exam_id', $examId)
             ->when($categoryId, fn (Builder $query) => $query->where('category_id', $categoryId))
-            ->when($paperId, fn (Builder $query) => $query->where('past_paper_id', $paperId));
+            ->when($paperId, fn (Builder $query) => $query->where('past_paper_id', $paperId))
+            ->when($source === self::SOURCE_MAIN, fn (Builder $query) => $query->whereNull('past_paper_id'))
+            ->when($source === self::SOURCE_PAST, fn (Builder $query) => $query->whereNotNull('past_paper_id'));
     }
 
     /**
@@ -39,6 +47,7 @@ class PracticeService
         string $mode = PracticeSession::MODE_PRACTICE,
         ?int $durationSeconds = null,
         ?array $questionIds = null,
+        ?string $source = null,
     ): PracticeSession {
         if ($limit < 1 || $limit > self::MAX_QUESTIONS) {
             throw ValidationException::withMessages(['count' => 'Choose 1–100 questions.']);
@@ -47,8 +56,8 @@ class PracticeService
             throw ValidationException::withMessages(['minutes' => 'Choose a duration between 1 and 180 minutes.']);
         }
 
-        return DB::transaction(function () use ($user, $exam, $limit, $categoryId, $paperId, $mode, $durationSeconds, $questionIds) {
-            $base = $this->questions($exam->id, $categoryId, $paperId);
+        return DB::transaction(function () use ($user, $exam, $limit, $categoryId, $paperId, $mode, $durationSeconds, $questionIds, $source) {
+            $base = $this->questions($exam->id, $categoryId, $paperId, $source);
             if ($questionIds !== null) {
                 $base = $base->whereIn('id', $questionIds);
             }

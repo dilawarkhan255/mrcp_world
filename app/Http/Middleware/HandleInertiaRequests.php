@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\Exam;
+use App\Support\StudentNavigation;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -26,7 +27,7 @@ class HandleInertiaRequests extends Middleware
             ],
             'exams' => $exams,
             'currentExam' => $current,
-            'navigation' => $request->user() ? config('student.groups') : [],
+            'navigation' => fn () => $request->user() ? StudentNavigation::for($current) : [],
         ];
     }
 }

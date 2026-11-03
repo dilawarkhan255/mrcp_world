@@ -5,6 +5,7 @@ use App\Filament\Resources\ExamResource\Pages\ManageExams;
 use App\Models\Category;
 use App\Models\Exam;
 use App\Models\User;
+use App\Support\StudentNavigation;
 use Database\Seeders\ExamSeeder;
 use Database\Seeders\RoleSeeder;
 use Filament\Facades\Filament;
@@ -36,10 +37,8 @@ it('protects exam selection and all student placeholders', function () {
     $this->post('/exam', ['exam_id' => Exam::first()->id])->assertRedirect('/login');
     $this->actingAs(User::factory()->unverified()->create())->get('/questions/bank')->assertRedirect('/verify-email');
     $this->actingAs(User::factory()->create());
-    foreach (config('student.groups') as $group) {
-        foreach ($group['items'] as $item) {
-            $this->get($item['href'])->assertOk();
-        }
+    foreach (StudentNavigation::staticHrefs() as $href) {
+        $this->get($href)->assertOk();
     }
 });
 

@@ -4,14 +4,17 @@ import SimplePagination from '@/components/SimplePagination.vue';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { BookmarkItem } from '@/types/practice';
-import { Head, useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
-defineProps<{
+import { Head, Link, useForm } from '@inertiajs/vue3';
+import { computed, ref } from 'vue';
+const props = defineProps<{
     exam: { id: number; name: string };
     bookmarks: { data: BookmarkItem[]; current_page: number; prev_page_url: string | null; next_page_url: string | null };
     stats: { total: number; withNotes: number };
     maxQuestions: number;
+    notesOnly: boolean;
 }>();
+const pageTitle = computed(() => (props.notesOnly ? 'My notes' : 'Bookmarks and notes'));
+const pageHref = computed(() => (props.notesOnly ? '/revision/notes' : '/revision/bookmarks'));
 const editing = ref<number | null>(null);
 const note = useForm<{ id: number; note: string }>({ id: 0, note: '' });
 const practiceForm = useForm<{ question_ids: string }>({ question_ids: '' });
@@ -29,16 +32,32 @@ function remove(bookmark: BookmarkItem) {
 }
 </script>
 <template>
-    <Head title="Bookmarks and notes" />
-    <AppLayout :breadcrumbs="[{ title: 'Bookmarks and notes', href: '/revision/bookmarks' }]">
+    <Head :title="pageTitle" />
+    <AppLayout :breadcrumbs="[{ title: pageTitle, href: pageHref }]">
         <div class="mx-auto w-full max-w-4xl space-y-6 p-6 md:p-10">
             <div>
                 <p class="text-sm font-semibold text-primary">{{ exam.name }}</p>
-                <h1 class="mt-2 text-3xl font-semibold">Bookmarks and notes</h1>
+                <h1 class="mt-2 text-3xl font-semibold">{{ pageTitle }}</h1>
                 <p class="mt-3 text-sm text-muted-foreground">
                     {{ stats.total }} saved questions, {{ stats.withNotes }} with a note. Bookmark a question while you practise to keep it here.
                 </p>
             </div>
+            <nav class="flex gap-2 border-b" aria-label="My revision">
+                <Link
+                    href="/revision/notes"
+                    :aria-current="notesOnly ? 'page' : undefined"
+                    class="-mb-px border-b-2 px-4 py-2 text-sm font-semibold"
+                    :class="notesOnly ? 'border-primary text-primary' : 'border-transparent text-muted-foreground'"
+                    >Notes ({{ stats.withNotes }})</Link
+                >
+                <Link
+                    href="/revision/bookmarks"
+                    :aria-current="!notesOnly ? 'page' : undefined"
+                    class="-mb-px border-b-2 px-4 py-2 text-sm font-semibold"
+                    :class="!notesOnly ? 'border-primary text-primary' : 'border-transparent text-muted-foreground'"
+                    >All bookmarks ({{ stats.total }})</Link
+                >
+            </nav>
             <div class="flex flex-wrap items-center gap-3 rounded-xl border bg-card p-5">
                 <Button :disabled="practiceForm.processing || !stats.total" @click="practiceForm.post('/revision/bookmarks/practice')">
                     Practise bookmarks
@@ -48,7 +67,11 @@ function remove(bookmark: BookmarkItem) {
                 </p>
                 <InputError :message="practiceForm.errors.question_ids" />
             </div>
-            <div v-if="!bookmarks.data.length" class="rounded-xl border border-dashed p-8 text-center">
+            <div v-if="!bookmarks.data.length && notesOnly" class="rounded-xl border border-dashed p-8 text-center">
+                <h2 class="font-semibold">No notes yet</h2>
+                <p class="mt-2 text-sm text-muted-foreground">Add a note to a bookmarked question and it will appear here.</p>
+            </div>
+            <div v-else-if="!bookmarks.data.length" class="rounded-xl border border-dashed p-8 text-center">
                 <h2 class="font-semibold">No bookmarks yet</h2>
                 <p class="mt-2 text-sm text-muted-foreground">Save a question from any practice session and it will appear here.</p>
             </div>
