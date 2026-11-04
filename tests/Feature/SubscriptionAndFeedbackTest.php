@@ -28,7 +28,7 @@ it('lists each Qbank with its active plans', function () {
             ->component('Subscription')
             ->has('qbanks', 2)
             ->where('qbanks.0.name', 'MRCPWorld 1 Qbank')
-            ->where('qbanks.0.exams', ['MRCP 1 UK/Irish', 'IMM'])
+            ->where('qbanks.0.exams', ['MRCP 1', 'IMM'])
             ->where('qbanks.0.is_selected', true)
             ->where('qbanks.0.has_access', false)
             ->has('qbanks.0.plans', 1)

@@ -5,10 +5,19 @@ import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { PageSlice } from '@/types/practice';
 import { Head, Link, useForm } from '@inertiajs/vue3';
+import { FileClock, ListChecks, Play } from 'lucide-vue-next';
 defineProps<{
     exam: { id: number; name: string };
     subjects: PageSlice<{ id: number; name: string; slug: string; questions_count: number }>;
-    papers: PageSlice<{ id: number; title: string; year: number; questions_count: number }>;
+    papers: PageSlice<{
+        id: number;
+        title: string;
+        year: number;
+        sitting: string | null;
+        description: string | null;
+        image_url: string | null;
+        questions_count: number;
+    }>;
 }>();
 const form = useForm<{ count: number; category_id: number | null; past_paper_id: number | null; source: 'past' | null }>({
     count: 50,
@@ -78,11 +87,32 @@ function startSubject(categoryId: number) {
                     No published past papers yet.
                 </div>
                 <div class="grid gap-4 md:grid-cols-2">
-                    <section v-for="paper in papers.data" :key="paper.id" class="rounded-xl border bg-card p-6">
-                        <p class="text-sm font-semibold text-primary">{{ paper.year }}</p>
-                        <h3 class="mt-2 text-lg font-semibold">{{ paper.title }}</h3>
-                        <p class="my-4 text-sm text-muted-foreground">{{ paper.questions_count }} published questions</p>
-                        <Button :disabled="form.processing || !paper.questions_count" @click="start(paper.id)">Start paper practice</Button>
+                    <section v-for="paper in papers.data" :key="paper.id" class="flex overflow-hidden rounded-xl border bg-card shadow-sm">
+                        <div class="relative hidden w-36 shrink-0 bg-muted sm:block">
+                            <img
+                                v-if="paper.image_url"
+                                :src="paper.image_url"
+                                :alt="paper.title"
+                                loading="lazy"
+                                class="absolute inset-0 h-full w-full object-cover"
+                            />
+                            <div v-else class="flex h-full items-center justify-center">
+                                <FileClock class="size-10 text-muted-foreground/60" aria-hidden="true" />
+                            </div>
+                        </div>
+                        <div class="flex flex-1 flex-col p-5">
+                            <p class="text-xs font-semibold uppercase tracking-wider text-primary">
+                                {{ paper.sitting ? paper.sitting + ' ' : '' }}{{ paper.year }}
+                            </p>
+                            <h3 class="mt-1 text-lg font-semibold">{{ paper.title }}</h3>
+                            <p v-if="paper.description" class="mt-2 line-clamp-3 text-sm text-muted-foreground">{{ paper.description }}</p>
+                            <p class="mb-4 mt-2 flex items-center gap-1.5 text-sm text-muted-foreground">
+                                <ListChecks class="size-4" aria-hidden="true" />{{ paper.questions_count }} published questions
+                            </p>
+                            <Button class="mt-auto w-fit" :disabled="form.processing || !paper.questions_count" @click="start(paper.id)"
+                                ><Play class="size-4" aria-hidden="true" />Start paper practice</Button
+                            >
+                        </div>
                     </section>
                 </div>
                 <SimplePagination :previous="papers.prev_page_url" :next="papers.next_page_url" :page="papers.current_page" />

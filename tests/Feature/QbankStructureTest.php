@@ -54,7 +54,7 @@ it('stores a session started from IMM against the shared MRCP 1 bank', function 
 
 it('counts the shared bank on the landing page for an exam without its own content', function () {
     $this->get('/')->assertInertia(fn (Assert $page) => $page
-        ->where('exams.0.name', 'MRCP 1 UK/Irish')->where('exams.0.question_count', 3)
+        ->where('exams.0.name', 'MRCP 1')->where('exams.0.question_count', 3)
         ->where('exams.1.name', 'IMM')->where('exams.1.question_count', 3));
 });
 

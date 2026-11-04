@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Exam;
 use App\Models\Plan;
 use App\Models\Qbank;
 use App\Models\User;
@@ -66,4 +67,21 @@ it('does not protect content staff and can be switched off', function () {
 it('protects the public demo without a watermark', function () {
     $this->get('/exams/mrcp-part-1/demo')->assertInertia(fn (Assert $page) => $page
         ->where('protection.enabled', true)->where('protection.watermark', null));
+});
+
+it('has a login link per exam that opens that exam after logging in', function () {
+    $mrcp2 = Exam::where('slug', 'mrcp-part-2-written')->firstOrFail();
+    $this->get('/login?exam=mrcp-part-2-written')->assertInertia(fn (Assert $page) => $page
+        ->component('auth/Login')->where('exam', ['name' => 'MRCP 2', 'slug' => 'mrcp-part-2-written']));
+
+    $student = User::factory()->create();
+    $this->post('/login', ['email' => $student->email, 'password' => 'password', 'exam' => 'mrcp-part-2-written'])
+        ->assertRedirect('/dashboard')->assertSessionHas('exam_id', $mrcp2->id);
+    $this->get('/dashboard')->assertInertia(fn (Assert $page) => $page->where('currentExam.name', 'MRCP 2'));
+});
+
+it('ignores an unknown exam on the login link', function () {
+    $this->get('/login?exam=nope')->assertInertia(fn (Assert $page) => $page->where('exam', null));
+    $student = User::factory()->create();
+    $this->post('/login', ['email' => $student->email, 'password' => 'password', 'exam' => 'nope'])->assertSessionMissing('exam_id');
 });

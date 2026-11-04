@@ -3,66 +3,72 @@
 @tailwind utilities;
 
 @layer base {
+    /*
+     | Brand colours from the MRCPWorld logo: navy (the word "World") for
+     | buttons and links, the logo's cyan in dark mode, and the rainbow of the
+     | "M" as an accent (see .brand-rainbow).
+     */
     :root {
-        --ink: #0f1b2d;
-        --teal: #0b6e78;
-        --light-teal: #ddf0f1;
-        --amber: #f2a93b;
-        --background: 210 37.5% 96.863%;
-        --foreground: 216 50% 11.765%;
+        --ink: #0b2a6f;
+        --teal: #0b2a6f;
+        --light-teal: #e8edf8;
+        --amber: #f5a524;
+        --background: 220 40% 97%;
+        --foreground: 222 60% 14%;
         --card: 0 0% 100%;
-        --card-foreground: 216 50% 11.765%;
+        --card-foreground: 222 60% 14%;
         --popover: 0 0% 100%;
-        --popover-foreground: 216 50% 11.765%;
-        --primary: 185.505 83.206% 25.686%;
+        --popover-foreground: 222 60% 14%;
+        --primary: 222 82% 24%;
         --primary-foreground: 0 0% 100%;
-        --secondary: 183 41.667% 90.588%;
-        --secondary-foreground: 185.505 83.206% 25.686%;
-        --muted: 210 37.5% 96.863%;
-        --muted-foreground: 215 18% 43%;
-        --accent: 183 41.667% 90.588%;
-        --accent-foreground: 185.505 83.206% 25.686%;
+        --secondary: 222 55% 94%;
+        --secondary-foreground: 222 82% 24%;
+        --muted: 216 40% 95%;
+        --muted-foreground: 218 18% 42%;
+        --accent: 222 55% 94%;
+        --accent-foreground: 222 82% 24%;
         --destructive: 0 72% 45%;
         --destructive-foreground: 0 0% 100%;
-        --border: 211.579 33.333% 88.824%;
-        --input: 211.579 33.333% 88.824%;
-        --ring: 185.505 83.206% 25.686%;
+        --border: 216 32% 88%;
+        --input: 216 32% 88%;
+        --ring: 222 82% 24%;
         --radius: 0.75rem;
         --sidebar-background: 0 0% 100%;
-        --sidebar-foreground: 216 50% 11.765%;
-        --sidebar-primary: 185.505 83.206% 25.686%;
+        --sidebar-foreground: 222 60% 14%;
+        --sidebar-primary: 222 82% 24%;
         --sidebar-primary-foreground: 0 0% 100%;
-        --sidebar-accent: 183 41.667% 90.588%;
-        --sidebar-accent-foreground: 185.505 83.206% 25.686%;
-        --sidebar-border: 211.579 33.333% 88.824%;
-        --sidebar-ring: 185.505 83.206% 25.686%;
+        --sidebar-accent: 222 55% 94%;
+        --sidebar-accent-foreground: 222 82% 24%;
+        --sidebar-border: 216 32% 88%;
+        --sidebar-ring: 222 82% 24%;
+        --brand-rainbow: linear-gradient(90deg, #f28c28 0%, #f5c518 22%, #2dbe4e 45%, #1bb8d6 68%, #1e6fd9 85%, #5b3fc4 100%);
     }
     .dark {
-        --background: 216 50% 11.765%;
-        --foreground: 210 30% 96%;
-        --card: 215 42% 15%;
-        --card-foreground: 210 30% 96%;
-        --popover: 215 42% 15%;
-        --popover-foreground: 210 30% 96%;
-        --primary: 185 55% 57%;
-        --primary-foreground: 216 50% 11.765%;
-        --secondary: 185 35% 22%;
-        --secondary-foreground: 183 41.667% 90.588%;
-        --muted: 215 32% 19%;
-        --muted-foreground: 215 20% 70%;
-        --accent: 185 35% 22%;
-        --accent-foreground: 183 41.667% 90.588%;
-        --border: 215 28% 26%;
-        --input: 215 28% 26%;
-        --ring: 185 55% 57%;
-        --sidebar-background: 215 45% 12%;
-        --sidebar-foreground: 210 30% 96%;
-        --sidebar-primary: 185 55% 57%;
-        --sidebar-primary-foreground: 216 50% 11.765%;
-        --sidebar-accent: 185 35% 22%;
-        --sidebar-accent-foreground: 183 41.667% 90.588%;
-        --sidebar-border: 215 28% 26%;
-        --sidebar-ring: 185 55% 57%;
+        --background: 224 50% 9%;
+        --foreground: 216 40% 95%;
+        --card: 223 44% 13%;
+        --card-foreground: 216 40% 95%;
+        --popover: 223 44% 13%;
+        --popover-foreground: 216 40% 95%;
+        --primary: 190 78% 47%;
+        --primary-foreground: 224 50% 9%;
+        --secondary: 220 45% 20%;
+        --secondary-foreground: 216 82% 92%;
+        --muted: 222 36% 17%;
+        --muted-foreground: 216 20% 70%;
+        --accent: 220 45% 20%;
+        --accent-foreground: 216 82% 92%;
+        --border: 222 30% 23%;
+        --input: 222 30% 23%;
+        --ring: 190 78% 47%;
+        --sidebar-background: 224 50% 11%;
+        --sidebar-foreground: 216 40% 95%;
+        --sidebar-primary: 190 78% 47%;
+        --sidebar-primary-foreground: 224 50% 9%;
+        --sidebar-accent: 220 45% 20%;
+        --sidebar-accent-foreground: 216 82% 92%;
+        --sidebar-border: 222 30% 23%;
+        --sidebar-ring: 190 78% 47%;
     }
     * {
         @apply border-border;
@@ -87,26 +93,26 @@
      | this list, so the palette is changed in one place.
      */
     :root {
-        --ink: #0f1b2d;
-        --teal: #0b6e78;
-        --dark-teal: #08515a;
-        --light-teal: #ddf0f1;
-        --amber: #f2a93b;
-        --amber-soft: #e0a44a;
+        --ink: #0b2a6f;
+        --teal: #0b2a6f;
+        --dark-teal: #071c4d;
+        --light-teal: #e8edf8;
+        --amber: #f5a524;
+        --amber-soft: #e0952a;
         --surface: #f4f7fa;
         --muted-strong: #44546c;
         --muted-soft: #5b6b82;
         --track: #e6edf4;
         --radius-card: 16px;
         --radius-control: 10px;
-        --tint-teal-bg: #ddf0f1;
-        --tint-teal-fg: #08515a;
-        --tint-amber-bg: #fdf0dc;
-        --tint-amber-fg: #7a5411;
-        --tint-indigo-bg: #e7eafa;
-        --tint-indigo-fg: #3b4a8c;
-        --tint-plum-bg: #f6e6f0;
-        --tint-plum-fg: #7a3c63;
+        --tint-teal-bg: #ddf4f9;
+        --tint-teal-fg: #0b6377;
+        --tint-amber-bg: #fdeedd;
+        --tint-amber-fg: #8a4307;
+        --tint-indigo-bg: #e2f5e7;
+        --tint-indigo-fg: #1d6a34;
+        --tint-plum-bg: #ece8fb;
+        --tint-plum-fg: #4b32a8;
     }
 }
 
@@ -193,5 +199,72 @@
             padding: 2rem;
             font-size: 14pt;
         }
+    }
+}
+
+@layer components {
+    /* The rainbow of the logo's "M", used only as a thin accent line. */
+    .brand-rainbow {
+        background-image: var(--brand-rainbow);
+    }
+    .brand-rainbow-text {
+        background-image: var(--brand-rainbow);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+    }
+}
+
+/* Yajra data tables (components/YajraTable.vue) in the app's colours, light and dark. */
+@layer components {
+    .yajra-table .dt-container {
+        @apply text-sm text-foreground;
+    }
+    .yajra-table .dt-search input,
+    .yajra-table .dt-length select {
+        @apply h-9 rounded-md border bg-background px-3 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring;
+    }
+    .yajra-table .dt-layout-row {
+        @apply my-2;
+    }
+    .yajra-table table.dataTable thead th {
+        @apply border-b bg-muted/50 px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground;
+    }
+    .yajra-table table.dataTable tbody td {
+        @apply border-b px-3 py-3 align-middle;
+    }
+    .yajra-table table.dataTable tbody tr {
+        @apply bg-transparent;
+    }
+    .yajra-table table.dataTable tbody tr:hover {
+        @apply bg-muted/40;
+    }
+    .yajra-table table.dataTable.no-footer {
+        @apply border-b-0;
+    }
+    .yajra-table .dt-info {
+        @apply text-xs text-muted-foreground;
+    }
+    .yajra-table .dt-paging .dt-paging-button {
+        @apply !rounded-md !border !border-transparent !bg-transparent !px-3 !py-1 !text-foreground;
+    }
+    .yajra-table .dt-paging .dt-paging-button.current,
+    .yajra-table .dt-paging .dt-paging-button:hover:not(.disabled) {
+        @apply !border-border !bg-secondary !text-secondary-foreground;
+    }
+    .yajra-table .dt-paging .dt-paging-button.disabled {
+        @apply !opacity-40;
+    }
+    .yajra-table div.dt-processing > div:last-child > div {
+        @apply bg-primary;
+    }
+    .yajra-table div.dt-processing {
+        @apply rounded-lg border bg-popover text-popover-foreground shadow;
+    }
+    .yajra-action {
+        @apply mr-1 inline-flex size-8 items-center justify-center rounded-md border bg-background text-muted-foreground transition-colors hover:border-primary/40 hover:bg-accent hover:text-primary;
+    }
+    .yajra-badge {
+        @apply inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium;
     }
 }

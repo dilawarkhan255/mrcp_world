@@ -13,6 +13,7 @@ use Filament\Support\Enums\MaxWidth;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Validation\Rules\Unique;
 
 class QuestionResource extends Resource
@@ -55,6 +56,40 @@ class QuestionResource extends Resource
             ->toolbarButtons(self::TOOLBAR)
             ->fileAttachmentsDisk('public')->fileAttachmentsDirectory('question-media')->fileAttachmentsVisibility('public')
             ->columnSpanFull();
+    }
+
+    /** @return list<string> */
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['code'];
+    }
+
+    protected static int $globalSearchResultsLimit = 5;
+
+    public static function getGlobalSearchResultTitle(Model $record): string
+    {
+        /** @var Question $record */
+        return (string) ($record->code);
+    }
+
+    /** @return array<string, string> */
+    public static function getGlobalSearchResultDetails(Model $record): array
+    {
+        /** @var Question $record */
+        return ['Subject' => $record->category->name ?? '—', 'Exam' => $record->exam->name ?? '—'];
+    }
+
+    /** @return Builder<Question> */
+    public static function getGlobalSearchEloquentQuery(): Builder
+    {
+        return parent::getGlobalSearchEloquentQuery()->with(['category:id,name', 'exam:id,name']);
+    }
+
+    /** These resources have no edit page of their own: open the list, searched for the record. */
+    public static function getGlobalSearchResultUrl(Model $record): string
+    {
+        /** @var Question $record */
+        return static::getUrl('index', ['tableSearch' => $record->code]);
     }
 
     public static function form(Form $form): Form
@@ -133,17 +168,18 @@ class QuestionResource extends Resource
         ])->filters([
             Tables\Filters\SelectFilter::make('exam')->relationship('exam', 'name', fn (Builder $query) => $query->whereNull('content_exam_id')),
             Tables\Filters\SelectFilter::make('category')->label('Subject')->relationship('category', 'name')->searchable()->optionsLimit(50),
+            Tables\Filters\SelectFilter::make('past_paper')->label('Past paper')->relationship('pastPaper', 'title')->searchable()->optionsLimit(50),
             Tables\Filters\TernaryFilter::make('is_published')->label('Published'),
             Tables\Filters\TernaryFilter::make('needs_review')->label('Flagged for review'),
         ])->actions([
             Tables\Actions\EditAction::make()->slideOver()->modalWidth(MaxWidth::FiveExtraLarge)
                 ->mutateRecordDataUsing(fn (array $data, Question $record): array => [...$data, ...$record->only(['correct_option', 'explanation', 'key_points', 'mnemonics', 'references', 'youtube_url', 'image_links', 'image_search', 'image_search_sites', 'review_note'])]),
-            Tables\Actions\Action::make('resolveReview')->label('Mark reviewed')->icon('heroicon-o-check')->color('success')
+            Tables\Actions\Action::make('resolveReview')->iconButton()->label('Mark reviewed')->icon('heroicon-o-check')->color('success')
                 ->visible(fn (Question $record): bool => $record->needs_review)
                 ->authorize(fn (Question $record): bool => auth()->user()?->can('update', $record) ?? false)
                 ->requiresConfirmation()->modalDescription('Confirm that the citations and facts of this MCQ were checked by a person.')
                 ->action(fn (Question $record) => $record->update(['needs_review' => false, 'review_note' => null])),
-            Tables\Actions\DeleteAction::make()->label('Archive'),
+            Tables\Actions\DeleteAction::make()->label('Archive')->icon('heroicon-o-archive-box'),
         ])->defaultSort('id', 'desc')->paginationPageOptions([25, 50, 100]);
     }
 

@@ -10,7 +10,7 @@ use Illuminate\Http\Request;
 /**
  * The exam a student has chosen in the sidebar, and the exam whose content is
  * shown for it. They differ for an exam that shares another exam's question
- * bank (IMM reads MRCP 1 UK/Irish). Sessions, bookmarks, reviews and
+ * bank (IMM reads MRCP 1). Sessions, bookmarks, reviews and
  * performance are stored against the content exam, so switching between two
  * exams of one Qbank keeps the same history.
  *

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { landingCopy } from '@/content/landing';
 import type { LandingPlan, LandingPlanGroup } from '@/types/landing';
-import { Check } from 'lucide-vue-next';
+import { Check, PoundSterling } from 'lucide-vue-next';
 import { computed } from 'vue';
 const props = defineProps<{ plans: LandingPlanGroup[] }>();
 /** One card per plan (one per Qbank), in the server's order. */
@@ -23,11 +23,10 @@ const cards = computed<LandingPlan[]>(() => props.plans.flatMap((group) => group
                     :class="index === 0 ? 'border-ink bg-ink text-white' : 'bg-white text-ink'"
                 >
                     <p class="text-sm font-semibold" :class="index === 0 ? 'text-light-teal' : 'text-teal'">{{ plan.qbank ?? plan.name }}</p>
-                    <p class="mt-4 font-heading text-4xl font-bold tracking-tight">
-                        {{ plan.price }}
-                        <span class="text-base font-semibold" :class="index === 0 ? 'text-white/70' : 'text-muted-soft'"
-                            >/ {{ plan.duration ?? plan.duration_days + ' days' }}</span
-                        >
+                    <p class="mt-4 flex items-center gap-1 font-heading text-4xl font-bold tracking-tight">
+                        <PoundSterling v-if="plan.currency === 'GBP'" class="size-8" aria-label="GBP" />{{
+                            plan.currency === 'GBP' ? plan.amount : plan.price
+                        }}
                     </p>
                     <ul v-if="plan.exams?.length" class="mt-5 space-y-2 text-sm">
                         <li v-for="exam in plan.exams" :key="exam" class="flex items-center gap-2">

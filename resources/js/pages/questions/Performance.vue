@@ -90,7 +90,7 @@ function barHeight(answered: number): string {
                         <div class="mt-2 h-2 overflow-hidden rounded-full bg-muted">
                             <div
                                 class="h-full rounded-full"
-                                :class="category.accuracy >= 70 ? 'bg-green-600' : category.accuracy >= 50 ? 'bg-amber-500' : 'bg-destructive'"
+                                :class="category.accuracy >= 70 ? 'bg-green-600' : category.accuracy >= 50 ? 'bg-amber' : 'bg-destructive'"
                                 :style="{ width: category.accuracy + '%' }"
                             />
                         </div>

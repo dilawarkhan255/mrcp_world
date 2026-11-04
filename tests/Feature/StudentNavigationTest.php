@@ -25,16 +25,19 @@ function topLevelTitles(array $navigation): array
 
 it('lists the sidebar items in the agreed order', function () {
     expect(topLevelTitles(StudentNavigation::for(null)))->toBe([
-        'Dashboard', 'Question Bank', 'Search MCQs', 'Mock Tests', 'Image Atlas', 'Textbooks',
-        'My Reviews', 'My Notes', 'Performance', 'Leaderboard', 'AI Study Plan', 'Subscription', 'Feedback',
+        'Dashboard', 'My Notes', 'Search MCQs', 'Question Bank', 'Past Papers', 'Extended Textbook', 'Image Atlas', 'Review Questions',
+        'More', 'Mock Tests', 'Performance', 'Leaderboard', 'AI Study Plan', 'Subscription', 'Feedback',
     ]);
+    expect(collect(StudentNavigation::for(null))->firstWhere('title', 'More'))->toMatchArray(['section' => 'More']);
 });
 
-it('starts Question Bank with the main and past bank links', function () {
-    $bank = collect(StudentNavigation::for(null))->firstWhere('title', 'Question Bank');
+it('starts Question Bank with the main bank and keeps Past Papers as its own item', function () {
+    $items = collect(StudentNavigation::for(null));
+    $bank = $items->firstWhere('title', 'Question Bank');
 
-    expect(array_column($bank['children'], 'title'))->toBe(['Main MCQ Bank', 'Past Paper MCQs'])
-        ->and(array_column($bank['children'], 'href'))->toBe(['/questions/bank', '/questions/past-papers']);
+    expect(array_column($bank['children'], 'title'))->toBe(['Main MCQ Bank'])
+        ->and(array_column($bank['children'], 'href'))->toBe(['/questions/bank'])
+        ->and($items->firstWhere('title', 'Past Papers')['href'])->toBe('/questions/past-papers');
 });
 
 it('adds only subjects with published questions, ordered by name', function () {
@@ -54,7 +57,7 @@ it('adds only subjects with published questions, ordered by name', function () {
     navQuestion($other, $elsewhere);
 
     $bank = collect(StudentNavigation::for($exam))->firstWhere('title', 'Question Bank');
-    $subjects = array_slice($bank['children'], 2);
+    $subjects = array_slice($bank['children'], 1);
 
     expect(array_column($subjects, 'title'))->toBe(['Alpha', 'Zeta'])
         ->and($subjects[0]['children'])->toBe([
@@ -67,7 +70,7 @@ it('shares the navigation with signed-in students', function () {
     $this->actingAs(User::factory()->create());
     $exam = Exam::factory()->create(['is_active' => true]);
     $this->withSession(['exam_id' => $exam->id])->get('/dashboard')
-        ->assertInertia(fn (Assert $page) => $page->has('navigation', 13)->where('navigation.0.title', 'Dashboard'));
+        ->assertInertia(fn (Assert $page) => $page->has('navigation', 15)->where('navigation.0.title', 'Dashboard'));
 });
 
 it('shares no navigation with guests', function () {
@@ -104,7 +107,7 @@ it('locks the subscription pages in the sidebar for a student without one', func
     expect($items['Mock Tests']['locked'])->toBeTrue()
         ->and($items['Dashboard']['locked'])->toBeFalse()
         ->and($items['Question Bank']['children'][0]['locked'])->toBeFalse()
-        ->and($items['Question Bank']['children'][1]['locked'])->toBeTrue()
+        ->and($items['Past Papers']['locked'])->toBeTrue()
         ->and(collect(StudentNavigation::for(null))->firstWhere('title', 'Mock Tests')['locked'])->toBeFalse();
 });
 

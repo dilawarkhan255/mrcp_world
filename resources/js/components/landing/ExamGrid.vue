@@ -40,6 +40,12 @@ function tileStyle(index: number): Record<string, string> {
                             {{ landingCopy.exams.demo }}
                         </a>
                         <a
+                            :href="'/login?exam=' + exam.slug"
+                            class="hover:border-teal/50 inline-flex min-h-[44px] flex-1 items-center justify-center rounded-control border border-border bg-white px-4 text-sm font-semibold text-ink transition hover:text-dark-teal focus-visible:ring-2 focus-visible:ring-teal focus-visible:ring-offset-2"
+                        >
+                            {{ landingCopy.exams.logIn }}
+                        </a>
+                        <a
                             :href="'/register?exam=' + exam.slug"
                             class="inline-flex min-h-[44px] flex-1 items-center justify-center rounded-control bg-teal px-4 text-sm font-semibold text-white transition hover:bg-dark-teal focus-visible:ring-2 focus-visible:ring-teal focus-visible:ring-offset-2"
                         >

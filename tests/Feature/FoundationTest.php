@@ -19,7 +19,7 @@ beforeEach(function () {
 
 it('seeds the two Qbanks and their four exams idempotently', function () {
     $this->seed(ExamSeeder::class);
-    expect(Exam::orderBy('sort_order')->pluck('name')->all())->toBe(['MRCP 1 UK/Irish', 'IMM', 'MRCP 2 UK/Irish', 'FCPS Part 2'])
+    expect(Exam::orderBy('sort_order')->pluck('name')->all())->toBe(['MRCP 1', 'IMM', 'MRCP 2', 'FCPS Part 2'])
         ->and(Qbank::orderBy('sort_order')->pluck('name')->all())->toBe(['MRCPWorld 1 Qbank', 'MRCPWorld 2 Qbank']);
     $mrcp1 = Exam::where('slug', 'mrcp-part-1')->firstOrFail();
     $mrcp2 = Exam::where('slug', 'mrcp-part-2-written')->firstOrFail();

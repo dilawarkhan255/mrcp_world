@@ -4,7 +4,20 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import type { SharedData } from '@/types';
 import type { TrendPoint } from '@/types/practice';
 import { Head, Link, usePage } from '@inertiajs/vue3';
-import { ArrowUpRight, BookOpen, CalendarDays, CheckCircle2, ListChecks, ListTodo, Target } from 'lucide-vue-next';
+import {
+    ArrowUpRight,
+    BookOpen,
+    CalendarDays,
+    CheckCircle2,
+    ClipboardList,
+    FileClock,
+    Images,
+    ListChecks,
+    ListTodo,
+    RotateCcw,
+    Sparkles,
+    Target,
+} from 'lucide-vue-next';
 import { computed } from 'vue';
 const props = defineProps<{ stats: { answered: number; correct: number; sessions: number; completed: number }; trend: TrendPoint[] }>();
 const page = usePage<SharedData>();
@@ -17,28 +30,23 @@ function barHeight(answered: number): string {
 function shortDay(day: string): string {
     return new Date(day).toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
 }
+// Quick start, in the same order as the sidebar.
 const tools = [
-    {
-        title: 'Question bank',
-        href: '/questions/bank',
-        icon: ListChecks,
-        description: 'Build confidence with focused question practice.',
-        label: 'Start practising',
-    },
-    {
-        title: 'Textbooks',
-        href: '/textbooks',
-        icon: BookOpen,
-        description: 'Make room for the concepts that matter.',
-        label: 'Explore textbooks',
-    },
+    { title: 'Question bank', href: '/questions/bank', icon: ListChecks, description: 'Practise the main MCQ bank by subject or across the bank.' },
+    { title: 'Past papers', href: '/questions/past-papers', icon: FileClock, description: 'Past paper MCQs, organised unit by unit.' },
+    { title: 'Extended textbook', href: '/textbooks', icon: BookOpen, description: 'Chapters by subject with tables and key points.' },
+    { title: 'Image Atlas', href: '/image-atlas', icon: Images, description: 'Clinical images with findings and teaching points.' },
+    { title: 'Review questions', href: '/questions/review', icon: RotateCcw, description: 'Go back over the questions you got wrong.' },
+    { title: 'Mock tests', href: '/questions/mocks', icon: ClipboardList, description: 'Timed papers that feel like the real exam.' },
+    { title: 'AI Study Plan', href: '/study-plan', icon: Sparkles, description: 'Your weakest subjects and a plan for the next 7 days.' },
 ];
 </script>
 <template>
     <Head title="Dashboard" />
     <AppLayout :breadcrumbs="[{ title: 'Dashboard', href: '/dashboard' }]">
         <div class="mx-auto w-full max-w-7xl space-y-8 p-5 md:p-8 lg:p-10">
-            <section class="flex flex-wrap items-end justify-between gap-4">
+            <section class="relative flex flex-wrap items-end justify-between gap-4 overflow-hidden rounded-2xl border bg-card p-6 shadow-sm md:p-8">
+                <span class="brand-rainbow absolute inset-x-0 top-0 h-1" aria-hidden="true" />
                 <div>
                     <p class="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-primary">Your learning space</p>
                     <h1 class="text-2xl font-semibold tracking-tight md:text-3xl">Welcome back, {{ firstName }}.</h1>
@@ -103,35 +111,26 @@ const tools = [
             </section>
             <section>
                 <div class="mb-4 flex items-center justify-between">
-                    <h2 class="text-lg font-semibold">Make time for your next step</h2>
+                    <h2 class="text-lg font-semibold">Quick start</h2>
                     <span class="hidden text-xs text-muted-foreground sm:block">Your revision toolkit</span>
                 </div>
-                <div class="grid gap-5 lg:grid-cols-2">
+                <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                     <Link
                         v-for="tool in tools"
                         :key="tool.title"
                         :href="tool.href"
-                        class="group rounded-xl border bg-card p-6 shadow-sm transition hover:border-primary/50 hover:shadow-md"
+                        class="group flex flex-col rounded-xl border bg-card p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-md"
                     >
-                        <div class="mb-6 flex items-start justify-between">
+                        <div class="mb-4 flex items-start justify-between">
                             <span class="flex size-11 items-center justify-center rounded-xl bg-secondary text-primary"
                                 ><component :is="tool.icon" class="size-5" /></span
                             ><ArrowUpRight class="size-4 text-muted-foreground transition group-hover:text-primary" />
                         </div>
-                        <h3 class="text-lg font-semibold">{{ tool.title }}</h3>
-                        <p class="mt-2 min-h-10 text-sm leading-relaxed text-muted-foreground">{{ tool.description }}</p>
-                        <div class="mt-6 flex items-center justify-between">
-                            <span class="text-xs font-semibold text-primary">{{ tool.label }}</span
-                            ><span class="text-[10px] uppercase tracking-wider text-muted-foreground">{{
-                                tool.title === 'Question bank' ? 'Ready' : 'Coming soon'
-                            }}</span>
-                        </div>
+                        <h3 class="font-semibold">{{ tool.title }}</h3>
+                        <p class="mt-1.5 text-sm leading-relaxed text-muted-foreground">{{ tool.description }}</p>
                     </Link>
                 </div>
             </section>
-            <p class="text-xs text-muted-foreground">
-                Question practice, saved sessions, mock exams and performance reporting are available. Textbooks are coming later.
-            </p>
         </div>
     </AppLayout>
 </template>

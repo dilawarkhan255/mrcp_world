@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AuthBase from '@/layouts/AuthLayout.vue';
 import { Head, useForm } from '@inertiajs/vue3';
-import { CheckCircle2, LoaderCircle } from 'lucide-vue-next';
+import { CheckCircle2, LoaderCircle, PoundSterling } from 'lucide-vue-next';
 
 interface PlanOption {
     id: number;
@@ -62,7 +62,11 @@ const submit = () => {
                         <span class="flex items-baseline justify-between gap-2">
                             <span class="font-semibold">{{ plan.qbank }}</span>
                             <span class="text-sm"
-                                ><strong class="text-primary">{{ plan.price }}</strong> / {{ plan.duration }}</span
+                                ><strong class="inline-flex items-center text-primary"
+                                    ><PoundSterling v-if="plan.price.startsWith('£')" class="size-4" aria-label="GBP" />{{
+                                        plan.price.replace(/^£/, '')
+                                    }}</strong
+                                ></span
                             >
                         </span>
                         <span class="mt-1 block text-xs text-muted-foreground">For {{ plan.exams.join(', ') }}</span>

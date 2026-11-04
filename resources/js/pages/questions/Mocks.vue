@@ -1,16 +1,16 @@
 <script setup lang="ts">
 import InputError from '@/components/InputError.vue';
-import SimplePagination from '@/components/SimplePagination.vue';
 import { Button } from '@/components/ui/button';
+import YajraTable, { type YajraColumn } from '@/components/YajraTable.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
-import type { MockAttempt, MockLimits, MockPreset, PageSlice } from '@/types/practice';
+import { escapeHtml, openAction, progressColumn, startedColumn, statusColumn } from '@/lib/session-table';
+import type { MockLimits, MockPreset } from '@/types/practice';
 import { Head, useForm } from '@inertiajs/vue3';
 defineProps<{
     exam: { id: number; name: string };
     presets: MockPreset[];
     availableQuestions: number;
     limits: MockLimits;
-    attempts: PageSlice<MockAttempt>;
 }>();
 const form = useForm<{ count: number; minutes: number }>({ count: 20, minutes: 30 });
 function start(count: number, minutes: number) {
@@ -18,15 +18,36 @@ function start(count: number, minutes: number) {
     form.minutes = minutes;
     form.post('/questions/mocks');
 }
-function score(attempt: MockAttempt): number {
-    if (!attempt.total_questions) return 0;
-    return Math.round((attempt.correct_count / attempt.total_questions) * 100);
-}
-function minutesUsed(attempt: MockAttempt): number {
-    if (!attempt.started_at) return 0;
-    const end = attempt.completed_at ? new Date(attempt.completed_at).getTime() : Date.now();
-    return Math.max(0, Math.round((end - new Date(attempt.started_at).getTime()) / 60000));
-}
+const attemptColumns: YajraColumn[] = [
+    {
+        data: 'id',
+        title: 'Mock',
+        orderable: true,
+        render: (value, row) =>
+            '#' +
+            escapeHtml(value) +
+            '<span class="mt-1 block text-xs text-muted-foreground">' +
+            escapeHtml(row.total_questions) +
+            ' questions</span>',
+    },
+    startedColumn,
+    progressColumn,
+    {
+        data: 'correct_count',
+        title: 'Score',
+        orderable: true,
+        render: (value, row) =>
+            escapeHtml(value) +
+            ' / ' +
+            escapeHtml(row.total_questions) +
+            '<span class="mt-1 block text-xs text-muted-foreground">' +
+            escapeHtml(row.score) +
+            '%</span>',
+    },
+    { data: 'minutes', title: 'Time used', render: (value) => (value === null ? '—' : escapeHtml(value) + ' min') },
+    statusColumn,
+];
+const attemptActions = [openAction(() => '/questions/mocks/')];
 </script>
 <template>
     <Head title="Mock exams" />
@@ -78,44 +99,13 @@ function minutesUsed(attempt: MockAttempt): number {
             </section>
             <section class="space-y-3">
                 <h2 class="text-lg font-semibold">Recent attempts</h2>
-                <div v-if="!attempts.data.length" class="rounded-xl border border-dashed p-8 text-center">
-                    <p class="text-sm text-muted-foreground">No mock exams attempted yet.</p>
-                </div>
-                <div v-else class="overflow-x-auto rounded-xl border bg-card">
-                    <table class="w-full text-left text-sm">
-                        <thead class="border-b bg-muted/40">
-                            <tr>
-                                <th class="p-4">Mock</th>
-                                <th class="p-4">Started</th>
-                                <th class="p-4">Score</th>
-                                <th class="p-4">Time used</th>
-                                <th class="p-4">Status</th>
-                                <th class="p-4">Open</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr v-for="attempt in attempts.data" :key="attempt.id" class="border-b last:border-0">
-                                <td class="p-4">
-                                    #{{ attempt.id
-                                    }}<span class="mt-1 block text-xs text-muted-foreground">{{ attempt.total_questions }} questions</span>
-                                </td>
-                                <td class="p-4">{{ attempt.started_at ? new Date(attempt.started_at).toLocaleString() : '' }}</td>
-                                <td class="p-4">
-                                    {{ attempt.correct_count }} / {{ attempt.total_questions }}
-                                    <span class="mt-1 block text-xs text-muted-foreground">{{ score(attempt) }}%</span>
-                                </td>
-                                <td class="p-4">{{ minutesUsed(attempt) }} min</td>
-                                <td class="p-4">{{ attempt.completed_at ? 'Completed' : 'In progress' }}</td>
-                                <td class="p-4">
-                                    <a :href="'/questions/mocks/' + attempt.id" class="font-semibold text-primary">{{
-                                        attempt.completed_at ? 'Review' : 'Resume'
-                                    }}</a>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-                <SimplePagination :previous="attempts.prev_page_url" :next="attempts.next_page_url" :page="attempts.current_page" />
+                <YajraTable
+                    url="/questions/mocks/data"
+                    :columns="attemptColumns"
+                    :actions="attemptActions"
+                    search-placeholder="Mock number…"
+                    empty-text="No mock exams attempted yet."
+                />
             </section>
         </div>
     </AppLayout>

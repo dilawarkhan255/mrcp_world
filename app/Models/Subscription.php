@@ -28,13 +28,13 @@ class Subscription extends Model
     /** @var list<string> */
     protected $fillable = [
         'user_id', 'qbank_id', 'plan_id', 'status', 'amount', 'currency', 'payment_reference', 'student_note', 'admin_note',
-        'starts_at', 'ends_at', 'activated_by', 'activated_at',
+        'starts_at', 'ends_at', 'activated_by', 'activated_at', 'reminded_at',
     ];
 
     /** @return array<string, string> */
     protected function casts(): array
     {
-        return ['amount' => 'decimal:2', 'starts_at' => 'datetime', 'ends_at' => 'datetime', 'activated_at' => 'datetime'];
+        return ['amount' => 'decimal:2', 'starts_at' => 'datetime', 'ends_at' => 'datetime', 'activated_at' => 'datetime', 'reminded_at' => 'datetime'];
     }
 
     /**

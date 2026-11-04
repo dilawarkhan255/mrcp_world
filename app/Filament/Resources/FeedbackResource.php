@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\FeedbackResource\Pages\ListFeedback;
 use App\Models\Feedback;
+use App\Support\Notify;
 use Filament\Resources\Pages\PageRegistration;
 use Filament\Resources\Resource;
 use Filament\Tables;
@@ -55,12 +56,18 @@ class FeedbackResource extends Resource
             Tables\Filters\SelectFilter::make('type')->options(Feedback::TYPES),
             Tables\Filters\TernaryFilter::make('question_id')->label('MCQ reports')->nullable(),
         ])->actions([
-            Tables\Actions\Action::make('markReviewed')
+            Tables\Actions\Action::make('markReviewed')->iconButton()
                 ->label('Mark reviewed')
                 ->icon('heroicon-o-check')
                 ->visible(fn (Feedback $record): bool => $record->status === Feedback::STATUS_NEW)
                 ->authorize(fn (Feedback $record): bool => Gate::allows('update', $record))
-                ->action(fn (Feedback $record) => $record->update(['status' => Feedback::STATUS_REVIEWED])),
+                ->action(function (Feedback $record): void {
+                    $record->update(['status' => Feedback::STATUS_REVIEWED]);
+                    if ($record->user !== null) {
+                        Notify::student($record->user, $record->question_id ? 'Your MCQ report was reviewed' : 'Your feedback was reviewed',
+                            'Thank you. The editors have reviewed: "'.$record->message.'"', '/feedback', 'CheckCircle2', 'success');
+                    }
+                }),
             Tables\Actions\DeleteAction::make(),
         ])->modifyQueryUsing(fn ($query) => $query->with(['user:id,name', 'exam:id,name', 'question:id,code']))->defaultSort('id', 'desc')->paginationPageOptions([25, 50, 100]);
     }

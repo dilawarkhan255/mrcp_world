@@ -49,7 +49,7 @@ class AnswerTrendChart extends ChartWidget
 
         return [
             'datasets' => [
-                ['label' => 'Answered', 'data' => $data['answered'], 'borderColor' => '#0B6E78', 'backgroundColor' => 'rgba(11, 110, 120, 0.12)', 'fill' => true, 'tension' => 0.35],
+                ['label' => 'Answered', 'data' => $data['answered'], 'borderColor' => '#0B2A6F', 'backgroundColor' => 'rgba(11, 42, 111, 0.12)', 'fill' => true, 'tension' => 0.35],
                 ['label' => 'Correct', 'data' => $data['correct'], 'borderColor' => '#16A34A', 'backgroundColor' => 'transparent', 'tension' => 0.35],
             ],
             'labels' => $data['labels'],

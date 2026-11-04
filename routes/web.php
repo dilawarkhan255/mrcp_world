@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AiTutorController;
 use App\Http\Controllers\AtlasController;
 use App\Http\Controllers\BookmarkController;
 use App\Http\Controllers\CommentController;
@@ -9,13 +10,16 @@ use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\LeaderboardController;
 use App\Http\Controllers\MockExamController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PerformanceController;
 use App\Http\Controllers\PracticeController;
 use App\Http\Controllers\QuestionTemplateController;
+use App\Http\Controllers\QuickSearchController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\SelectExamController;
 use App\Http\Controllers\SitemapController;
+use App\Http\Controllers\StudentTableController;
 use App\Http\Controllers\StudyPlanController;
 use App\Http\Controllers\SubjectController;
 use App\Http\Controllers\SubscriptionController;
@@ -51,6 +55,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/questions/subjects/{slug}/past-papers', [SubjectController::class, 'past'])->where('slug', '[a-z0-9-]+')->middleware('qbank')->name('subjects.past');
     Route::get('/questions/sessions', [PracticeController::class, 'index'])->name('practice.index');
     Route::post('/questions/sessions', [PracticeController::class, 'store'])->middleware('throttle:10,1')->name('practice.store');
+    // Yajra data tables (registered before the {session} routes, so "data" is not read as a session id).
+    Route::get('/questions/sessions/data', [StudentTableController::class, 'sessions'])->middleware('throttle:120,1')->name('tables.sessions');
+    Route::get('/questions/mocks/data', [StudentTableController::class, 'mocks'])->middleware(['qbank', 'throttle:120,1'])->name('tables.mocks');
     Route::get('/questions/sessions/{session}', [PracticeController::class, 'show'])->name('practice.show');
     Route::post('/questions/sessions/{session}/answer/{position}', [PracticeController::class, 'answer'])->middleware('throttle:120,1')->whereNumber('position')->name('practice.answer');
     Route::post('/questions/sessions/{session}/read/{position}', [PracticeController::class, 'read'])->middleware('throttle:120,1')->whereNumber('position')->name('practice.read');
@@ -64,6 +71,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/questions/performance', [PerformanceController::class, 'index'])->name('performance.index');
     Route::get('/leaderboard', [LeaderboardController::class, 'index'])->middleware(['qbank', 'throttle:60,1'])->name('leaderboard.index');
     Route::get('/study-plan', [StudyPlanController::class, 'index'])->middleware('qbank')->name('study-plan.index');
+    Route::post('/study-plan/ai', [AiTutorController::class, 'studyPlan'])->middleware(['qbank', 'throttle:6,1'])->name('ai.study-plan');
+    Route::post('/questions/sessions/{session}/ask/{position}', [AiTutorController::class, 'ask'])->middleware(['qbank', 'throttle:10,1'])->whereNumber('position')->name('ai.ask');
     Route::get('/questions/comments', [CommentController::class, 'index'])->middleware('qbank')->name('comments.index');
     Route::post('/questions/comments', [CommentController::class, 'store'])->middleware('throttle:20,1')->middleware('qbank')->name('comments.store');
     Route::post('/questions/comments/{comment}/reply', [CommentController::class, 'reply'])->middleware('throttle:20,1')->middleware('qbank')->name('comments.reply');
@@ -77,6 +86,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('/revision/bookmarks/{bookmark}', [BookmarkController::class, 'destroy'])->name('bookmarks.destroy');
     Route::post('/revision/bookmarks/practice', [BookmarkController::class, 'practice'])->middleware('throttle:10,1')->middleware('qbank')->name('bookmarks.practice');
     Route::get('/image-atlas', [AtlasController::class, 'index'])->middleware('throttle:60,1')->middleware('qbank')->name('atlas.index');
+    Route::get('/search/quick', QuickSearchController::class)->middleware('throttle:90,1')->name('search.quick');
+    Route::get('/notifications', [NotificationController::class, 'index'])->middleware('throttle:60,1')->name('notifications.index');
+    Route::post('/notifications/read-all', [NotificationController::class, 'readAll'])->name('notifications.read-all');
+    Route::post('/notifications/{id}/read', [NotificationController::class, 'read'])->whereUuid('id')->name('notifications.read');
     Route::get('/subscription', [SubscriptionController::class, 'index'])->name('subscription.index');
     Route::post('/subscription', [SubscriptionController::class, 'store'])->middleware('throttle:5,1')->name('subscription.store');
     Route::get('/textbooks', [TextbookController::class, 'index'])->middleware('qbank')->name('textbooks.index');

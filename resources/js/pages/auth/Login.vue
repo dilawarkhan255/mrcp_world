@@ -9,17 +9,20 @@ import AuthBase from '@/layouts/AuthLayout.vue';
 import { Head, useForm } from '@inertiajs/vue3';
 import { LoaderCircle } from 'lucide-vue-next';
 
-defineProps<{
+const props = defineProps<{
     status?: string;
     canResetPassword: boolean;
     /** The visitor chose a plan: the subscription form opens after logging in. */
     subscribing?: boolean;
+    /** Login link of one exam: the student lands in that exam. */
+    exam?: { name: string; slug: string } | null;
 }>();
 
 const form = useForm({
     email: '',
     password: '',
     remember: false,
+    exam: props.exam?.slug ?? '',
 });
 
 const submit = () => {
@@ -30,7 +33,10 @@ const submit = () => {
 </script>
 
 <template>
-    <AuthBase title="Log in to your account" description="Enter your email and password below to log in">
+    <AuthBase
+        :title="exam ? 'Log in to ' + exam.name : 'Log in to your account'"
+        :description="exam ? 'Your ' + exam.name + ' question bank opens after you log in.' : 'Enter your email and password below to log in'"
+    >
         <Head title="Log in" />
 
         <div v-if="subscribing" role="status" class="mb-4 rounded-lg border bg-secondary p-3 text-center text-sm text-secondary-foreground">

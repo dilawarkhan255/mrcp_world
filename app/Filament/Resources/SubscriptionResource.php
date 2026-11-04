@@ -16,6 +16,7 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 
 /**
  * Manual subscriptions: students send a request with a payment reference,
@@ -46,6 +47,40 @@ class SubscriptionResource extends Resource
     public static function getNavigationBadgeTooltip(): ?string
     {
         return 'Requests waiting for activation';
+    }
+
+    /** @return list<string> */
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['payment_reference', 'user.name', 'user.email'];
+    }
+
+    protected static int $globalSearchResultsLimit = 5;
+
+    public static function getGlobalSearchResultTitle(Model $record): string
+    {
+        /** @var Subscription $record */
+        return (string) (($record->user->name ?? 'Subscription').' · '.($record->qbank->name ?? ''));
+    }
+
+    /** @return array<string, string> */
+    public static function getGlobalSearchResultDetails(Model $record): array
+    {
+        /** @var Subscription $record */
+        return ['State' => $record->stateLabel(), 'Payment ref.' => $record->payment_reference ?? '—'];
+    }
+
+    /** @return Builder<Subscription> */
+    public static function getGlobalSearchEloquentQuery(): Builder
+    {
+        return parent::getGlobalSearchEloquentQuery()->with(['user:id,name,email', 'qbank:id,name']);
+    }
+
+    /** These resources have no edit page of their own: open the list, searched for the record. */
+    public static function getGlobalSearchResultUrl(Model $record): string
+    {
+        /** @var Subscription $record */
+        return static::getUrl('index', ['tableSearch' => (string) $record->payment_reference]);
     }
 
     public static function form(Form $form): Form
@@ -93,7 +128,7 @@ class SubscriptionResource extends Resource
             Tables\Filters\Filter::make('expiring')->label('Ends within 14 days')
                 ->query(fn (Builder $query) => $query->whereIn('id', Subscription::query()->current()->select('id'))->where('ends_at', '<=', now()->addDays(14))),
         ])->actions([
-            Tables\Actions\Action::make('activate')->label(fn (Subscription $record): string => $record->isCurrent() ? 'Extend' : 'Activate')
+            Tables\Actions\Action::make('activate')->iconButton()->label(fn (Subscription $record): string => $record->isCurrent() ? 'Extend' : 'Activate')
                 ->icon('heroicon-o-check-circle')->color('success')
                 ->visible(fn (Subscription $record): bool => $record->status !== Subscription::STATUS_CANCELLED)
                 ->authorize(fn (Subscription $record): bool => auth()->user()?->can('update', $record) ?? false)
@@ -109,7 +144,7 @@ class SubscriptionResource extends Resource
                     $active = app(SubscriptionService::class)->activate($record, $admin, (int) $data['days']);
                     Notification::make()->success()->title('Access open until '.$active->ends_at?->toFormattedDateString())->send();
                 }),
-            Tables\Actions\Action::make('cancel')->label('Deactivate')->icon('heroicon-o-x-circle')->color('danger')
+            Tables\Actions\Action::make('cancel')->iconButton()->label('Deactivate')->icon('heroicon-o-x-circle')->color('danger')
                 ->visible(fn (Subscription $record): bool => $record->status !== Subscription::STATUS_CANCELLED)
                 ->authorize(fn (Subscription $record): bool => auth()->user()?->can('update', $record) ?? false)
                 ->requiresConfirmation()->modalDescription('The student loses access to this Qbank straight away.')

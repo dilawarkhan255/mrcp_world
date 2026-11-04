@@ -18,10 +18,10 @@ class ExamSeeder extends Seeder
         $banks = [
             'qbank-1' => [
                 'name' => 'MRCPWorld 1 Qbank',
-                'description' => 'MRCP 1 UK/Irish and IMM',
+                'description' => 'MRCP 1 and IMM',
                 'sort_order' => 1,
                 'owner' => ['mrcp-part-1', [
-                    'name' => 'MRCP 1 UK/Irish',
+                    'name' => 'MRCP 1',
                     'code' => 'MP1',
                     'description' => 'Past papers and questions for the MRCP Part 1 written paper, covering every specialty of the curriculum.',
                     'sort_order' => 1,
@@ -30,10 +30,10 @@ class ExamSeeder extends Seeder
             ],
             'qbank-2' => [
                 'name' => 'MRCPWorld 2 Qbank',
-                'description' => 'MRCP 2 UK/Irish and FCPS Part 2',
+                'description' => 'MRCP 2 and FCPS Part 2',
                 'sort_order' => 2,
                 'owner' => ['mrcp-part-2-written', [
-                    'name' => 'MRCP 2 UK/Irish',
+                    'name' => 'MRCP 2',
                     'code' => 'MP2',
                     'description' => 'Clinical and data interpretation practice for the MRCP Part 2 written paper.',
                     'sort_order' => 3,

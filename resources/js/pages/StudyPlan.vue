@@ -1,9 +1,11 @@
 <script setup lang="ts">
+import AiAnswer from '@/components/practice/AiAnswer.vue';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { Head, router } from '@inertiajs/vue3';
+import type { SharedData } from '@/types';
+import { Head, router, usePage } from '@inertiajs/vue3';
 import { CalendarDays, Compass, Info, Play, Sparkles, Target, TrendingDown } from 'lucide-vue-next';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 
 interface WeakSubject {
     id: number;
@@ -38,6 +40,8 @@ defineProps<{
     plan: { weak: WeakSubject[]; unpractised: NewSubject[]; days: PlanDay[]; has_data: boolean; min_answers: number };
 }>();
 
+const page = usePage<SharedData>();
+const aiEnabled = computed(() => !!page.props.ai?.enabled);
 const starting = ref<string | null>(null);
 function start(day: number, item: PlanItem) {
     starting.value = day + ':' + item.category_id;
@@ -64,8 +68,12 @@ function dayLabel(date: string): string {
                     Your weakest subjects and the ones you have not practised yet, spread over the next 7 days.
                 </p>
                 <p class="mt-2 flex items-start gap-1.5 text-xs text-muted-foreground">
-                    <Info class="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />Worked out from your own saved answers in this exam with fixed rules.
-                    No answers are sent to an outside AI service.
+                    <Info class="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
+                    <template v-if="aiEnabled"
+                        >The plan is worked out from your own saved answers in this exam. The AI advice below is written by Claude from your subjects
+                        and scores only; your name and email are never sent.</template
+                    >
+                    <template v-else>Worked out from your own saved answers in this exam with fixed rules.</template>
                 </p>
             </div>
 
@@ -106,6 +114,8 @@ function dayLabel(date: string): string {
                     <p v-else class="text-sm text-muted-foreground">You have practised every subject. Well done.</p>
                 </section>
             </div>
+
+            <AiAnswer v-if="aiEnabled" url="/study-plan/ai" label="Get AI advice" title="AI advice on your plan" />
 
             <section class="space-y-3">
                 <h2 class="flex items-center gap-2 text-lg font-semibold">

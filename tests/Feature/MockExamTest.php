@@ -84,8 +84,10 @@ it('validates the mock limits and lists the attempts of the selected exam', func
     $this->post('/questions/mocks', ['count' => 0, 'minutes' => 10])->assertSessionHasErrors('count');
     $this->post('/questions/mocks', ['count' => 10, 'minutes' => 500])->assertSessionHasErrors('minutes');
     $this->post('/questions/mocks', ['count' => 10, 'minutes' => 30])->assertRedirect();
+    $this->getJson('/questions/mocks/data?draw=1&start=0&length=10')->assertOk()
+        ->assertJsonPath('recordsTotal', 1)->assertJsonPath('data.0.kind', 'Mock')->assertJsonPath('data.0.status', 'In progress');
     $this->get('/questions/mocks')->assertInertia(fn (Assert $page) => $page
-        ->has('attempts.data', 1)
+        ->missing('attempts')
         ->where('presets.0.title', 'Quick check')
         ->where('limits.maxMinutes', 180)
     );

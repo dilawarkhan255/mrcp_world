@@ -45,7 +45,7 @@ it('seeds £8 for 6 months per Qbank', function () {
     $this->get('/')->assertInertia(fn (Assert $page) => $page
         ->where('plans.0.plans.0.price', '£8')
         ->where('plans.0.plans.0.qbank', 'MRCPWorld 1 Qbank')
-        ->where('plans.0.plans.0.exams', ['MRCP 1 UK/Irish', 'IMM']));
+        ->where('plans.0.plans.0.exams', ['MRCP 1', 'IMM']));
 });
 
 it('lets a student without a subscription practise only the demo questions', function () {

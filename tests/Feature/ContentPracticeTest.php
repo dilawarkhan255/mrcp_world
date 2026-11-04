@@ -137,7 +137,10 @@ it('persists sessions, hides answers until submission, and scores idempotently',
     $session->refresh();
     expect($session->answered_count)->toBe(1)->and($session->correct_count)->toBe(1)->and($session->completed_at)->not->toBeNull();
     $this->get($url)->assertInertia(fn (Assert $page) => $page->where('question.result.correct_option', 'A')->where('question.result.explanation', 'Explanation for the saved answer'));
-    $this->get('/questions/sessions')->assertInertia(fn (Assert $page) => $page->has('sessions.data', 1));
+    $this->get('/questions/sessions')->assertInertia(fn (Assert $page) => $page->component('questions/Sessions')->missing('sessions'));
+    $this->getJson('/questions/sessions/data?draw=1&start=0&length=10')->assertOk()
+        ->assertJsonPath('recordsTotal', 1)->assertJsonPath('data.0.id', $session->id)
+        ->assertJsonPath('data.0.status', 'Completed')->assertJsonPath('data.0.accuracy', 100);
     $this->get('/dashboard')->assertInertia(fn (Assert $page) => $page->where('stats.answered', 1)->where('stats.correct', 1)->where('stats.completed', 1));
 });
 

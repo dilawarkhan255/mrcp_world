@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import InputError from '@/components/InputError.vue';
 import AnswerReveal from '@/components/practice/AnswerReveal.vue';
+import AskAi from '@/components/practice/AskAi.vue';
 import QuestionComments from '@/components/practice/QuestionComments.vue';
 import QuestionGrid from '@/components/practice/QuestionGrid.vue';
 import QuestionLabels from '@/components/practice/QuestionLabels.vue';
@@ -8,9 +9,11 @@ import ReportMcqDialog from '@/components/practice/ReportMcqDialog.vue';
 import RichText from '@/components/practice/RichText.vue';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
+import type { SharedData } from '@/types';
 import type { CommentThread, MockSession, NavigatorItem, PracticeQuestion } from '@/types/practice';
-import { Head, Link, router, useForm } from '@inertiajs/vue3';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+const page = usePage<SharedData>();
 const props = defineProps<{
     session: MockSession;
     question: PracticeQuestion;
@@ -220,6 +223,13 @@ function toggleBookmark() {
                     />
                     <p class="text-xs text-muted-foreground">Saved answers are not scored until the mock is closed.</p>
                 </aside>
+                <AskAi
+                    v-if="isCompleted && page.props.ai?.enabled && question.question_id"
+                    :session-id="session.id"
+                    :position="question.position"
+                    :answered="!!question.result"
+                    class="lg:col-start-1"
+                />
                 <QuestionComments
                     v-if="comments && question.question_id"
                     :key="question.question_id"

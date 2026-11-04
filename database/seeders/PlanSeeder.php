@@ -13,7 +13,7 @@ class PlanSeeder extends Seeder
         // £8 for 6 months per Qbank, from the MRCPWorld brochure. Existing plans are left untouched.
         foreach (Qbank::orderBy('sort_order')->orderBy('id')->get() as $index => $qbank) {
             Plan::firstOrCreate(['qbank_id' => $qbank->id], [
-                'name' => $qbank->name.' — 6 months', 'duration_days' => 180, 'price' => 8, 'currency' => 'GBP',
+                'name' => $qbank->name, 'duration_days' => 180, 'price' => 8, 'currency' => 'GBP',
                 'is_active' => true, 'sort_order' => $index + 1,
             ]);
         }

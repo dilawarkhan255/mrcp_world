@@ -39,6 +39,8 @@ export interface NavNode {
     children?: NavNode[];
     /** Needs a subscription the student does not have. */
     locked?: boolean;
+    /** A heading in the sidebar (for example "More"), not a link. */
+    section?: string;
 }
 /** Subscription state of the selected exam's Qbank. */
 export interface AccessState {
@@ -53,6 +55,10 @@ export interface SharedData {
     links?: CommunityLinks;
     access?: AccessState | null;
     flash?: { status: string | null };
+    /** The AI tutor (Claude) is on when an API key is configured. */
+    ai?: { enabled: boolean };
+    /** Unread notifications for the bell of the student app. */
+    notifications?: { unread: number } | null;
     /** Copy protection of the student app; watermark is the signed-in student's email and the date. */
     protection?: { enabled: boolean; watermark: string | null };
     name: string;

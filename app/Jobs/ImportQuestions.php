@@ -9,6 +9,7 @@ use App\Models\Question;
 use App\Models\QuestionImport;
 use App\Models\User;
 use App\Services\QuestionFileReader;
+use App\Support\Notify;
 use App\Support\QuestionContent;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -56,6 +57,10 @@ class ImportQuestions implements ShouldQueue
             $this->process($reader);
         } catch (ImportFileException $exception) {
             QuestionImport::whereKey($this->importId)->update(['status' => 'failed', 'failure' => $exception->getMessage()]);
+            $import = QuestionImport::find($this->importId);
+            if ($import !== null) {
+                $this->tellUploader($import, 'Bulk upload failed', $exception->getMessage(), 'danger');
+            }
         }
     }
 
@@ -111,6 +116,16 @@ class ImportQuestions implements ShouldQueue
             throw new ImportFileException('The import file is empty.');
         }
         $import->update(['status' => 'completed']);
+        $this->tellUploader($import->refresh(), 'Bulk upload finished',
+            number_format($import->imported).' rows accepted, '.number_format($import->rejected).' rejected.', $import->rejected > 0 ? 'warning' : 'success');
+    }
+
+    private function tellUploader(QuestionImport $import, string $title, string $body, string $color): void
+    {
+        $user = User::find($import->user_id);
+        if ($user !== null) {
+            Notify::staff([$user], $title.' (#'.$import->id.')', $body, '/admin/question-imports', 'heroicon-o-arrow-up-tray', $color);
+        }
     }
 
     /** @param array<int, array<string, string>> $batch */

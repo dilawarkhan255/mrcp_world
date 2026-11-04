@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import InputError from '@/components/InputError.vue';
 import AnswerReveal from '@/components/practice/AnswerReveal.vue';
+import AskAi from '@/components/practice/AskAi.vue';
 import PrivateNote from '@/components/practice/PrivateNote.vue';
 import QuestionComments from '@/components/practice/QuestionComments.vue';
 import QuestionGrid from '@/components/practice/QuestionGrid.vue';
@@ -9,10 +10,12 @@ import ReportMcqDialog from '@/components/practice/ReportMcqDialog.vue';
 import RichText from '@/components/practice/RichText.vue';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
+import type { SharedData } from '@/types';
 import type { CommentThread, NavigatorItem, PracticeQuestion, SessionSummary } from '@/types/practice';
-import { Head, Link, router, useForm } from '@inertiajs/vue3';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 import { Bookmark, BookmarkCheck, ChevronLeft, ChevronRight, Eraser, Eye, EyeOff } from 'lucide-vue-next';
 import { computed, ref, watch } from 'vue';
+const page = usePage<SharedData>();
 const props = defineProps<{
     session: SessionSummary;
     question: PracticeQuestion;
@@ -169,6 +172,13 @@ function toggleBookmark() {
                             :options="question.options"
                         />
                     </form>
+
+                    <AskAi
+                        v-if="page.props.ai?.enabled && question.question_id"
+                        :session-id="session.id"
+                        :position="question.position"
+                        :answered="!!question.result"
+                    />
 
                     <QuestionComments
                         v-if="comments && question.question_id"

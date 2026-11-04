@@ -72,6 +72,40 @@ class AtlasImageResource extends Resource
         ];
     }
 
+    /** @return list<string> */
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['title', 'diagnosis'];
+    }
+
+    protected static int $globalSearchResultsLimit = 5;
+
+    public static function getGlobalSearchResultTitle(Model $record): string
+    {
+        /** @var AtlasImage $record */
+        return (string) ($record->title);
+    }
+
+    /** @return array<string, string> */
+    public static function getGlobalSearchResultDetails(Model $record): array
+    {
+        /** @var AtlasImage $record */
+        return ['Diagnosis' => $record->diagnosis ?? '—'];
+    }
+
+    /** @return Builder<AtlasImage> */
+    public static function getGlobalSearchEloquentQuery(): Builder
+    {
+        return parent::getGlobalSearchEloquentQuery()->with([]);
+    }
+
+    /** These resources have no edit page of their own: open the list, searched for the record. */
+    public static function getGlobalSearchResultUrl(Model $record): string
+    {
+        /** @var AtlasImage $record */
+        return static::getUrl('index', ['tableSearch' => $record->title]);
+    }
+
     public static function form(Form $form): Form
     {
         return $form->schema([

@@ -18,11 +18,9 @@ function submit() {
 <template>
     <header class="bg-ink text-white">
         <div class="mx-auto flex w-full max-w-[1280px] flex-wrap items-center gap-x-8 gap-y-4 px-5 py-4 md:px-8">
-            <a href="#top" class="flex items-center gap-3">
-                <span class="flex size-10 items-center justify-center overflow-hidden rounded-xl bg-white p-1">
-                    <img src="/brand/mrcp-world-mark.png" alt="" class="size-full object-contain" width="40" height="40" />
-                </span>
-                <span class="font-heading text-lg font-semibold tracking-tight">{{ appName }}</span>
+            <a href="#top" class="flex items-center" :aria-label="appName">
+                <!-- The bar is navy, so the logo with the light "World" is used. -->
+                <img src="/brand/mrcp-world-logo.dark.png" :alt="appName" class="h-14 w-auto object-contain" height="56" />
             </a>
             <nav aria-label="Primary" class="order-3 flex w-full items-center gap-6 sm:order-none sm:w-auto">
                 <a href="#exams" class="rounded-lg px-1 py-2 text-sm font-semibold text-white/80 transition hover:text-white">{{

@@ -6,6 +6,7 @@ use App\Models\Plan;
 use App\Models\Qbank;
 use App\Models\Subscription;
 use App\Models\User;
+use App\Support\Notify;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -51,10 +52,15 @@ class SubscriptionService
                 throw ValidationException::withMessages(['plan_id' => 'Your request for '.$qbank->name.' is already waiting for activation.']);
             }
 
-            return Subscription::create([
+            $subscription = Subscription::create([
                 'user_id' => $user->id, 'qbank_id' => $qbank->id, 'plan_id' => $plan->id, 'status' => Subscription::STATUS_PENDING,
                 'amount' => $plan->price, 'currency' => $plan->currency, 'payment_reference' => $reference, 'student_note' => $note,
             ]);
+            Notify::staffWith('billing.subscriptions.manage', 'New subscription request',
+                $user->name.' requested '.$qbank->name.' ('.$plan->priceLabel().'). Payment reference: '.($reference ?: 'none').'.',
+                '/admin/subscriptions?tableFilters[status][value]=pending', 'heroicon-o-credit-card', 'warning');
+
+            return $subscription;
         }, 3);
     }
 
@@ -75,11 +81,47 @@ class SubscriptionService
             $locked->update([
                 'status' => Subscription::STATUS_ACTIVE,
                 'starts_at' => $start, 'ends_at' => $start->copy()->addDays($days),
-                'activated_by' => $admin->id, 'activated_at' => now(),
+                'activated_by' => $admin->id, 'activated_at' => now(), 'reminded_at' => null,
             ]);
+            Notify::student($locked->user, 'Your subscription is active',
+                ($locked->qbank->name ?? 'Your Qbank').' is open until '.$locked->ends_at?->toFormattedDateString().'. Happy studying!',
+                '/dashboard', 'CheckCircle2', 'success');
 
             return $locked;
         }, 3);
+    }
+
+    /**
+     * Remind students whose access ends within the given days. Each
+     * subscription period is reminded once.
+     */
+    public function remindExpiring(int $days = 7): int
+    {
+        $count = 0;
+        Subscription::query()->current()->whereNull('reminded_at')->where('ends_at', '<=', now()->addDays($days))
+            ->with(['user', 'qbank:id,name'])
+            ->chunkById(200, function ($subscriptions) use (&$count): void {
+                foreach ($subscriptions as $subscription) {
+                    if ($subscription->user === null) {
+                        continue;
+                    }
+                    // A renewal that is already waiting or active after this one needs no reminder.
+                    $renewed = Subscription::where('user_id', $subscription->user_id)->where('qbank_id', $subscription->qbank_id)
+                        ->whereKeyNot($subscription->id)
+                        ->where(fn ($query) => $query->where('status', Subscription::STATUS_PENDING)
+                            ->orWhere(fn ($query) => $query->where('status', Subscription::STATUS_ACTIVE)->where('ends_at', '>', $subscription->ends_at)))
+                        ->exists();
+                    if (! $renewed) {
+                        Notify::student($subscription->user, 'Your subscription ends soon',
+                            ($subscription->qbank->name ?? 'Your Qbank').' closes on '.$subscription->ends_at?->toFormattedDateString().'. Renew to keep your access and history.',
+                            '/subscription', 'CalendarClock', 'warning');
+                        $count++;
+                    }
+                    $subscription->update(['reminded_at' => now()]);
+                }
+            });
+
+        return $count;
     }
 
     public function cancel(Subscription $subscription, ?string $note = null): void

@@ -3,7 +3,11 @@ import RichText from '@/components/practice/RichText.vue';
 import type { QuestionResult } from '@/types/practice';
 import { CheckCircle2, Clock, ExternalLink, Image as ImageIcon, Lightbulb, Search, Sparkles, Users, XCircle } from 'lucide-vue-next';
 import { computed } from 'vue';
-const props = defineProps<{ result: QuestionResult; selected: string | null; options: Record<string, string> }>();
+const props = defineProps<{
+    result: QuestionResult;
+    selected: string | null;
+    options: Record<string, string>;
+}>();
 const candidates = computed(() => props.result.candidates ?? null);
 function seconds(value: number | null | undefined): string {
     if (value === null || value === undefined) return '—';

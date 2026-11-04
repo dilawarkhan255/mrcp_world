@@ -7,6 +7,7 @@ use App\Models\Question;
 use App\Models\QuestionComment;
 use App\Services\CommentService;
 use App\Support\CurrentExam;
+use App\Support\Notify;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -90,6 +91,9 @@ class CommentController extends Controller
             'parent_id' => $comment->id,
             'body' => $data['body'],
         ]);
+        if ($comment->user_id !== $request->user()->id && $comment->user !== null) {
+            Notify::student($comment->user, 'New reply to your comment', $request->user()->name.': '.$data['body'], '/questions/comments', 'MessagesSquare');
+        }
 
         return back();
     }

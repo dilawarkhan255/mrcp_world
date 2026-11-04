@@ -12,6 +12,7 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Validation\Rules\Unique;
 
 class CategoryResource extends Resource
@@ -23,6 +24,40 @@ class CategoryResource extends Resource
     protected static ?string $navigationGroup = 'Content';
 
     protected static ?int $navigationSort = 2;
+
+    /** @return list<string> */
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['name', 'slug'];
+    }
+
+    protected static int $globalSearchResultsLimit = 5;
+
+    public static function getGlobalSearchResultTitle(Model $record): string
+    {
+        /** @var Category $record */
+        return (string) ($record->name);
+    }
+
+    /** @return array<string, string> */
+    public static function getGlobalSearchResultDetails(Model $record): array
+    {
+        /** @var Category $record */
+        return ['Exam' => $record->exam->name ?? '—'];
+    }
+
+    /** @return Builder<Category> */
+    public static function getGlobalSearchEloquentQuery(): Builder
+    {
+        return parent::getGlobalSearchEloquentQuery()->with(['exam:id,name']);
+    }
+
+    /** These resources have no edit page of their own: open the list, searched for the record. */
+    public static function getGlobalSearchResultUrl(Model $record): string
+    {
+        /** @var Category $record */
+        return static::getUrl('index', ['tableSearch' => $record->name]);
+    }
 
     public static function form(Form $form): Form
     {

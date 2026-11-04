@@ -15,6 +15,7 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Validation\Rules\Password;
 use Spatie\Permission\Models\Permission;
 
@@ -70,6 +71,40 @@ class UserResource extends Resource
     private static function canManageRoles(): bool
     {
         return auth()->user()?->can('system.roles.manage') ?? false;
+    }
+
+    /** @return list<string> */
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['name', 'email'];
+    }
+
+    protected static int $globalSearchResultsLimit = 5;
+
+    public static function getGlobalSearchResultTitle(Model $record): string
+    {
+        /** @var User $record */
+        return (string) ($record->name);
+    }
+
+    /** @return array<string, string> */
+    public static function getGlobalSearchResultDetails(Model $record): array
+    {
+        /** @var User $record */
+        return ['Email' => self::showsFullEmail() ? $record->email : self::mask($record->email)];
+    }
+
+    /** @return Builder<User> */
+    public static function getGlobalSearchEloquentQuery(): Builder
+    {
+        return parent::getGlobalSearchEloquentQuery()->with([]);
+    }
+
+    /** These resources have no edit page of their own: open the list, searched for the record. */
+    public static function getGlobalSearchResultUrl(Model $record): string
+    {
+        /** @var User $record */
+        return static::getUrl('index', ['tableSearch' => $record->email]);
     }
 
     public static function form(Form $form): Form
@@ -139,7 +174,7 @@ class UserResource extends Resource
         ])->actions([
             Tables\Actions\EditAction::make()->slideOver()
                 ->using(fn (User $record, array $data): User => self::saveAccount($record, $data)),
-            Tables\Actions\Action::make('removeFromLeaderboard')->label('Remove from leaderboard')->icon('heroicon-o-trophy')->color('gray')
+            Tables\Actions\Action::make('removeFromLeaderboard')->iconButton()->label('Remove from leaderboard')->icon('heroicon-o-trophy')->color('gray')
                 ->visible(fn (User $record): bool => $record->leaderboard_opt_in)
                 ->authorize(fn (User $record): bool => auth()->user()?->can('update', $record) ?? false)
                 ->requiresConfirmation()

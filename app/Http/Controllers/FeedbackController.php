@@ -6,6 +6,7 @@ use App\Models\Exam;
 use App\Models\Feedback;
 use App\Models\User;
 use App\Support\CurrentExam;
+use App\Support\Notify;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -56,6 +57,10 @@ class FeedbackController extends Controller
             'message' => $data['message'],
             'status' => Feedback::STATUS_NEW,
         ]);
+
+        $isReport = isset($data['question_id']);
+        Notify::staffWith('community.comments.moderate', $isReport ? 'New MCQ report' : 'New student feedback',
+            $user->name.': '.$data['message'], '/admin/feedback', $isReport ? 'heroicon-o-flag' : 'heroicon-o-chat-bubble-left-ellipsis', 'warning');
 
         return back()->with('status', isset($data['question_id'])
             ? 'Thank you. The MCQ report has been sent to the editors.'

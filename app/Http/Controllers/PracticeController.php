@@ -50,7 +50,12 @@ class PracticeController extends Controller
             'subjects' => Category::where('exam_id', $exam->id)
                 ->withCount(['questions' => fn ($query) => $query->published()->whereNotNull('past_paper_id')])
                 ->orderBy('name')->simplePaginate(20, ['*'], 'subjects')->withQueryString(),
-            'papers' => PastPaper::where('exam_id', $exam->id)->where('is_published', true)->withCount(['questions' => fn ($query) => $query->published()])->orderByDesc('year')->orderByDesc('id')->simplePaginate(20)->withQueryString(),
+            'papers' => PastPaper::where('exam_id', $exam->id)->where('is_published', true)->withCount(['questions' => fn ($query) => $query->published()])->orderByDesc('year')->orderByDesc('id')
+                ->simplePaginate(20, ['id', 'title', 'year', 'sitting', 'description', 'image_path'])->withQueryString()
+                ->through(fn (PastPaper $paper): array => [
+                    'id' => $paper->id, 'title' => $paper->title, 'year' => $paper->year, 'sitting' => $paper->sitting,
+                    'description' => $paper->description, 'image_url' => $paper->imageUrl(), 'questions_count' => (int) $paper->getAttribute('questions_count'),
+                ]),
         ]);
     }
 
@@ -84,12 +89,8 @@ class PracticeController extends Controller
 
     public function index(Request $request): Response
     {
-        $exam = $this->exam($request);
-
-        return Inertia::render('questions/Sessions', [
-            'sessions' => PracticeSession::where('user_id', $request->user()?->id)->where('exam_id', $exam->id)->orderByDesc('id')
-                ->simplePaginate(20, ['id', 'total_questions', 'answered_count', 'correct_count', 'completed_at', 'created_at'])->withQueryString(),
-        ]);
+        // Rows come from the Yajra endpoint (StudentTableController::sessions).
+        return Inertia::render('questions/Sessions', ['exam' => CurrentExam::props($request)]);
     }
 
     public function show(Request $request, PracticeSession $session, PracticeService $practice, CommentService $comments): Response|RedirectResponse

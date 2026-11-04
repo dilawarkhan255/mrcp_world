@@ -29,6 +29,16 @@ return [
     ],
 
     /*
+    | The AI tutor (Claude). Without a key the AI buttons stay hidden and the
+    | rule-based study plan is used. daily_limit is per student.
+    */
+    'anthropic' => [
+        'key' => env('ANTHROPIC_API_KEY'),
+        'model' => env('ANTHROPIC_MODEL', 'claude-opus-5-5'),
+        'daily_limit' => (int) env('AI_TUTOR_DAILY_LIMIT', 20),
+    ],
+
+    /*
     | Public community links shown in the landing footer and student sidebar.
     | Leave empty to hide a link.
     */

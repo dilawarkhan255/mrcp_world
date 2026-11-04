@@ -3,7 +3,7 @@ import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, useForm } from '@inertiajs/vue3';
-import { CheckCircle2, Clock, CreditCard } from 'lucide-vue-next';
+import { CheckCircle2, Clock, CreditCard, PoundSterling } from 'lucide-vue-next';
 import { nextTick, onMounted, ref } from 'vue';
 
 interface QbankPlan {
@@ -110,8 +110,11 @@ function date(value: string | null): string {
                         <li v-for="plan in qbank.plans" :id="'plan-' + plan.id" :key="plan.id" class="rounded-lg border p-4">
                             <div class="flex flex-wrap items-baseline justify-between gap-2">
                                 <p>
-                                    <span class="text-2xl font-semibold text-primary">{{ plan.price }}</span>
-                                    <span class="text-sm text-muted-foreground"> for {{ plan.duration }}</span>
+                                    <span class="inline-flex items-center gap-0.5 text-2xl font-semibold text-primary"
+                                        ><PoundSterling v-if="plan.price.startsWith('£')" class="size-5" aria-label="GBP" />{{
+                                            plan.price.replace(/^£/, '')
+                                        }}</span
+                                    >
                                 </p>
                                 <Button v-if="requesting !== plan.id" size="sm" :disabled="qbank.pending" @click="open(plan)"
                                     ><CreditCard class="size-4" aria-hidden="true" />{{ qbank.has_access ? 'Renew' : 'Subscribe' }}</Button

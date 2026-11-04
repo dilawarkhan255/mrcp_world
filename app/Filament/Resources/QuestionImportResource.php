@@ -51,7 +51,7 @@ class QuestionImportResource extends Resource
             Tables\Columns\TextColumn::make('rejected'),
             Tables\Columns\TextColumn::make('created_at')->dateTime(),
         ])->actions([
-            Tables\Actions\Action::make('report')->modalHeading('Import report')->modalSubmitAction(false)->modalCancelActionLabel('Close')
+            Tables\Actions\Action::make('report')->iconButton()->icon('heroicon-o-document-magnifying-glass')->modalHeading('Import report')->modalSubmitAction(false)->modalCancelActionLabel('Close')
                 ->modalContent(fn (QuestionImport $record) => view('imports.report', ['record' => $record])),
         ])->poll('10s')->defaultSort('id', 'desc')->paginationPageOptions([25, 50, 100]);
     }

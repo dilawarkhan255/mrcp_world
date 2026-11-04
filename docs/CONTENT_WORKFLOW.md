@@ -8,8 +8,8 @@ A **Qbank** is the product a student subscribes to. Each Qbank groups exams:
 
 | Qbank | Exams | Question bank |
 | --- | --- | --- |
-| MRCPWorld 1 Qbank | MRCP 1 UK/Irish, IMM | IMM reads the MRCP 1 UK/Irish bank |
-| MRCPWorld 2 Qbank | MRCP 2 UK/Irish, FCPS Part 2 | FCPS Part 2 reads the MRCP 2 UK/Irish bank |
+| MRCPWorld 1 Qbank | MRCP 1, IMM | IMM reads the MRCP 1 bank |
+| MRCPWorld 2 Qbank | MRCP 2, FCPS Part 2 | FCPS Part 2 reads the MRCP 2 bank |
 
 ## Subscriptions
 
@@ -19,19 +19,19 @@ Each Qbank is sold on its own: **£8 for 6 months** (plans are in **Users and bi
 2. The request appears under **Users and billing → Subscriptions** with a badge. Check the payment, then **Activate** (180 days by default, editable). Activating while an earlier subscription is still running starts the new period when the old one ends, so no days are lost.
 3. **Deactivate** removes access at once. **Grant access** creates an active subscription directly, for example for a free trial.
 
-Without an active subscription a student sees a "free demo mode" banner and lock icons in the sidebar. They can practise only the questions marked **Free demo question** in the MCQ form. Past papers, mocks, search, reviews, notes, comments, the textbook and the Image Atlas send them to the subscription page; so does a session with non-demo questions after a subscription ends. Editors and admins always have access. One subscription to MRCPWorld 1 Qbank opens both MRCP 1 UK/Irish and IMM.
+Without an active subscription a student sees a "free demo mode" banner and lock icons in the sidebar. They can practise only the questions marked **Free demo question** in the MCQ form. Past papers, mocks, search, reviews, notes, comments, the textbook and the Image Atlas send them to the subscription page; so does a session with non-demo questions after a subscription ends. Editors and admins always have access. One subscription to MRCPWorld 1 Qbank opens both MRCP 1 and IMM.
 
 ## Extended textbook
 
 Open **Content → Textbook** and add chapters to an exam (the exam that owns the bank, never IMM or FCPS) and optionally a subject. The chapter body and key points are Markdown with tables and images (put flowcharts and diagrams in as images; files go to `storage/app/public/textbook-media`). Chapters are listed by subject and in **Order in subject**; students reach them from **Textbooks** with previous/next links. Only published chapters are shown, and only to subscribers.
 
-An exam either owns its subjects, papers and questions, or uses another exam's bank (**Exams → Uses the question bank of**). A shared-content exam cannot hold subjects, papers or imports of its own; the admin pickers list only exams that own content. When a student picks IMM in the sidebar, they see the MRCP 1 UK/Irish questions under the IMM name, and their sessions, reviews, bookmarks and performance are stored against the MRCP 1 UK/Irish bank, so switching between the two keeps one history. Subscriptions are tied to the Qbank, so they cover every exam in it.
+An exam either owns its subjects, papers and questions, or uses another exam's bank (**Exams → Uses the question bank of**). A shared-content exam cannot hold subjects, papers or imports of its own; the admin pickers list only exams that own content. When a student picks IMM in the sidebar, they see the MRCP 1 questions under the IMM name, and their sessions, reviews, bookmarks and performance are stored against the MRCP 1 bank, so switching between the two keeps one history. Subscriptions are tied to the Qbank, so they cover every exam in it.
 
 ## Add your content
 
 1. Log in as admin@example.test or editor@example.test using the local seed password in README.md. Open /admin.
 2. Open **Categories**. Create categories under the correct exam; note each category slug.
-3. For past-paper MCQs, open **Past papers**, create a paper with its exam/year/title/slug, and publish it when ready.
+3. For past-paper MCQs, open **Past papers**, create a paper with its exam, title (the slug fills itself), year and sitting, an optional short description and an optional cover image (JPG/PNG/WebP, up to 3 MB, stored on the `public` disk under `past-papers/`), and publish it when ready. The table shows each paper's MCQ count and live (published) MCQs; the row icons open the paper's MCQs, add MCQs through an import, edit, or delete (only a paper with no MCQs).
 4. To enter individual MCQs, open **Questions → Create**. Choose exam, category and optional paper; provide a unique code, question, 2–5 options (A–E), correct option and explanation. Save as a draft or publish immediately. Edit and Archive are available in the question table.
 5. For bulk content, open **Bulk MCQ uploads**, download the CSV template and fill it. CSV must use UTF-8 and quote any values containing commas or newlines. XLSX uses the first sheet and the same header row. Legacy .xls files are not supported.
 6. Click **Upload MCQs**, choose the exam and optionally the past paper, select CSV/XLSX, and choose whether to publish imported questions. Submission returns immediately; the queue worker processes the private file.
@@ -93,7 +93,8 @@ Validation failures show a readable failed status. Transient infrastructure fail
 
 - Choose the exam in the sidebar.
 - **Question bank** lists categories and published question counts, with mixed practice or category practice.
-- **Past papers** lists published papers; start a session from a paper.
+- **Past papers** lists published papers as cards with their cover image, sitting, year and description; start a session from a paper.
+- **Previous sessions** and the mock **Recent attempts** are server-side Yajra data tables (`StudentTableController`, component `YajraTable.vue`): sorted, paged and searchable by session number, limited to the student's own sessions of the selected exam, with icon actions to resume or review.
 - Select 1–100 questions per session. If fewer match, the session contains the available questions. Session creation uses an indexed random starting point with wraparound, not a full-table random sort; it is not a statistically uniform sample.
 - Choose one answer and submit. The server saves and scores it, then returns the correct option and explanation. These answers are absent from the unanswered question response.
 - **Previous sessions** lets the student resume unfinished sessions or review completed answers. Only submitted choices are saved. An answer cannot be changed after submission. Repeated identical submissions do not increment the score twice.
@@ -155,7 +156,7 @@ Admins log in at `/login` (or `/admin/login`) and land in the admin panel. Under
 
 ## Demo content (local only)
 
-`php artisan db:seed --class=DemoContentSeeder` fills a local site so it does not look empty: subjects for MRCP 1 UK/Irish and MRCP 2 UK/Irish, 36 sample MCQs (main bank and a "Sample paper A (demo content)"), three textbook chapters, ten demo students with subscriptions, two weeks of practice history, leaderboard entries, comments and candidate statistics. The local student account gets an MRCPWorld 1 Qbank subscription so both the subscribed and the demo-only states can be tried. `php artisan db:seed` runs it automatically in the local environment.
+`php artisan db:seed --class=DemoContentSeeder` fills a local site so it does not look empty: subjects for MRCP 1 and MRCP 2, 36 sample MCQs (main bank and a "Sample paper A (demo content)"), three textbook chapters, ten demo students with subscriptions, two weeks of practice history, leaderboard entries, comments and candidate statistics. The local student account gets an MRCPWorld 1 Qbank subscription so both the subscribed and the demo-only states can be tried. `php artisan db:seed` runs it automatically in the local environment.
 
 - It runs only in the `local` and `testing` environments and refuses to run in production.
 - Every sample MCQ is coded `SAMPLE-MP1-…` / `SAMPLE-MP2-…`, marked as sample and **flagged for review**: a clinician must check the facts and citations before real students rely on them. Only well-established NICE guideline numbers are cited; no citation was invented.
@@ -163,3 +164,13 @@ Admins log in at `/login` (or `/admin/login`) and land in the admin panel. Under
 - Demo student accounts (`demo.student1@example.test` …) have random passwords and are not meant for logging in.
 
 Admins move between the two sides with **Student app** in the admin sidebar (and the user menu); the student sidebar has **Admin panel** to return.
+- **Login per exam:** each exam card on the front page has its own **Log in** link (`/login?exam=<slug>`, for example `/login?exam=mrcp-part-2-written`). The login page names the exam, and the student lands in that exam after logging in. The exams are shown as **MRCP 1** and **MRCP 2** (without "UK/Irish").
+
+## AI tutor (Claude)
+
+Set `ANTHROPIC_API_KEY` in `.env` to switch it on (`ANTHROPIC_MODEL` defaults to `claude-opus-5-5`, `AI_TUTOR_DAILY_LIMIT` to 20 requests per student per day). Without a key the AI buttons stay hidden and the rule-based plan works as before.
+
+- **Ask AI about this question** appears under every practice question (in a mock, only once the mock is closed). The student types a question or picks a suggestion. Before the student answers, Claude gets only the stem and options, never the answer key; after the answer it also gets the correct answer, the editor's explanation and references. Answers are cached for 30 days per question, state and normalised question.
+- **AI advice** on the AI Study Plan page sends the student's subjects and scores only.
+- No name or email is sent. The prompt forbids inventing guideline titles, years or URLs. Answers are rendered with raw HTML stripped and labelled as AI-written.
+- Requests use low effort for short answers, and the server-side refusal fallback (`fallbacks: "default"`).

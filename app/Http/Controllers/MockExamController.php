@@ -32,12 +32,6 @@ class MockExamController extends Controller
                 'maxQuestions' => (int) config('student.mocks.max_questions'),
                 'maxMinutes' => (int) config('student.mocks.max_minutes'),
             ],
-            'attempts' => PracticeSession::where('user_id', $request->user()?->id)
-                ->where('exam_id', $exam->id)
-                ->where('mode', PracticeSession::MODE_MOCK)
-                ->orderByDesc('id')
-                ->simplePaginate(10, ['id', 'total_questions', 'answered_count', 'correct_count', 'completed_at', 'started_at', 'duration_seconds'])
-                ->withQueryString(),
         ]);
     }
 

@@ -12,7 +12,7 @@ use Inertia\Response;
 /**
  * The extended textbook of the selected exam: published chapters grouped by
  * subject. Chapters belong to the exam that owns the content, so IMM reads
- * the MRCP 1 UK/Irish textbook.
+ * the MRCP 1 textbook.
  */
 class TextbookController extends Controller
 {

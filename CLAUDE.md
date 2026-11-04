@@ -23,7 +23,8 @@ MRCP World is a question bank (Qbank) for the MRCP Part 1 and MRCP Part 2 Writte
 - **Tests:** Pest 3 (with PHPUnit 11 underneath). Tests run on an isolated in-memory SQLite database.
 - **Static analysis / style:** Larastan level 6 (no baseline), Laravel Pint, ESLint, Prettier
 - **Imports:** CSV via streamed reads, XLSX via OpenSpout 4
-- **Other packages:** Ziggy, predis (no phpredis extension needed). yajra/laravel-datatables-oracle and datatables.net are still installed but no longer used (the admin user list is a Filament resource).
+- **AI tutor:** the official Anthropic PHP SDK (`anthropic-ai/sdk`) in `App\Services\AiTutor`, model `claude-opus-5-5` (`ANTHROPIC_MODEL`), off without `ANTHROPIC_API_KEY`. Answers are cached and limited per student per day. "Ask AI" works on every question, but Claude gets the answer key only after the answer is revealed, and never in an open mock.
+- **Other packages:** Ziggy, predis (no phpredis extension needed). yajra/laravel-datatables-oracle + datatables.net-dt power the student data tables (`StudentTableController`, `resources/js/components/YajraTable.vue`); admin tables stay Filament.
 
 ## Local environment
 

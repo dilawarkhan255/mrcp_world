@@ -38,8 +38,8 @@ class QuestionsByExamChart extends ChartWidget
 
         return [
             'datasets' => [
-                ['label' => 'Published', 'data' => $published, 'backgroundColor' => '#0B6E78', 'borderRadius' => 6],
-                ['label' => 'Drafts', 'data' => $drafts, 'backgroundColor' => '#F59E0B', 'borderRadius' => 6],
+                ['label' => 'Published', 'data' => $published, 'backgroundColor' => '#0B2A6F', 'borderRadius' => 6],
+                ['label' => 'Drafts', 'data' => $drafts, 'backgroundColor' => '#F28C28', 'borderRadius' => 6],
             ],
             'labels' => $exams->values()->all(),
         ];

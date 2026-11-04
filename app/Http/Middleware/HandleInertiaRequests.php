@@ -2,7 +2,9 @@
 
 namespace App\Http\Middleware;
 
+use App\Http\Controllers\NotificationController;
 use App\Models\Exam;
+use App\Services\AiTutor;
 use App\Support\CurrentExam;
 use App\Support\StudentNavigation;
 use Illuminate\Http\Request;
@@ -48,6 +50,8 @@ class HandleInertiaRequests extends Middleware
             ],
             'flash' => ['status' => fn () => $request->session()->get('status')],
             'protection' => fn () => $this->protection($request),
+            'ai' => fn () => ['enabled' => $request->user() !== null && app(AiTutor::class)->enabled()],
+            'notifications' => fn () => $request->user() ? ['unread' => NotificationController::unread($request->user())] : null,
             'links' => [
                 'whatsapp' => config('services.community.whatsapp_url') ?: null,
                 'play_store' => config('services.community.play_store_url') ?: null,

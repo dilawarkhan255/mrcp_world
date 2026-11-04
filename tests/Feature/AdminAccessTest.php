@@ -16,6 +16,8 @@ use App\Models\Question;
 use App\Models\User;
 use Database\Seeders\RoleSeeder;
 use Filament\Facades\Filament;
+use Filament\Tables\Actions\DeleteAction;
+use Filament\Tables\Actions\EditAction;
 use Inertia\Testing\AssertableInertia as Assert;
 use Livewire\Livewire;
 
@@ -118,4 +120,24 @@ it('links from the admin panel to the student app', function () {
     $this->actingAs($this->admin)->get('/admin')->assertOk()->assertSee('Student app')->assertSee('/dashboard', false);
     // An admin can open the student app; content staff need no subscription (see SubscriptionAccessTest).
     $this->get('/dashboard')->assertOk();
+});
+
+it('uses the same trimmed, transparent logo and favicon as the student app', function () {
+    $this->actingAs($this->admin)->get('/admin')->assertOk()
+        ->assertSee('brand/mrcp-world-logo.trim.png', false)
+        ->assertSee('brand/mrcp-world-mark.trim.png', false);
+    expect(file_get_contents(resource_path('js/components/AppSidebar.vue')))->toContain('/brand/mrcp-world-logo.trim.png');
+});
+
+it('shows table row actions as icon buttons with their name as a tooltip', function () {
+    Filament::setCurrentPanel(Filament::getPanel('admin'));
+    $edit = EditAction::make();
+    $delete = DeleteAction::make();
+
+    expect($edit->isIconButton())->toBeTrue()
+        ->and($edit->getIcon())->toBe('heroicon-m-pencil-square')
+        ->and($edit->getTooltip())->toBe($edit->getLabel())
+        ->and($delete->isIconButton())->toBeTrue()
+        ->and($delete->getIcon())->toBe('heroicon-m-trash')
+        ->and($delete->getTooltip())->toBe($delete->getLabel());
 });

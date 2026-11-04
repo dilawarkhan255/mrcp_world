@@ -14,6 +14,7 @@ use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
 use Filament\Support\Enums\MaxWidth;
+use Filament\Tables;
 use Filament\View\PanelsRenderHook;
 use Filament\Widgets;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
@@ -25,6 +26,22 @@ use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 class AdminPanelProvider extends PanelProvider
 {
+    /**
+     * Table row actions are icon buttons with their name as a tooltip, the
+     * same in every resource. Edit and delete keep Filament's pencil and bin
+     * icons (set in their setUp(), which runs after these defaults); custom
+     * actions name their own icons.
+     */
+    public function boot(): void
+    {
+        Tables\Actions\EditAction::configureUsing(fn (Tables\Actions\EditAction $action) => $action
+            ->iconButton()->color('primary'));
+        Tables\Actions\DeleteAction::configureUsing(fn (Tables\Actions\DeleteAction $action) => $action
+            ->iconButton());
+        Tables\Actions\Action::configureUsing(fn (Tables\Actions\Action $action) => $action
+            ->tooltip(fn (): ?string => $action->isIconButton() ? $action->getLabel() : null));
+    }
+
     public function panel(Panel $panel): Panel
     {
         return $panel
@@ -33,12 +50,13 @@ class AdminPanelProvider extends PanelProvider
             ->path('admin')
             ->login()
             ->brandName(fn (): string => (string) config('app.name'))
-            ->brandLogo(asset('brand/mrcp-world-logo-full.png'))
+            ->brandLogo(asset('brand/mrcp-world-logo.trim.png'))
+            ->darkModeBrandLogo(asset('brand/mrcp-world-logo.dark.png'))
             ->brandLogoHeight('4rem')
-            ->favicon(asset('brand/mrcp-world-mark.png'))
+            ->favicon(asset('brand/mrcp-world-mark.trim.png'))
             ->font('Manrope')
             ->colors([
-                'primary' => Color::hex('#0B6E78'),
+                'primary' => Color::hex('#0B2A6F'),
                 'gray' => Color::Slate,
             ])
             ->sidebarCollapsibleOnDesktop()
@@ -52,6 +70,8 @@ class AdminPanelProvider extends PanelProvider
                 NavigationGroup::make('System')->collapsed(),
             ])
             ->darkMode(true)
+            ->databaseNotifications()
+            ->databaseNotificationsPolling('30s')
             // The brand logo links here.
             ->homeUrl(fn (): string => Dashboard::getUrl())
             // The way back to the student app (it has an "Admin panel" link to return here).
@@ -66,7 +86,10 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->renderHook(PanelsRenderHook::HEAD_START, fn (): string => view('filament.appearance-sync')->render())
             ->renderHook(PanelsRenderHook::STYLES_AFTER, fn (): string => view('filament.admin-styles')->render())
-            ->renderHook(PanelsRenderHook::SIDEBAR_FOOTER, fn (): string => view('filament.appearance-switch')->render())
+            ->renderHook(PanelsRenderHook::TOPBAR_START, fn (): string => view('filament.topbar-toggle')->render())
+            ->renderHook(PanelsRenderHook::USER_MENU_BEFORE, fn (): string => view('filament.appearance-switch')->render())
+            ->globalSearchKeyBindings(['command+k', 'ctrl+k'])
+            ->globalSearchFieldSuffix(fn (): string => 'Ctrl K')
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([

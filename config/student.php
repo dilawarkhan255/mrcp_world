@@ -12,16 +12,18 @@ return [
     */
     'navigation' => [
         ['title' => 'Dashboard', 'icon' => 'LayoutGrid', 'href' => '/dashboard', 'match' => ['/questions/sessions']],
+        ['title' => 'My Notes', 'icon' => 'Bookmark', 'href' => '/revision/notes', 'match' => ['/revision/bookmarks'], 'subscription' => true],
+        ['title' => 'Search MCQs', 'icon' => 'Search', 'href' => '/questions/search', 'subscription' => true],
         ['title' => 'Question Bank', 'icon' => 'ListChecks', 'href' => null, 'subjects' => true, 'children' => [
             ['title' => 'Main MCQ Bank', 'icon' => 'Library', 'href' => '/questions/bank'],
-            ['title' => 'Past Paper MCQs', 'icon' => 'FileClock', 'href' => '/questions/past-papers', 'subscription' => true],
         ]],
-        ['title' => 'Search MCQs', 'icon' => 'Search', 'href' => '/questions/search', 'subscription' => true],
-        ['title' => 'Mock Tests', 'icon' => 'ClipboardList', 'href' => '/questions/mocks', 'subscription' => true],
+        ['title' => 'Past Papers', 'icon' => 'FileClock', 'href' => '/questions/past-papers', 'subscription' => true],
+        ['title' => 'Extended Textbook', 'icon' => 'BookOpen', 'href' => '/textbooks', 'match' => ['/textbooks/'], 'subscription' => true],
         ['title' => 'Image Atlas', 'icon' => 'Images', 'href' => '/image-atlas', 'subscription' => true],
-        ['title' => 'Textbooks', 'icon' => 'BookOpen', 'href' => '/textbooks', 'match' => ['/textbooks/'], 'subscription' => true],
-        ['title' => 'My Reviews', 'icon' => 'RotateCcw', 'href' => '/questions/review', 'subscription' => true],
-        ['title' => 'My Notes', 'icon' => 'Bookmark', 'href' => '/revision/notes', 'match' => ['/revision/bookmarks'], 'subscription' => true],
+        ['title' => 'Review Questions', 'icon' => 'RotateCcw', 'href' => '/questions/review', 'subscription' => true],
+        // A heading, not a link: the items below it are grouped under "More".
+        ['title' => 'More', 'section' => 'More'],
+        ['title' => 'Mock Tests', 'icon' => 'ClipboardList', 'href' => '/questions/mocks', 'subscription' => true],
         ['title' => 'Performance', 'icon' => 'TrendingUp', 'href' => '/questions/performance'],
         ['title' => 'Leaderboard', 'icon' => 'Trophy', 'href' => '/leaderboard', 'subscription' => true],
         ['title' => 'AI Study Plan', 'icon' => 'Sparkles', 'href' => '/study-plan', 'subscription' => true],

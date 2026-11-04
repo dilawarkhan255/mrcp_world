@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Models\Exam;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -18,9 +19,14 @@ class AuthenticatedSessionController extends Controller
      */
     public function create(Request $request): Response
     {
+        // Each exam has its own login link (/login?exam=mrcp-part-2-written): the page names the
+        // exam, and the student lands in that exam after logging in.
+        $exam = Exam::where('slug', $request->string('exam')->toString())->where('is_active', true)->first(['id', 'name', 'slug']);
+
         return Inertia::render('auth/Login', [
             'canResetPassword' => Route::has('password.request'),
             'status' => $request->session()->get('status'),
+            'exam' => $exam?->only(['name', 'slug']),
             // A visitor sent here after choosing a plan sees why they must log in first.
             'subscribing' => str_contains((string) $request->session()->get('url.intended', ''), '/subscription'),
         ]);
@@ -34,6 +40,11 @@ class AuthenticatedSessionController extends Controller
         $request->authenticate();
 
         $request->session()->regenerate();
+
+        $examId = Exam::where('slug', (string) $request->input('exam', ''))->where('is_active', true)->value('id');
+        if ($examId !== null) {
+            $request->session()->put('exam_id', (int) $examId);
+        }
 
         $default = $request->user()?->isStaff() ? '/admin' : route('dashboard', absolute: false);
         $destination = $request->session()->pull('url.intended', $default);

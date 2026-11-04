@@ -13,6 +13,7 @@ use Filament\Support\Enums\MaxWidth;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Validation\Rules\Unique;
 
 class TextbookChapterResource extends Resource
@@ -28,6 +29,40 @@ class TextbookChapterResource extends Resource
     protected static ?string $modelLabel = 'chapter';
 
     protected static ?int $navigationSort = 6;
+
+    /** @return list<string> */
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['title'];
+    }
+
+    protected static int $globalSearchResultsLimit = 5;
+
+    public static function getGlobalSearchResultTitle(Model $record): string
+    {
+        /** @var TextbookChapter $record */
+        return (string) ($record->title);
+    }
+
+    /** @return array<string, string> */
+    public static function getGlobalSearchResultDetails(Model $record): array
+    {
+        /** @var TextbookChapter $record */
+        return ['Subject' => $record->category->name ?? 'General'];
+    }
+
+    /** @return Builder<TextbookChapter> */
+    public static function getGlobalSearchEloquentQuery(): Builder
+    {
+        return parent::getGlobalSearchEloquentQuery()->with(['category:id,name']);
+    }
+
+    /** These resources have no edit page of their own: open the list, searched for the record. */
+    public static function getGlobalSearchResultUrl(Model $record): string
+    {
+        /** @var TextbookChapter $record */
+        return static::getUrl('index', ['tableSearch' => $record->title]);
+    }
 
     public static function form(Form $form): Form
     {

@@ -1,31 +1,25 @@
-{{-- Day / Dark switch in the admin sidebar, like the student app. Filament keeps
+{{-- Day / Dark switch in the admin top bar, like the student app. Filament keeps
      the choice in localStorage "theme" and the student app in "appearance";
      both are written so the two sides always match. --}}
-<div
+<button
+    type="button"
     x-data="{
         mode: localStorage.getItem('theme') || 'system',
         get dark() {
             return this.mode === 'dark' || (this.mode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)
         },
-        set(value) {
+        toggle() {
+            const value = this.dark ? 'light' : 'dark'
             this.mode = value
             localStorage.setItem('appearance', value)
             window.dispatchEvent(new CustomEvent('theme-changed', { detail: value }))
         },
     }"
-    class="mw-appearance"
+    x-on:click="toggle()"
+    x-bind:title="dark ? 'Switch to Day mode' : 'Switch to Dark mode'"
+    x-bind:aria-label="dark ? 'Switch to Day mode' : 'Switch to Dark mode'"
+    class="mw-topbar-btn mw-appearance"
 >
-    <span class="mw-appearance__label" x-show="$store.sidebar.isOpen">Appearance</span>
-    <div class="mw-appearance__group" role="group" aria-label="Appearance" x-bind:class="{ 'mw-appearance__group--stacked': ! $store.sidebar.isOpen }">
-        <button type="button" title="Day mode" x-bind:aria-pressed="(! dark).toString()" x-on:click="set('light')"
-            class="mw-appearance__btn" x-bind:class="{ 'mw-appearance__btn--active': ! dark }">
-            <x-filament::icon icon="heroicon-m-sun" class="h-4 w-4" />
-            <span x-show="$store.sidebar.isOpen">Day</span>
-        </button>
-        <button type="button" title="Dark mode" x-bind:aria-pressed="dark.toString()" x-on:click="set('dark')"
-            class="mw-appearance__btn" x-bind:class="{ 'mw-appearance__btn--active': dark }">
-            <x-filament::icon icon="heroicon-m-moon" class="h-4 w-4" />
-            <span x-show="$store.sidebar.isOpen">Dark</span>
-        </button>
-    </div>
-</div>
+    <x-filament::icon icon="heroicon-o-sun" class="h-5 w-5" x-show="dark" />
+    <x-filament::icon icon="heroicon-o-moon" class="h-5 w-5" x-show="! dark" />
+</button>

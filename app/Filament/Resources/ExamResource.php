@@ -35,7 +35,7 @@ class ExamResource extends Resource
                     ->whereNull('content_exam_id')
                     ->where('qbank_id', $get('qbank_id'))
                     ->when($record, fn (Builder $query) => $query->whereKeyNot($record->id)))
-                ->helperText('Leave empty when this exam has its own subjects and questions. For example, IMM uses the MRCP 1 UK/Irish bank.'),
+                ->helperText('Leave empty when this exam has its own subjects and questions. For example, IMM uses the MRCP 1 bank.'),
             Forms\Components\TextInput::make('code')->label('Tile code')->maxLength(4)->helperText('Up to 4 letters shown on the landing page.'),
             Forms\Components\TextInput::make('sort_order')->numeric()->minValue(0)->default(0),
             Forms\Components\Textarea::make('description')->maxLength(1000)->rows(2)->columnSpanFull(),

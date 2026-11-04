@@ -27,6 +27,7 @@ export const landingCopy = {
         intro: 'Pick the exam you are sitting. Every exam has its own question bank, past papers and mock exams.',
         demo: 'Take a demo',
         signUp: 'Sign up',
+        logIn: 'Log in',
         questions: (count: number): string => `${count}+ questions`,
         empty: 'Exams are being prepared. Check back shortly.',
     },

@@ -1,6 +1,7 @@
 <?php
 
 use App\Services\CandidateStatsService;
+use App\Services\SubscriptionService;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -15,3 +16,10 @@ Artisan::command('stats:refresh {--full : Recompute every question instead of th
 })->purpose('Refresh the candidate correct %, average time and subject averages');
 
 Schedule::command('stats:refresh')->everyTenMinutes()->withoutOverlapping(30);
+
+Artisan::command('subscriptions:remind {--days=7 : Remind when access ends within this many days}', function (SubscriptionService $subscriptions) {
+    $count = $subscriptions->remindExpiring((int) $this->option('days'));
+    $this->info("Reminded {$count} students.");
+})->purpose('Notify students whose subscription ends soon');
+
+Schedule::command('subscriptions:remind')->dailyAt('09:00')->withoutOverlapping();
