@@ -2,27 +2,48 @@
 
 namespace App\Models;
 
+use App\Support\QuestionContent;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Validation\ValidationException;
 
-/** @property array<string, string|null> $options */
+/**
+ * @property array<string, string|null> $options
+ * @property list<array{source: string, title: string, url?: string|null, year?: string|null}>|null $references
+ * @property list<array{label: string, url: string}>|null $image_links
+ */
 class Question extends Model
 {
     use SoftDeletes;
 
     /** @var list<string> */
-    protected $fillable = ['exam_id', 'category_id', 'past_paper_id', 'code', 'body', 'options', 'correct_option', 'explanation', 'is_published', 'is_demo', 'is_sample', 'difficulty'];
+    protected $fillable = [
+        'exam_id', 'category_id', 'past_paper_id', 'code', 'body', 'options', 'correct_option', 'explanation',
+        'key_points', 'mnemonics', 'references', 'youtube_url', 'image_links', 'image_search', 'image_search_sites', 'system', 'repeat_count', 'source_reference',
+        'needs_review', 'review_note', 'is_published', 'is_demo', 'is_sample', 'difficulty',
+    ];
 
-    /** @var list<string> */
-    protected $hidden = ['correct_option', 'explanation'];
+    /** Reference sources an editor can choose. Other covers BNF, BTS, ESC and similar bodies. */
+    public const REFERENCE_SOURCES = ['NICE' => 'NICE', 'WHO' => 'WHO', 'Other' => 'Other guideline or source'];
+
+    /**
+     * Everything that reveals or explains the answer stays out of serialised
+     * models, so an unanswered question can never leak it.
+     *
+     * @var list<string>
+     */
+    protected $hidden = ['correct_option', 'explanation', 'key_points', 'mnemonics', 'references', 'youtube_url', 'image_links', 'image_search', 'image_search_sites', 'review_note'];
 
     /** @return array<string, string> */
     protected function casts(): array
     {
-        return ['options' => 'array', 'is_published' => 'boolean', 'is_demo' => 'boolean', 'is_sample' => 'boolean', 'difficulty' => 'integer'];
+        return [
+            'options' => 'array', 'references' => 'array', 'image_links' => 'array', 'image_search_sites' => 'array',
+            'is_published' => 'boolean', 'is_demo' => 'boolean', 'is_sample' => 'boolean', 'needs_review' => 'boolean',
+            'difficulty' => 'integer', 'repeat_count' => 'integer',
+        ];
     }
 
     protected static function booted(): void
@@ -39,6 +60,13 @@ class Question extends Model
                 throw ValidationException::withMessages(['past_paper_id' => 'Past paper must belong to this exam.']);
             }
             $question->options = $options;
+            if ($question->youtube_url !== null && $question->youtube_url !== '' && QuestionContent::youtubeId($question->youtube_url) === null) {
+                throw ValidationException::withMessages(['youtube_url' => 'Enter a YouTube watch, share or embed link.']);
+            }
+            $question->references = QuestionContent::cleanReferences($question->references);
+            $question->image_links = QuestionContent::cleanLinks($question->image_links);
+            $question->image_search = QuestionContent::cleanSearchTerm($question->image_search);
+            $question->image_search_sites = QuestionContent::cleanSearchSites($question->image_search_sites);
         });
     }
 

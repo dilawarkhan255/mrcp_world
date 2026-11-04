@@ -26,10 +26,12 @@ class QuestionImportResource extends Resource
 
     protected static ?string $navigationGroup = 'Content';
 
+    protected static ?int $navigationSort = 5;
+
     public static function form(Form $form): Form
     {
         return $form->schema([
-            Forms\Components\Select::make('exam_id')->relationship('exam', 'name')->required()->live(),
+            Forms\Components\Select::make('exam_id')->relationship('exam', 'name', modifyQueryUsing: fn (Builder $query) => $query->whereNull('content_exam_id'))->required()->live(),
             Forms\Components\Select::make('past_paper_id')->relationship('pastPaper', 'title', modifyQueryUsing: fn (Builder $query, Get $get) => $query->where('exam_id', $get('exam_id')))->searchable()->optionsLimit(50)
                 ->rules(fn (Get $get): array => [Rule::exists('past_papers', 'id')->where('exam_id', $get('exam_id'))]),
             Forms\Components\FileUpload::make('path')->label('CSV or XLSX file (first sheet only)')->disk('local')->directory('question-imports')->visibility('private')->acceptedFileTypes(['text/csv', 'text/plain', 'application/csv', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'])->maxSize(20480)->rules(['extensions:csv,xlsx'])->getUploadedFileNameForStorageUsing(fn (TemporaryUploadedFile $file): string => Str::uuid().'.'.strtolower($file->getClientOriginalExtension()))->required(),

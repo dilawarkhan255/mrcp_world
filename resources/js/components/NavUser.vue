@@ -20,15 +20,17 @@ const { getInitials } = useInitials();
                 <DropdownMenuTrigger as-child>
                     <SidebarMenuButton
                         size="lg"
-                        class="rounded-xl bg-white/10 text-sidebar-foreground hover:bg-white/15 hover:text-sidebar-foreground data-[state=open]:bg-white/15 data-[state=open]:text-sidebar-foreground"
+                        class="rounded-xl border border-sidebar-border text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-foreground"
                     >
                         <Avatar class="h-8 w-8 overflow-hidden rounded-lg">
                             <AvatarImage v-if="user.avatar" :src="user.avatar" :alt="user.name" />
-                            <AvatarFallback class="rounded-lg bg-white font-semibold text-[#14274a]">{{ getInitials(user.name) }}</AvatarFallback>
+                            <AvatarFallback class="rounded-lg bg-sidebar-primary font-semibold text-sidebar-primary-foreground">{{
+                                getInitials(user.name)
+                            }}</AvatarFallback>
                         </Avatar>
                         <div class="grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
                             <span class="truncate font-semibold">{{ user.name }}</span>
-                            <span class="truncate text-xs text-white/75">{{ user.email }}</span>
+                            <span class="truncate text-xs text-muted-foreground">{{ user.email }}</span>
                         </div>
                         <ChevronsUpDown class="ml-auto size-4 group-data-[collapsible=icon]:hidden" />
                     </SidebarMenuButton>

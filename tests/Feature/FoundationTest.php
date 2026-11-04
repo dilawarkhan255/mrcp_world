@@ -4,6 +4,7 @@ use App\Filament\Resources\CategoryResource\Pages\ManageCategories;
 use App\Filament\Resources\ExamResource\Pages\ManageExams;
 use App\Models\Category;
 use App\Models\Exam;
+use App\Models\Qbank;
 use App\Models\User;
 use App\Support\StudentNavigation;
 use Database\Seeders\ExamSeeder;
@@ -16,28 +17,46 @@ beforeEach(function () {
     $this->seed([ExamSeeder::class, RoleSeeder::class]);
 });
 
-it('seeds exactly the two exams idempotently', function () {
+it('seeds the two Qbanks and their four exams idempotently', function () {
     $this->seed(ExamSeeder::class);
-    expect(Exam::orderBy('id')->pluck('name')->all())->toBe(['MRCP Part 1', 'MRCP Part 2 Written']);
+    expect(Exam::orderBy('sort_order')->pluck('name')->all())->toBe(['MRCP 1 UK/Irish', 'IMM', 'MRCP 2 UK/Irish', 'FCPS Part 2'])
+        ->and(Qbank::orderBy('sort_order')->pluck('name')->all())->toBe(['MRCPWorld 1 Qbank', 'MRCPWorld 2 Qbank']);
+    $mrcp1 = Exam::where('slug', 'mrcp-part-1')->firstOrFail();
+    $mrcp2 = Exam::where('slug', 'mrcp-part-2-written')->firstOrFail();
+    expect(Exam::where('slug', 'imm')->value('content_exam_id'))->toBe($mrcp1->id)
+        ->and(Exam::where('slug', 'fcps-part-2')->value('content_exam_id'))->toBe($mrcp2->id)
+        ->and($mrcp1->content_exam_id)->toBeNull();
 });
 
 it('shares database exams and persists the selected exam', function () {
     $this->actingAs(User::factory()->create());
-    $exams = Exam::orderBy('id')->get();
-    $this->get('/dashboard')->assertInertia(fn (Assert $page) => $page->component('Dashboard')->has('exams', 2)->where('currentExam.id', $exams[0]->id));
+    $exams = Exam::whereNull('content_exam_id')->orderBy('id')->get();
+    $this->get('/dashboard')->assertInertia(fn (Assert $page) => $page->component('Dashboard')->has('exams', 4)->where('exams.1.qbank', 'MRCPWorld 1 Qbank')->where('currentExam.id', $exams[0]->id));
     $this->post('/exam', ['exam_id' => $exams[1]->id])->assertSessionHas('exam_id', $exams[1]->id);
     $this->get('/dashboard')->assertInertia(fn (Assert $page) => $page->where('currentExam.id', $exams[1]->id));
     $exams[1]->update(['is_active' => false]);
     $this->post('/exam', ['exam_id' => $exams[1]->id])->assertSessionHasErrors('exam_id');
     $this->post('/exam', ['exam_id' => 99999])->assertSessionHasErrors('exam_id');
-    $this->get('/dashboard')->assertInertia(fn (Assert $page) => $page->has('exams', 1)->where('currentExam.id', $exams[0]->id));
+    $this->get('/dashboard')->assertInertia(fn (Assert $page) => $page->has('exams', 3)->where('currentExam.id', $exams[0]->id));
 });
 
-it('protects exam selection and all student placeholders', function () {
+it('protects exam selection and opens every sidebar page to a subscriber', function () {
     $this->post('/exam', ['exam_id' => Exam::first()->id])->assertRedirect('/login');
     $this->actingAs(User::factory()->unverified()->create())->get('/questions/bank')->assertRedirect('/verify-email');
-    $this->actingAs(User::factory()->create());
+    $student = User::factory()->create();
+    grantAccess($student, Exam::orderBy('sort_order')->firstOrFail()->qbank_id);
+    $this->actingAs($student);
     foreach (StudentNavigation::staticHrefs() as $href) {
+        $this->get($href)->assertOk();
+    }
+});
+
+it('sends a student without a subscription from locked pages to the subscription page', function () {
+    $this->actingAs(User::factory()->create());
+    foreach (['/questions/past-papers', '/questions/search', '/questions/mocks', '/questions/review', '/revision/notes', '/image-atlas', '/textbooks', '/questions/comments'] as $href) {
+        $this->get($href)->assertRedirect('/subscription');
+    }
+    foreach (['/dashboard', '/questions/bank', '/questions/sessions', '/questions/performance', '/subscription', '/feedback'] as $href) {
         $this->get($href)->assertOk();
     }
 });
@@ -90,3 +109,13 @@ it('routes staff logins to the panel and exposes management navigation only to s
     ['editor', '/admin', true],
     ['student', '/dashboard', false],
 ]);
+
+it('makes an Inertia login into the admin panel a full browser visit', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+
+    $this->withHeaders(['X-Inertia' => 'true'])
+        ->post('/login', ['email' => $admin->email, 'password' => 'password'])
+        ->assertStatus(409)
+        ->assertHeader('X-Inertia-Location', '/admin');
+});

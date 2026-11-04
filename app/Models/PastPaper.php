@@ -20,6 +20,11 @@ class PastPaper extends Model
 
     protected static function booted(): void
     {
+        static::saving(function (PastPaper $paper) {
+            if (Exam::whereKey($paper->exam_id)->whereNotNull('content_exam_id')->exists()) {
+                throw ValidationException::withMessages(['exam_id' => 'This exam shares another exam\'s question bank. Add the paper to that exam instead.']);
+            }
+        });
         static::updating(function (PastPaper $paper) {
             if ($paper->isDirty('exam_id') && ($paper->questions()->withTrashed()->exists() || QuestionImport::where('past_paper_id', $paper->id)->exists() || PracticeSession::where('past_paper_id', $paper->id)->exists())) {
                 throw ValidationException::withMessages(['exam_id' => 'A paper with content or sessions cannot be moved to another exam.']);

@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Exam;
 use App\Models\PracticeSession;
+use App\Services\CommentService;
 use App\Services\PracticeService;
+use App\Support\CurrentExam;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -15,7 +17,7 @@ class MockExamController extends Controller
 {
     private function exam(Request $request): Exam
     {
-        return Exam::where('is_active', true)->find($request->session()->get('exam_id')) ?? Exam::where('is_active', true)->orderBy('id')->firstOrFail();
+        return CurrentExam::content($request);
     }
 
     public function index(Request $request, PracticeService $practice): Response
@@ -23,7 +25,7 @@ class MockExamController extends Controller
         $exam = $this->exam($request);
 
         return Inertia::render('questions/Mocks', [
-            'exam' => $exam->only(['id', 'name']),
+            'exam' => CurrentExam::props($request),
             'presets' => config('student.mocks.presets'),
             'availableQuestions' => $practice->questions($exam->id)->count(),
             'limits' => [
@@ -59,7 +61,7 @@ class MockExamController extends Controller
         return redirect()->route('mocks.show', $session);
     }
 
-    public function show(Request $request, PracticeSession $session, PracticeService $practice): Response
+    public function show(Request $request, PracticeSession $session, PracticeService $practice, CommentService $comments): Response
     {
         abort_unless($session->user_id === $request->user()?->id, 403);
         abort_unless($session->mode === PracticeSession::MODE_MOCK, 404);
@@ -82,7 +84,8 @@ class MockExamController extends Controller
                 'expires_at' => $session->expires_at?->toIso8601String(),
                 'duration_seconds' => $session->duration_seconds,
             ],
-            'question' => $practice->question($session, $position, $request->user()),
+            'question' => $question = $practice->question($session, $position, $request->user()),
+            ...PracticeController::discussion($question, $request, $comments),
             'navigator' => $practice->navigator($session),
             'serverTime' => now()->toIso8601String(),
         ]);
@@ -92,8 +95,11 @@ class MockExamController extends Controller
     {
         abort_unless($session->user_id === $request->user()?->id, 403);
         abort_unless($session->mode === PracticeSession::MODE_MOCK, 404);
-        $data = $request->validate(['option' => ['required', Rule::in(['A', 'B', 'C', 'D', 'E'])]]);
-        $practice->answer($session, $position, $data['option']);
+        $data = $request->validate([
+            'option' => ['required', Rule::in(['A', 'B', 'C', 'D', 'E'])],
+            'seconds' => ['nullable', 'integer', 'min:0', 'max:86400'],
+        ]);
+        $practice->answer($session, $position, $data['option'], isset($data['seconds']) ? (int) $data['seconds'] : null);
         $session->refresh();
         $next = $session->completed_at !== null ? $position : $practice->nextPosition($session, $position);
 

@@ -1,12 +1,34 @@
 <script setup lang="ts">
 import InputError from '@/components/InputError.vue';
+import AnswerReveal from '@/components/practice/AnswerReveal.vue';
+import QuestionComments from '@/components/practice/QuestionComments.vue';
+import QuestionGrid from '@/components/practice/QuestionGrid.vue';
+import QuestionLabels from '@/components/practice/QuestionLabels.vue';
+import ReportMcqDialog from '@/components/practice/ReportMcqDialog.vue';
+import RichText from '@/components/practice/RichText.vue';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
-import type { MockSession, NavigatorItem, PracticeQuestion } from '@/types/practice';
+import type { CommentThread, MockSession, NavigatorItem, PracticeQuestion } from '@/types/practice';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
-const props = defineProps<{ session: MockSession; question: PracticeQuestion; navigator: NavigatorItem[]; serverTime: string }>();
-const form = useForm({ option: props.question.selected_option || '' });
+const props = defineProps<{
+    session: MockSession;
+    question: PracticeQuestion;
+    navigator: NavigatorItem[];
+    serverTime: string;
+    /** Null until the mock is closed. */
+    comments?: CommentThread[] | null;
+    canModerate?: boolean;
+}>();
+const form = useForm({ option: props.question.selected_option || '', seconds: 0 });
+/** When the current question was shown, to send the time spent with the answer. */
+let shownAt = Date.now();
+watch(
+    () => props.question.position,
+    () => {
+        shownAt = Date.now();
+    },
+);
 const bookmark = useForm({ question_id: 0 });
 watch(
     () => props.question,
@@ -54,7 +76,12 @@ const scorePercentage = computed(() =>
     props.session.total_questions ? Math.round((props.session.correct_count / props.session.total_questions) * 100) : 0,
 );
 const alreadyAnswered = computed(() => props.question.selected_option !== null);
+function clearResponse() {
+    form.option = '';
+    form.clearErrors();
+}
 function save() {
+    form.seconds = Math.round((Date.now() - shownAt) / 1000);
     form.post('/questions/mocks/' + props.session.id + '/answer/' + props.question.position);
 }
 function toggleBookmark() {
@@ -131,10 +158,14 @@ function toggleBookmark() {
                     {{ session.total_questions }} questions. Use the navigator to review every question.
                 </p>
             </section>
-            <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_16rem]">
+            <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]">
                 <form class="space-y-6 rounded-xl border bg-card p-6 md:p-8" @submit.prevent="save">
-                    <p class="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Question {{ question.position }}</p>
-                    <p class="whitespace-pre-wrap text-base leading-relaxed">{{ question.body }}</p>
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <p class="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Question {{ question.position }}</p>
+                        <ReportMcqDialog v-if="question.question_id && isCompleted" :question-id="question.question_id" :code="question.code" />
+                    </div>
+                    <QuestionLabels :labels="question.labels" :code="isCompleted ? question.code : null" />
+                    <RichText :html="question.body_html" :text="question.body" class="text-base" />
                     <fieldset :disabled="alreadyAnswered || isCompleted || form.processing" class="space-y-3">
                         <legend class="mb-3 text-sm font-semibold">Choose one answer</legend>
                         <label
@@ -157,6 +188,14 @@ function toggleBookmark() {
                         <Button v-if="!alreadyAnswered && !isCompleted" type="submit" :disabled="form.processing || !form.option">{{
                             form.processing ? 'Saving…' : 'Save answer'
                         }}</Button>
+                        <Button
+                            v-if="!alreadyAnswered && !isCompleted"
+                            type="button"
+                            variant="ghost"
+                            :disabled="!form.option || form.processing"
+                            @click="clearResponse"
+                            >Clear response</Button
+                        >
                         <Link
                             v-else-if="question.position < session.total_questions"
                             :href="'/questions/mocks/' + session.id + '?position=' + (question.position + 1)"
@@ -170,36 +209,25 @@ function toggleBookmark() {
                             >Back to first question</Link
                         >
                     </div>
-                    <section v-if="question.result" role="status" class="rounded-lg border bg-muted/40 p-5">
-                        <h2 class="font-semibold" :class="question.result.is_correct ? 'text-green-700 dark:text-green-400' : 'text-destructive'">
-                            {{ question.result.is_correct ? 'Correct answer' : 'Incorrect answer' }}
-                        </h2>
-                        <p class="mt-2 text-sm">Correct option: {{ question.result.correct_option }}</p>
-                        <p v-if="question.result.explanation" class="mt-4 whitespace-pre-wrap text-sm leading-relaxed">
-                            {{ question.result.explanation }}
-                        </p>
-                    </section>
+                    <AnswerReveal v-if="question.result" :result="question.result" :selected="question.selected_option" :options="question.options" />
                 </form>
-                <aside class="space-y-3">
-                    <h2 class="text-sm font-semibold">Navigator</h2>
-                    <nav aria-label="Question navigator" class="grid grid-cols-6 gap-2">
-                        <Link
-                            v-for="item in navigator"
-                            :key="item.position"
-                            :href="'/questions/mocks/' + session.id + '?position=' + item.position"
-                            class="flex h-9 items-center justify-center rounded-md border text-sm tabular-nums"
-                            :class="[
-                                item.position === question.position
-                                    ? 'border-primary bg-primary text-primary-foreground'
-                                    : item.answered
-                                      ? 'border-green-600 bg-green-50 text-green-800 dark:bg-green-950 dark:text-green-300'
-                                      : 'bg-card',
-                            ]"
-                            >{{ item.position }}</Link
-                        >
-                    </nav>
-                    <p class="text-xs text-muted-foreground">Green questions are saved. Nothing is scored until the mock is closed.</p>
+                <aside class="space-y-3 lg:sticky lg:top-4 lg:self-start">
+                    <QuestionGrid
+                        :items="navigator"
+                        :current="question.position"
+                        :base-url="'/questions/mocks/' + session.id"
+                        :hide-correctness="!isCompleted"
+                    />
+                    <p class="text-xs text-muted-foreground">Saved answers are not scored until the mock is closed.</p>
                 </aside>
+                <QuestionComments
+                    v-if="comments && question.question_id"
+                    :key="question.question_id"
+                    :question-id="question.question_id"
+                    :threads="comments"
+                    :can-moderate="!!canModerate"
+                    class="lg:col-start-1"
+                />
             </div>
         </div>
     </AppLayout>

@@ -1,5 +1,8 @@
 <?php
 
+use App\Models\Qbank;
+use App\Models\Subscription;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -44,7 +47,11 @@ expect()->extend('toBeOne', function () {
 |
 */
 
-function something()
+/** Give a student an active subscription to a Qbank (manual activation, as an admin would). */
+function grantAccess(User $user, Qbank|int $qbank, int $days = 180): Subscription
 {
-    // ..
+    return Subscription::create([
+        'user_id' => $user->id, 'qbank_id' => $qbank instanceof Qbank ? $qbank->id : $qbank,
+        'status' => Subscription::STATUS_ACTIVE, 'starts_at' => now()->subMinute(), 'ends_at' => now()->addDays($days),
+    ]);
 }

@@ -46,7 +46,7 @@ beforeEach(function () {
 it('provides editors with working manual question and paper CRUD', function () {
     $this->actingAs($this->staff);
     Filament::setCurrentPanel(Filament::getPanel('admin'));
-    $this->get('/admin')->assertOk()->assertSee('Manage MCQs')->assertSee('Bulk upload CSV / XLSX');
+    $this->get('/admin')->assertOk()->assertSee('Publishing workflow')->assertSee('Bulk upload');
     Livewire::test(ManagePastPapers::class)->callAction('create', data: ['exam_id' => $this->exam->id, 'title' => 'Test paper', 'slug' => 'test-paper', 'year' => 2025, 'is_published' => true])->assertHasNoActionErrors();
     $paper = PastPaper::firstOrFail();
     $data = ['exam_id' => $this->exam->id, 'category_id' => $this->category->id, 'past_paper_id' => $paper->id, 'code' => 'Q-001', 'body' => 'Manual question', 'options' => ['A' => 'One', 'B' => 'Two', 'C' => '', 'D' => '', 'E' => ''], 'correct_option' => 'B', 'explanation' => 'Manual explanation', 'is_published' => true];
@@ -118,7 +118,7 @@ it('shows published content only and rejects cross-exam session filters', functi
     $this->get('/questions/past-papers')->assertInertia(fn (Assert $page) => $page->has('papers.data', 0));
     $otherCategory = Category::factory()->create();
     $this->post('/questions/sessions', ['count' => 10, 'category_id' => $otherCategory->id])->assertSessionHasErrors('category_id');
-    $this->post('/questions/sessions', ['count' => 101])->assertSessionHasErrors('count');
+    $this->post('/questions/sessions', ['count' => 251])->assertSessionHasErrors('count');
 });
 
 it('persists sessions, hides answers until submission, and scores idempotently', function () {

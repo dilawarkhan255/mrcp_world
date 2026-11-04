@@ -4,9 +4,12 @@ namespace App\Providers;
 
 use App\Http\Responses\Auth\LoginResponse;
 use App\Http\Responses\Auth\LogoutResponse;
+use App\Policies\RolePolicy;
 use Filament\Http\Responses\Auth\Contracts\LoginResponse as LoginResponseContract;
 use Filament\Http\Responses\Auth\Contracts\LogoutResponse as LogoutResponseContract;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
+use Spatie\Permission\Models\Role;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -24,6 +27,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // Spatie's Role model lives outside App\Models, so its policy is registered by hand.
+        Gate::policy(Role::class, RolePolicy::class);
     }
 }

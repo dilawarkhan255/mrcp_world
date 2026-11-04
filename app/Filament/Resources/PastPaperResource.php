@@ -11,6 +11,7 @@ use Filament\Resources\Pages\PageRegistration;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Validation\Rules\Unique;
 
 class PastPaperResource extends Resource
@@ -21,10 +22,12 @@ class PastPaperResource extends Resource
 
     protected static ?string $navigationGroup = 'Content';
 
+    protected static ?int $navigationSort = 3;
+
     public static function form(Form $form): Form
     {
         return $form->schema([
-            Forms\Components\Select::make('exam_id')->relationship('exam', 'name')->required()->live(),
+            Forms\Components\Select::make('exam_id')->relationship('exam', 'name', modifyQueryUsing: fn (Builder $query) => $query->whereNull('content_exam_id'))->required()->live(),
             Forms\Components\TextInput::make('title')->required()->maxLength(255),
             Forms\Components\TextInput::make('slug')->required()->maxLength(255)->regex('/^[a-z0-9]+(?:-[a-z0-9]+)*$/')->unique(ignoreRecord: true, modifyRuleUsing: fn (Unique $rule, Get $get): Unique => $rule->where('exam_id', $get('exam_id'))),
             Forms\Components\TextInput::make('year')->numeric()->required()->minValue(1900)->maxValue((int) date('Y') + 1),

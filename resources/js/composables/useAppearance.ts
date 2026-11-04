@@ -43,6 +43,8 @@ export function useAppearance() {
     function updateAppearance(value: Appearance) {
         appearance.value = value;
         localStorage.setItem('appearance', value);
+        // The admin panel (Filament) reads "theme"; keep both sides on the same choice.
+        localStorage.setItem('theme', value);
         updateTheme(value);
     }
 

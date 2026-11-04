@@ -25,8 +25,8 @@ function topLevelTitles(array $navigation): array
 
 it('lists the sidebar items in the agreed order', function () {
     expect(topLevelTitles(StudentNavigation::for(null)))->toBe([
-        'Dashboard', 'Question Bank', 'Search MCQs', 'Mock Tests', 'Textbooks',
-        'My Reviews', 'My Notes', 'Performance', 'Subscription', 'Feedback',
+        'Dashboard', 'Question Bank', 'Search MCQs', 'Mock Tests', 'Image Atlas', 'Textbooks',
+        'My Reviews', 'My Notes', 'Performance', 'Leaderboard', 'AI Study Plan', 'Subscription', 'Feedback',
     ]);
 });
 
@@ -58,8 +58,8 @@ it('adds only subjects with published questions, ordered by name', function () {
 
     expect(array_column($subjects, 'title'))->toBe(['Alpha', 'Zeta'])
         ->and($subjects[0]['children'])->toBe([
-            ['title' => 'Main MCQ Bank', 'href' => '/questions/subjects/alpha'],
-            ['title' => 'Past Paper MCQs', 'href' => '/questions/subjects/alpha/past-papers'],
+            ['title' => 'Main MCQ Bank', 'icon' => 'Library', 'href' => '/questions/subjects/alpha'],
+            ['title' => 'Past Paper MCQs', 'icon' => 'FileClock', 'href' => '/questions/subjects/alpha/past-papers', 'locked' => false],
         ]);
 });
 
@@ -67,7 +67,7 @@ it('shares the navigation with signed-in students', function () {
     $this->actingAs(User::factory()->create());
     $exam = Exam::factory()->create(['is_active' => true]);
     $this->withSession(['exam_id' => $exam->id])->get('/dashboard')
-        ->assertInertia(fn (Assert $page) => $page->has('navigation', 10)->where('navigation.0.title', 'Dashboard'));
+        ->assertInertia(fn (Assert $page) => $page->has('navigation', 13)->where('navigation.0.title', 'Dashboard'));
 });
 
 it('shares no navigation with guests', function () {
@@ -91,9 +91,40 @@ it('keeps the removed pages out of the sidebar while their routes still work', f
     $this->get('/tutor/flashcards')->assertNotFound();
 });
 
-it('renders the textbooks placeholder from the placeholder map', function () {
+it('renders the textbook instead of a placeholder', function () {
     $this->actingAs(User::factory()->create());
     $exam = Exam::factory()->create(['is_active' => true]);
     $this->withSession(['exam_id' => $exam->id])->get('/textbooks')
-        ->assertInertia(fn (Assert $page) => $page->component('Placeholder')->where('title', 'Textbooks'));
+        ->assertInertia(fn (Assert $page) => $page->component('textbooks/Index')->has('subjects', 0));
+});
+
+it('locks the subscription pages in the sidebar for a student without one', function () {
+    $items = collect(StudentNavigation::for(null, locked: true))->keyBy('title');
+
+    expect($items['Mock Tests']['locked'])->toBeTrue()
+        ->and($items['Dashboard']['locked'])->toBeFalse()
+        ->and($items['Question Bank']['children'][0]['locked'])->toBeFalse()
+        ->and($items['Question Bank']['children'][1]['locked'])->toBeTrue()
+        ->and(collect(StudentNavigation::for(null))->firstWhere('title', 'Mock Tests')['locked'])->toBeFalse();
+});
+
+it('has every sidebar icon registered in the front end, so no item shows without one', function () {
+    $collect = function (array $items) use (&$collect): array {
+        $names = [];
+        foreach ($items as $item) {
+            if (isset($item['icon'])) {
+                $names[] = $item['icon'];
+            }
+            $names = [...$names, ...$collect($item['children'] ?? [])];
+        }
+
+        return $names;
+    };
+    // Icons added by StudentNavigation for each subject.
+    $used = array_unique([...$collect(config('student.navigation')), 'Folder', 'Library', 'FileClock']);
+    $source = (string) file_get_contents(resource_path('js/lib/nav-icons.ts'));
+    preg_match('/const icons: Record<string, LucideIcon> = \{(.*?)\};/s', $source, $match);
+    $registered = array_map('trim', array_filter(explode(',', $match[1] ?? '')));
+
+    expect(array_values(array_diff($used, $registered)))->toBe([]);
 });

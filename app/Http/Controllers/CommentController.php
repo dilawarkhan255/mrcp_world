@@ -5,9 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Exam;
 use App\Models\Question;
 use App\Models\QuestionComment;
-use App\Models\User;
+use App\Services\CommentService;
+use App\Support\CurrentExam;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -20,27 +20,17 @@ class CommentController extends Controller
 {
     private function exam(Request $request): Exam
     {
-        return Exam::where('is_active', true)->find($request->session()->get('exam_id')) ?? Exam::where('is_active', true)->orderBy('id')->firstOrFail();
+        return CurrentExam::content($request);
     }
 
-    public function index(Request $request): Response
+    public function index(Request $request, CommentService $comments): Response
     {
         $exam = $this->exam($request);
         $user = $request->user();
         $search = trim((string) $request->input('q', ''));
 
-        $threads = QuestionComment::query()
-            ->whereNull('parent_id')
+        $threads = $comments->threads($user)
             ->whereHas('question', fn (Builder $query) => $query->where('questions.exam_id', $exam->id))
-            ->visibleTo($user)
-            ->with([
-                'user:id,name',
-                'user.roles',
-                'question:id,exam_id,code,body',
-                'replies' => fn (HasMany $relation) => $relation->getQuery()->visibleTo($user)->with('user:id,name', 'user.roles')->orderBy('id'),
-            ])
-            ->orderByDesc('is_pinned')
-            ->orderByDesc('id')
             ->simplePaginate(15)
             ->withQueryString();
 
@@ -52,9 +42,9 @@ class CommentController extends Controller
             ->get(['id', 'code', 'body']);
 
         return Inertia::render('questions/Comments', [
-            'exam' => $exam->only(['id', 'name']),
+            'exam' => CurrentExam::props($request),
             'threads' => [
-                'data' => $threads->getCollection()->map(fn (QuestionComment $comment): array => $this->payload($comment, $user))->all(),
+                'data' => $threads->getCollection()->map(fn (QuestionComment $comment): array => $comments->payload($comment, $user))->all(),
                 'current_page' => $threads->currentPage(),
                 'prev_page_url' => $threads->previousPageUrl(),
                 'next_page_url' => $threads->nextPageUrl(),
@@ -117,30 +107,5 @@ class CommentController extends Controller
         };
 
         return back();
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    private function payload(QuestionComment $comment, ?User $user): array
-    {
-        $author = $comment->user;
-
-        return [
-            'id' => $comment->id,
-            'body' => $comment->body,
-            'created_at' => $comment->created_at?->toIso8601String(),
-            'is_hidden' => $comment->is_hidden,
-            'is_pinned' => $comment->is_pinned,
-            'author' => $author->name,
-            'author_role' => $author->hasRole('admin') ? 'Admin' : ($author->hasRole('editor') ? 'Editor' : 'Student'),
-            'is_mine' => $user !== null && $comment->user_id === $user->id,
-            'question' => $comment->question === null ? null : [
-                'id' => $comment->question->id,
-                'code' => $comment->question->code,
-                'body' => $comment->question->body,
-            ],
-            'replies' => $comment->replies->map(fn (QuestionComment $reply): array => $this->payload($reply, $user))->all(),
-        ];
     }
 }

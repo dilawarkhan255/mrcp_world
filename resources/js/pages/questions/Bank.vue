@@ -10,6 +10,9 @@ defineProps<{
     exam: { id: number; name: string };
     availableQuestions: number;
     categories: PageSlice<{ id: number; name: string; slug: string; questions_count: number }>;
+    /** No subscription: only the free demo questions are counted and practised. */
+    demoOnly?: boolean;
+    maxQuestions?: number;
 }>();
 const page = usePage<SharedData>();
 // The Main MCQ Bank excludes past paper questions.
@@ -27,7 +30,12 @@ function start(category: number | null) {
                 <p class="text-sm font-semibold text-primary">{{ exam.name }}</p>
                 <h1 class="mt-2 text-3xl font-semibold">Question bank</h1>
                 <p class="mt-3 text-sm text-muted-foreground">
-                    {{ availableQuestions.toLocaleString() }} published main bank questions. Choose a subject or practise across the bank.
+                    {{ availableQuestions.toLocaleString() }} {{ demoOnly ? 'free demo' : 'published main bank' }} questions. Choose a subject or
+                    practise across the bank.
+                </p>
+                <p v-if="demoOnly" class="mt-2 text-sm">
+                    You are practising the free demo questions.
+                    <Link href="/subscription" class="font-semibold text-primary">Subscribe</Link> to unlock the full bank and every past paper.
                 </p>
             </div>
             <div class="flex flex-wrap items-end gap-4 rounded-xl border bg-card p-5">
@@ -36,7 +44,7 @@ function start(category: number | null) {
                         v-model.number="form.count"
                         type="number"
                         min="1"
-                        max="100"
+                        :max="maxQuestions ?? 100"
                         class="w-36 rounded-md border bg-background px-3 py-2"
                 /></label>
                 <Button :disabled="form.processing || !availableQuestions" @click="start(null)">Start mixed practice</Button>

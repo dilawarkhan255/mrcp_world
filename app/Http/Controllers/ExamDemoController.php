@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Exam;
 use App\Models\Question;
+use App\Support\QuestionContent;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -19,7 +20,7 @@ class ExamDemoController extends Controller
 
         $exam = Exam::where('slug', $slug)->where('is_active', true)->firstOrFail();
         $questions = Question::published()
-            ->where('exam_id', $exam->id)
+            ->where('exam_id', $exam->contentId())
             ->where('is_demo', true)
             ->orderBy('id')
             ->limit(10)
@@ -35,9 +36,11 @@ class ExamDemoController extends Controller
             'questions' => $questions->map(fn (Question $question): array => [
                 'id' => $question->id,
                 'body' => $question->body,
+                'body_html' => QuestionContent::html($question->body),
                 'options' => $question->options,
                 'correct_option' => $question->correct_option,
                 'explanation' => $question->explanation,
+                'explanation_html' => QuestionContent::html($question->explanation),
             ])->all(),
         ]);
     }

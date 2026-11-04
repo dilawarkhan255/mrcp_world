@@ -1,20 +1,19 @@
 <x-filament-widgets::widget>
-    <x-filament::section heading="Manage learning content">
-        <div class="space-y-4 text-sm">
-            <p>Create categories, add or import MCQs, then publish the content for students.</p>
-            <div class="flex flex-wrap gap-3">
-                <x-filament::button href="/admin/questions" tag="a">Manage MCQs</x-filament::button>
-                <x-filament::button href="/admin/question-imports" tag="a" color="gray">Bulk upload CSV / XLSX</x-filament::button>
-                <x-filament::button href="/admin/past-papers" tag="a" color="gray">Past papers</x-filament::button>
-                <x-filament::button href="/admin/categories" tag="a" color="gray">Categories</x-filament::button>
-                <x-filament::button href="/questions/bank" tag="a" color="gray">Open student question bank</x-filament::button>
-            </div>
-            <ol class="list-decimal space-y-2 pl-5">
-                <li>Create the exam categories first. The category slug goes in each import row.</li>
-                <li>For a past paper, create a paper and select it when adding or importing its questions.</li>
-                <li>Download the template on Bulk MCQ uploads, fill it, then upload. Check the progress and rejected-row report.</li>
-                <li>Publish questions and the paper. Students can then start practice and resume their saved sessions.</li>
-            </ol>
-        </div>
+    <x-filament::section icon="heroicon-o-map" heading="Publishing workflow" description="From an empty subject to questions students can practise.">
+        <ol class="mw-workflow">
+            @foreach ($this->getSteps() as $item)
+                <li class="mw-workflow__step">
+                    <div class="mw-workflow__head">
+                        <span class="mw-workflow__badge">{{ $item['step'] }}</span>
+                        <x-filament::icon :icon="$item['icon']" class="mw-workflow__icon" />
+                    </div>
+                    <p class="mw-workflow__title">{{ $item['title'] }}</p>
+                    <p class="mw-workflow__body">{{ $item['body'] }}</p>
+                    <x-filament::link :href="$item['href']" icon="heroicon-m-arrow-right" icon-position="after" size="sm">
+                        {{ $item['action'] }}
+                    </x-filament::link>
+                </li>
+            @endforeach
+        </ol>
     </x-filament::section>
 </x-filament-widgets::widget>

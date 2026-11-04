@@ -4,6 +4,7 @@ use App\Filament\Resources\FeedbackResource\Pages\ListFeedback;
 use App\Models\Exam;
 use App\Models\Feedback;
 use App\Models\Plan;
+use App\Models\Qbank;
 use App\Models\User;
 use Database\Seeders\ExamSeeder;
 use Database\Seeders\RoleSeeder;
@@ -17,19 +18,22 @@ beforeEach(function () {
     $this->student = User::factory()->create();
 });
 
-it('lists only active plans ordered by sort order and duration', function () {
-    Plan::create(['name' => 'Annual', 'duration_days' => 365, 'price' => 15000, 'currency' => 'PKR', 'is_active' => true, 'sort_order' => 2]);
-    Plan::create(['name' => 'Monthly', 'duration_days' => 30, 'price' => 1500, 'currency' => 'PKR', 'is_active' => true, 'sort_order' => 1]);
-    Plan::create(['name' => 'Retired', 'duration_days' => 30, 'price' => 900, 'currency' => 'PKR', 'is_active' => false, 'sort_order' => 0]);
+it('lists each Qbank with its active plans', function () {
+    $qbank = Qbank::where('slug', 'qbank-1')->firstOrFail();
+    Plan::create(['qbank_id' => $qbank->id, 'name' => 'Retired', 'duration_days' => 30, 'price' => 900, 'currency' => 'PKR', 'is_active' => false]);
+    Plan::create(['qbank_id' => $qbank->id, 'name' => '6 months', 'duration_days' => 180, 'price' => 8, 'currency' => 'GBP', 'is_active' => true]);
 
     $this->actingAs($this->student)->get('/subscription')
         ->assertInertia(fn (Assert $page) => $page
             ->component('Subscription')
-            ->has('plans', 2)
-            ->where('plans.0.name', 'Monthly')
-            ->where('plans.0.price', 'PKR 1,500')
-            ->where('plans.0.duration_days', 30)
-            ->where('plans.1.name', 'Annual'));
+            ->has('qbanks', 2)
+            ->where('qbanks.0.name', 'MRCPWorld 1 Qbank')
+            ->where('qbanks.0.exams', ['MRCP 1 UK/Irish', 'IMM'])
+            ->where('qbanks.0.is_selected', true)
+            ->where('qbanks.0.has_access', false)
+            ->has('qbanks.0.plans', 1)
+            ->where('qbanks.0.plans.0.price', '£8')
+            ->where('qbanks.0.plans.0.duration', '6 months'));
 });
 
 it('validates feedback type and message length', function () {

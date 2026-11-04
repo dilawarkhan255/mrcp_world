@@ -31,7 +31,7 @@ class Feedback extends Model
     public const STATUS_REVIEWED = 'reviewed';
 
     /** @var list<string> */
-    protected $fillable = ['user_id', 'exam_id', 'type', 'message', 'status'];
+    protected $fillable = ['user_id', 'exam_id', 'question_id', 'type', 'message', 'status'];
 
     /** @return BelongsTo<User, $this> */
     public function user(): BelongsTo
@@ -43,5 +43,15 @@ class Feedback extends Model
     public function exam(): BelongsTo
     {
         return $this->belongsTo(Exam::class);
+    }
+
+    /**
+     * The MCQ a "Report MCQ" message is about.
+     *
+     * @return BelongsTo<Question, $this>
+     */
+    public function question(): BelongsTo
+    {
+        return $this->belongsTo(Question::class)->withTrashed();
     }
 }

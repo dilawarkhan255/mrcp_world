@@ -60,8 +60,9 @@ export const landingCopy = {
     },
     pricing: {
         heading: 'Simple plans',
-        intro: 'One plan, one price. Cancel whenever you like.',
-        choose: 'Choose plan',
+        intro: 'One price per Qbank. Each Qbank includes its main MCQ bank and every past paper MCQ.',
+        choose: 'Subscribe',
+        member: 'Already a member? Log in to renew',
         placeholderPrice: '[PRICE]',
         month: '1 month',
         quarter: '3 months',

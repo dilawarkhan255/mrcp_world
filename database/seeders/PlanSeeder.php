@@ -3,20 +3,19 @@
 namespace Database\Seeders;
 
 use App\Models\Plan;
+use App\Models\Qbank;
 use Illuminate\Database\Seeder;
 
 class PlanSeeder extends Seeder
 {
     public function run(): void
     {
-        $plans = [
-            ['name' => '1 month access', 'duration_days' => 30, 'price' => 2500, 'currency' => 'PKR', 'sort_order' => 1],
-            ['name' => '3 month access', 'duration_days' => 90, 'price' => 6000, 'currency' => 'PKR', 'sort_order' => 2],
-            ['name' => '12 month access', 'duration_days' => 365, 'price' => 18000, 'currency' => 'PKR', 'sort_order' => 3],
-        ];
-
-        foreach ($plans as $plan) {
-            Plan::firstOrCreate(['name' => $plan['name']], array_merge($plan, ['is_active' => true]));
+        // £8 for 6 months per Qbank, from the MRCPWorld brochure. Existing plans are left untouched.
+        foreach (Qbank::orderBy('sort_order')->orderBy('id')->get() as $index => $qbank) {
+            Plan::firstOrCreate(['qbank_id' => $qbank->id], [
+                'name' => $qbank->name.' — 6 months', 'duration_days' => 180, 'price' => 8, 'currency' => 'GBP',
+                'is_active' => true, 'sort_order' => $index + 1,
+            ]);
         }
     }
 }

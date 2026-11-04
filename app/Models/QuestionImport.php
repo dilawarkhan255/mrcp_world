@@ -27,6 +27,9 @@ class QuestionImport extends Model
             if ($import->past_paper_id && ! PastPaper::whereKey($import->past_paper_id)->where('exam_id', $import->exam_id)->exists()) {
                 throw ValidationException::withMessages(['past_paper_id' => 'Past paper must belong to this exam.']);
             }
+            if ($import->isDirty('exam_id') && Exam::whereKey($import->exam_id)->whereNotNull('content_exam_id')->exists()) {
+                throw ValidationException::withMessages(['exam_id' => 'This exam shares another exam\'s question bank. Import into that exam instead.']);
+            }
         });
     }
 

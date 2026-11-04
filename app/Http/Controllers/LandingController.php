@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Exam;
 use App\Models\Plan;
+use App\Models\Question;
 use App\Models\ScoreDistribution;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -36,36 +37,46 @@ class LandingController extends Controller
      */
     private function exams(): array
     {
-        return Exam::where('is_active', true)
+        $exams = Exam::where('is_active', true)
             ->orderBy('sort_order')
             ->orderBy('id')
-            ->withCount(['questions' => fn ($query) => $query->published()])
-            ->get(['id', 'name', 'slug', 'description', 'code'])
-            ->map(fn (Exam $exam): array => [
-                'id' => $exam->id,
-                'name' => $exam->name,
-                'slug' => $exam->slug,
-                'description' => $exam->description,
-                'code' => $exam->tileCode(),
-                'question_count' => $exam->questions_count,
-            ])
-            ->all();
+            ->get(['id', 'content_exam_id', 'name', 'slug', 'description', 'code']);
+        // An exam that shares another exam's bank shows that bank's count. One grouped query for every exam.
+        $counts = Question::published()
+            ->whereIn('exam_id', $exams->map(fn (Exam $exam): int => $exam->contentId())->unique()->values())
+            ->groupBy('exam_id')
+            ->selectRaw('exam_id, COUNT(*) AS total')
+            ->pluck('total', 'exam_id');
+
+        return $exams->map(fn (Exam $exam): array => [
+            'id' => $exam->id,
+            'name' => $exam->name,
+            'slug' => $exam->slug,
+            'description' => $exam->description,
+            'code' => $exam->tileCode(),
+            'question_count' => (int) ($counts[$exam->contentId()] ?? 0),
+        ])->all();
     }
 
     /**
      * Active plans grouped by their duration in days.
      *
-     * @return list<array{duration_days: int, plans: list<array{id: int, name: string, duration_days: int, price: string, amount: string, currency: string}>}>
+     * @return list<array{duration_days: int, plans: list<array<string, mixed>>}>
      */
     private function plans(): array
     {
         return Plan::where('is_active', true)
+            ->with(['qbank:id,name,is_active', 'qbank.exams' => fn ($query) => $query->where('is_active', true)->orderBy('sort_order')->select(['id', 'qbank_id', 'name'])])
             ->orderBy('sort_order')
             ->orderBy('duration_days')
             ->get()
+            ->filter(fn (Plan $plan): bool => $plan->qbank === null || $plan->qbank->is_active)
             ->map(fn (Plan $plan): array => [
                 'id' => $plan->id,
                 'name' => $plan->name,
+                'qbank' => $plan->qbank?->name,
+                'exams' => $plan->qbank?->exams->pluck('name')->all() ?? [],
+                'duration' => $plan->durationLabel(),
                 'duration_days' => $plan->duration_days,
                 'price' => $plan->priceLabel(),
                 'amount' => $plan->amountLabel(),

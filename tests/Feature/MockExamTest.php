@@ -62,7 +62,7 @@ it('keeps the correct answer hidden until the mock is closed', function () {
     $this->get($url.'?position=1')->assertInertia(fn (Assert $page) => $page->missing('question.result')->where('session.answered_count', 1));
     $this->post($url.'/finish')->assertRedirect();
     $this->get($url.'?position=1')->assertInertia(fn (Assert $page) => $page
-        ->has('question.result', fn (Assert $result) => $result->where('is_correct', true)->where('correct_option', 'A')->where('explanation', 'Mock explanation'))
+        ->has('question.result', fn (Assert $result) => $result->where('is_correct', true)->where('correct_option', 'A')->where('explanation', 'Mock explanation')->etc())
         ->where('session.correct_count', 1)
     );
 });

@@ -28,14 +28,14 @@
         --input: 211.579 33.333% 88.824%;
         --ring: 185.505 83.206% 25.686%;
         --radius: 0.75rem;
-        --sidebar-background: 214 64% 25%;
-        --sidebar-foreground: 0 0% 100%;
-        --sidebar-primary: 211 86% 53%;
+        --sidebar-background: 0 0% 100%;
+        --sidebar-foreground: 216 50% 11.765%;
+        --sidebar-primary: 185.505 83.206% 25.686%;
         --sidebar-primary-foreground: 0 0% 100%;
-        --sidebar-accent: 214 55% 32%;
-        --sidebar-accent-foreground: 0 0% 100%;
-        --sidebar-border: 214 45% 36%;
-        --sidebar-ring: 211 86% 70%;
+        --sidebar-accent: 183 41.667% 90.588%;
+        --sidebar-accent-foreground: 185.505 83.206% 25.686%;
+        --sidebar-border: 211.579 33.333% 88.824%;
+        --sidebar-ring: 185.505 83.206% 25.686%;
     }
     .dark {
         --background: 216 50% 11.765%;
@@ -57,8 +57,8 @@
         --ring: 185 55% 57%;
         --sidebar-background: 215 45% 12%;
         --sidebar-foreground: 210 30% 96%;
-        --sidebar-primary: 211 86% 56%;
-        --sidebar-primary-foreground: 0 0% 100%;
+        --sidebar-primary: 185 55% 57%;
+        --sidebar-primary-foreground: 216 50% 11.765%;
         --sidebar-accent: 185 35% 22%;
         --sidebar-accent-foreground: 183 41.667% 90.588%;
         --sidebar-border: 215 28% 26%;
@@ -118,5 +118,80 @@
     .landing-control {
         @apply rounded-[10px] border bg-background;
         border-color: var(--border);
+    }
+}
+
+/* Rendered MCQ Markdown (question stems, explanations, key points). The
+   server strips raw HTML, so only Markdown elements can appear here. */
+@layer components {
+    .mcq-content {
+        @apply text-[0.95rem] leading-relaxed;
+    }
+    .mcq-content > * + * {
+        @apply mt-3;
+    }
+    .mcq-content h1,
+    .mcq-content h2,
+    .mcq-content h3 {
+        @apply font-semibold;
+    }
+    .mcq-content ul {
+        @apply list-disc pl-5;
+    }
+    .mcq-content ol {
+        @apply list-decimal pl-5;
+    }
+    .mcq-content a {
+        @apply font-medium text-primary underline underline-offset-2;
+    }
+    .mcq-content img {
+        @apply my-2 h-auto max-h-[28rem] max-w-full rounded-lg border;
+    }
+    .mcq-content blockquote {
+        @apply border-l-4 border-primary/40 pl-4 italic text-muted-foreground;
+    }
+    .mcq-content table {
+        @apply block w-full border-collapse overflow-x-auto text-sm;
+    }
+    .mcq-content th,
+    .mcq-content td {
+        @apply border px-3 py-1.5 text-left align-top;
+    }
+    .mcq-content th {
+        @apply bg-muted font-semibold;
+    }
+    .mcq-content code {
+        @apply rounded bg-muted px-1 py-0.5 text-[0.85em];
+    }
+}
+
+/* Copy protection of the student app (see useContentProtection). Form fields
+   stay selectable so students can type and paste their own notes. */
+@layer base {
+    html.content-protected body {
+        -webkit-user-select: none;
+        user-select: none;
+        -webkit-touch-callout: none;
+    }
+    html.content-protected input,
+    html.content-protected textarea,
+    html.content-protected select,
+    html.content-protected [contenteditable='true'] {
+        -webkit-user-select: text;
+        user-select: text;
+    }
+    html.content-protected img {
+        -webkit-user-drag: none;
+    }
+    @media print {
+        html.content-protected body > * {
+            display: none !important;
+        }
+        html.content-protected body::after {
+            content: 'Printing is disabled to protect the question bank.';
+            display: block;
+            padding: 2rem;
+            font-size: 14pt;
+        }
     }
 }

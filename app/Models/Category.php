@@ -25,6 +25,11 @@ class Category extends Model
 
     protected static function booted(): void
     {
+        static::saving(function (Category $category) {
+            if (Exam::whereKey($category->exam_id)->whereNotNull('content_exam_id')->exists()) {
+                throw ValidationException::withMessages(['exam_id' => 'This exam shares another exam\'s question bank. Add the subject to that exam instead.']);
+            }
+        });
         static::updating(function (Category $category) {
             if ($category->isDirty('exam_id') && $category->questions()->withTrashed()->exists()) {
                 throw ValidationException::withMessages(['exam_id' => 'A category containing questions cannot be moved to another exam.']);

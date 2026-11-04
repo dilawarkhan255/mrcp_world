@@ -8,6 +8,7 @@ use App\Models\Question;
 use App\Models\User;
 use App\Services\PracticeService;
 use App\Services\QuestionSearchService;
+use App\Support\CurrentExam;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -19,7 +20,7 @@ class SearchController extends Controller
 {
     private function exam(Request $request): Exam
     {
-        return Exam::where('is_active', true)->find($request->session()->get('exam_id')) ?? Exam::where('is_active', true)->orderBy('id')->firstOrFail();
+        return CurrentExam::content($request);
     }
 
     /**
@@ -51,7 +52,7 @@ class SearchController extends Controller
         }
 
         return Inertia::render('questions/Search', [
-            'exam' => $exam->only(['id', 'name']),
+            'exam' => CurrentExam::props($request),
             'q' => $term,
             'total' => $results?->total() ?? 0,
             'practiceCount' => $results === null ? 0 : min($results->total(), QuestionSearchService::PRACTICE_LIMIT),

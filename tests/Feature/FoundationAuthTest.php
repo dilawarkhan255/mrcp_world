@@ -1,17 +1,21 @@
 <?php
 
+use App\Models\Plan;
 use App\Models\User;
+use Database\Seeders\ExamSeeder;
+use Database\Seeders\PlanSeeder;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\RateLimiter;
 
 it('registers students and sends a verification notification', function () {
     Notification::fake();
+    $this->seed([ExamSeeder::class, PlanSeeder::class]);
     $this->post('/register', [
         'name' => 'New Student', 'email' => 'new@example.test',
         'password' => 'secure-password', 'password_confirmation' => 'secure-password',
-        'role' => 'admin',
-    ])->assertRedirect('/dashboard');
+        'role' => 'admin', 'plan_id' => Plan::value('id'), 'payment_reference' => 'TXN-7',
+    ])->assertRedirect('/subscription');
     $user = User::where('email', 'new@example.test')->firstOrFail();
     expect($user->hasRole('student'))->toBeTrue()->and($user->hasRole('admin'))->toBeFalse();
     Notification::assertSentTo($user, VerifyEmail::class);

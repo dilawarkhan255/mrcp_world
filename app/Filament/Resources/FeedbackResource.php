@@ -41,7 +41,9 @@ class FeedbackResource extends Resource
         return $table->columns([
             Tables\Columns\TextColumn::make('created_at')->label('Sent')->dateTime()->sortable(),
             Tables\Columns\TextColumn::make('user.name')->label('Student')->searchable(),
-            Tables\Columns\TextColumn::make('exam.name')->label('Exam'),
+            Tables\Columns\TextColumn::make('exam.name')->label('Exam')->toggleable(),
+            Tables\Columns\TextColumn::make('question.code')->label('MCQ')->placeholder('—')->badge()->color('gray')
+                ->url(fn (Feedback $record): ?string => $record->question ? '/admin/questions?tableSearch='.urlencode($record->question->code) : null),
             Tables\Columns\TextColumn::make('type')->badge()->formatStateUsing(fn (string $state): string => Feedback::TYPES[$state] ?? $state),
             Tables\Columns\TextColumn::make('message')->limit(120)->wrap(),
             Tables\Columns\TextColumn::make('status')->badge()->color(fn (string $state): string => $state === Feedback::STATUS_NEW ? 'danger' : 'success'),
@@ -51,6 +53,7 @@ class FeedbackResource extends Resource
                 Feedback::STATUS_REVIEWED => 'Reviewed',
             ]),
             Tables\Filters\SelectFilter::make('type')->options(Feedback::TYPES),
+            Tables\Filters\TernaryFilter::make('question_id')->label('MCQ reports')->nullable(),
         ])->actions([
             Tables\Actions\Action::make('markReviewed')
                 ->label('Mark reviewed')
@@ -59,7 +62,7 @@ class FeedbackResource extends Resource
                 ->authorize(fn (Feedback $record): bool => Gate::allows('update', $record))
                 ->action(fn (Feedback $record) => $record->update(['status' => Feedback::STATUS_REVIEWED])),
             Tables\Actions\DeleteAction::make(),
-        ])->defaultSort('id', 'desc')->paginationPageOptions([25, 50, 100]);
+        ])->modifyQueryUsing(fn ($query) => $query->with(['user:id,name', 'exam:id,name', 'question:id,code']))->defaultSort('id', 'desc')->paginationPageOptions([25, 50, 100]);
     }
 
     /** @return array<string, PageRegistration> */

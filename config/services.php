@@ -28,6 +28,15 @@ return [
         'key' => env('RESEND_KEY'),
     ],
 
+    /*
+    | Public community links shown in the landing footer and student sidebar.
+    | Leave empty to hide a link.
+    */
+    'community' => [
+        'whatsapp_url' => env('COMMUNITY_WHATSAPP_URL'),
+        'play_store_url' => env('COMMUNITY_PLAY_STORE_URL'),
+    ],
+
     'slack' => [
         'notifications' => [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),

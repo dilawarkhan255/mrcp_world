@@ -1,11 +1,21 @@
 <script setup lang="ts">
+import ContentProtection from '@/components/ContentProtection.vue';
+import RichText from '@/components/practice/RichText.vue';
 import { landingCopy, landingSeo } from '@/content/landing';
 import PublicLayout from '@/layouts/PublicLayout.vue';
 import { Head, Link } from '@inertiajs/vue3';
 defineProps<{
     appName: string;
     exam: { name: string; slug: string; description: string | null };
-    questions: { id: number; body: string; options: Record<string, string>; correct_option: string; explanation: string | null }[];
+    questions: {
+        id: number;
+        body: string;
+        body_html?: string | null;
+        options: Record<string, string>;
+        correct_option: string;
+        explanation: string | null;
+        explanation_html?: string | null;
+    }[];
 }>();
 </script>
 <template>
@@ -16,6 +26,7 @@ defineProps<{
         <meta property="og:type" :content="landingSeo.ogType" />
     </Head>
     <PublicLayout :app-name="appName">
+        <ContentProtection />
         <div class="mx-auto w-full max-w-3xl px-5 py-16 md:px-8 md:py-20">
             <p class="text-sm font-semibold uppercase tracking-widest text-teal">{{ exam.name }}</p>
             <h1 class="mt-3 text-3xl font-bold tracking-tight text-ink sm:text-4xl">{{ landingCopy.demo.title }}</h1>
@@ -26,7 +37,7 @@ defineProps<{
             <ol v-else class="mt-10 space-y-6">
                 <li v-for="(question, index) in questions" :key="question.id" class="rounded-card border bg-white p-6 shadow-sm">
                     <p class="text-xs font-semibold uppercase tracking-wide text-muted-soft">Question {{ index + 1 }}</p>
-                    <p class="mt-2 whitespace-pre-wrap text-base leading-relaxed text-ink">{{ question.body }}</p>
+                    <RichText :html="question.body_html" :text="question.body" class="mt-2 text-base text-ink" />
                     <ul class="mt-4 space-y-2">
                         <li
                             v-for="(text, key) in question.options"
@@ -37,9 +48,12 @@ defineProps<{
                             <span class="font-semibold">{{ key }}.</span> {{ text }}
                         </li>
                     </ul>
-                    <p v-if="question.explanation" class="mt-4 border-l-2 border-teal pl-3 text-sm leading-relaxed text-muted-strong">
-                        {{ question.explanation }}
-                    </p>
+                    <RichText
+                        v-if="question.explanation"
+                        :html="question.explanation_html"
+                        :text="question.explanation"
+                        class="mt-4 border-l-2 border-teal pl-3 text-sm text-muted-strong"
+                    />
                 </li>
             </ol>
             <div class="mt-12 flex flex-wrap gap-3">

@@ -22,7 +22,7 @@ import { ACTIVE_CLASS } from '@/lib/nav-classes';
 import { navIcon } from '@/lib/nav-icons';
 import type { SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/vue3';
-import { Minus, Moon, Plus, Shield, Sun } from 'lucide-vue-next';
+import { Lock, MessageCircle, Minus, Moon, Plus, Shield, Smartphone, Sun } from 'lucide-vue-next';
 import { computed } from 'vue';
 
 const page = usePage<SharedData>();
@@ -31,6 +31,12 @@ const { isActive, containsActive } = useNavActive();
 const { appearance, updateAppearance } = useAppearance();
 
 const navigation = computed(() => page.props.navigation ?? []);
+const community = computed(() =>
+    [
+        { title: 'WhatsApp group', href: page.props.links?.whatsapp ?? null, icon: MessageCircle },
+        { title: 'Android app', href: page.props.links?.play_store ?? null, icon: Smartphone },
+    ].filter((link): link is { title: string; href: string; icon: typeof MessageCircle } => !!link.href),
+);
 // Icon-only mode (desktop). On mobile the sheet always shows the full labels.
 const collapsed = computed(() => state.value === 'collapsed' && !isMobile.value);
 const closeMobile = () => setOpenMobile(false);
@@ -40,23 +46,22 @@ const isDark = computed(
     () => appearance.value === 'dark' || (appearance.value === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches),
 );
 const segmentClass = (selected: boolean) =>
-    selected ? 'bg-sidebar-primary text-sidebar-primary-foreground shadow-sm' : 'text-sidebar-foreground hover:bg-white/10';
+    selected ? 'bg-sidebar-primary text-sidebar-primary-foreground shadow-sm' : 'text-sidebar-foreground hover:bg-sidebar-accent';
 </script>
 
 <template>
     <Sidebar collapsible="icon">
         <SidebarHeader class="gap-3 p-3 group-data-[collapsible=icon]:p-2">
             <div
-                class="flex items-center gap-3 rounded-xl bg-white p-3 shadow-sm group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-1"
+                class="flex items-center justify-center rounded-xl border border-sidebar-border bg-white p-2 shadow-sm group-data-[collapsible=icon]:p-1"
             >
-                <img src="/brand/mrcp-world-mark.png" alt="" class="size-9 shrink-0 object-contain group-data-[collapsible=icon]:size-6" />
-                <div class="grid leading-tight group-data-[collapsible=icon]:hidden">
-                    <span class="text-lg font-bold tracking-tight">
-                        <span class="text-[#e03131]">M</span><span class="text-[#2f9e44]">R</span><span class="text-[#1c7ed6]">C</span
-                        ><span class="text-[#f08c00]">P</span><span class="text-[#14274a]">World</span>
-                    </span>
-                    <span class="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#14274a]/70">MCQ BANK</span>
-                </div>
+                <!-- Full logo when expanded; the small mark alone when the sidebar is icon-only. -->
+                <img
+                    src="/brand/mrcp-world-logo-full.png"
+                    alt="MRCPWorld MCQ Bank"
+                    class="h-16 w-16 object-contain group-data-[collapsible=icon]:hidden"
+                />
+                <img src="/brand/mrcp-world-mark.png" alt="" class="hidden size-7 object-contain group-data-[collapsible=icon]:block" />
             </div>
             <ExamSwitcher />
         </SidebarHeader>
@@ -70,6 +75,11 @@ const segmentClass = (selected: boolean) =>
                             <Link :href="item.href ?? '/dashboard'" :aria-current="isActive(item) ? 'page' : undefined" @click="closeMobile">
                                 <component :is="navIcon(item.icon)" v-if="navIcon(item.icon)" />
                                 <span class="group-data-[collapsible=icon]:hidden">{{ item.title }}</span>
+                                <Lock
+                                    v-if="item.locked"
+                                    class="ml-auto size-3.5 text-muted-foreground group-data-[collapsible=icon]:hidden"
+                                    aria-label="Needs a subscription"
+                                />
                             </Link>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
@@ -106,6 +116,16 @@ const segmentClass = (selected: boolean) =>
                 </template>
             </SidebarMenu>
 
+            <SidebarMenu v-if="community.length" class="mt-3 border-t border-sidebar-border pt-3">
+                <SidebarMenuItem v-for="link in community" :key="link.title">
+                    <SidebarMenuButton as-child :tooltip="link.title">
+                        <a :href="link.href" target="_blank" rel="noopener noreferrer" @click="closeMobile"
+                            ><component :is="link.icon" /><span class="group-data-[collapsible=icon]:hidden">{{ link.title }}</span></a
+                        >
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+            </SidebarMenu>
+
             <SidebarMenu v-if="page.props.auth.canManageContent" class="mt-3 border-t border-sidebar-border pt-3">
                 <SidebarMenuItem>
                     <SidebarMenuButton as-child size="lg" tooltip="Admin panel">
@@ -117,7 +137,9 @@ const segmentClass = (selected: boolean) =>
 
         <SidebarFooter class="gap-3 border-t border-sidebar-border p-3 group-data-[collapsible=icon]:p-2">
             <div class="grid gap-1.5 group-data-[collapsible=icon]:gap-1">
-                <span class="text-[10px] font-semibold uppercase tracking-wider text-white/75 group-data-[collapsible=icon]:hidden">Appearance</span>
+                <span class="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground group-data-[collapsible=icon]:hidden"
+                    >Appearance</span
+                >
                 <div
                     role="group"
                     aria-label="Appearance"

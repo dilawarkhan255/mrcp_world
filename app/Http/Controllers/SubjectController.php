@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use App\Models\Exam;
 use App\Services\PracticeService;
+use App\Support\CurrentExam;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -28,7 +29,7 @@ class SubjectController extends Controller
 
     private function show(Request $request, string $slug, string $source, PracticeService $practice): Response|RedirectResponse
     {
-        $exam = Exam::where('is_active', true)->find($request->session()->get('exam_id')) ?? Exam::where('is_active', true)->orderBy('id')->firstOrFail();
+        $exam = CurrentExam::content($request);
 
         $category = Category::where('exam_id', $exam->id)->where('slug', $slug)->first();
         if ($category === null) {
@@ -39,11 +40,11 @@ class SubjectController extends Controller
         }
 
         return Inertia::render('questions/Subject', [
-            'exam' => $exam->only(['id', 'name']),
+            'exam' => CurrentExam::props($request),
             'subject' => $category->only(['id', 'name', 'slug']),
             'source' => $source,
             'counts' => [
-                'main' => $practice->questions($exam->id, $category->id, null, PracticeService::SOURCE_MAIN)->count(),
+                'main' => $practice->questions($exam->id, $category->id, null, PracticeService::SOURCE_MAIN, ! CurrentExam::hasAccess($request))->count(),
                 'past' => $practice->questions($exam->id, $category->id, null, PracticeService::SOURCE_PAST)->count(),
             ],
         ]);

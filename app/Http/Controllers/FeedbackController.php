@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Exam;
 use App\Models\Feedback;
 use App\Models\User;
+use App\Support\CurrentExam;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -15,7 +16,7 @@ class FeedbackController extends Controller
 {
     private function exam(Request $request): Exam
     {
-        return Exam::where('is_active', true)->find($request->session()->get('exam_id')) ?? Exam::where('is_active', true)->orderBy('id')->firstOrFail();
+        return CurrentExam::content($request);
     }
 
     public function index(Request $request): Response
@@ -23,7 +24,7 @@ class FeedbackController extends Controller
         $exam = $this->exam($request);
 
         return Inertia::render('Feedback', [
-            'exam' => $exam->only(['id', 'name']),
+            'exam' => CurrentExam::props($request),
             'types' => collect(Feedback::TYPES)->map(fn (string $label, string $value): array => ['value' => $value, 'label' => $label])->values()->all(),
             'items' => Feedback::where('user_id', $request->user()?->id)->orderByDesc('id')->limit(10)
                 ->get(['id', 'type', 'message', 'status', 'created_at'])
@@ -43,17 +44,21 @@ class FeedbackController extends Controller
         $data = $request->validate([
             'type' => ['required', 'string', Rule::in(array_keys(Feedback::TYPES))],
             'message' => ['required', 'string', 'min:10', 'max:4000'],
+            'question_id' => ['nullable', 'integer', Rule::exists('questions', 'id')->where('exam_id', $exam->id)->whereNull('deleted_at')],
         ]);
         /** @var User $user */
         $user = $request->user();
         Feedback::create([
             'user_id' => $user->id,
             'exam_id' => $exam->id,
+            'question_id' => isset($data['question_id']) ? (int) $data['question_id'] : null,
             'type' => $data['type'],
             'message' => $data['message'],
             'status' => Feedback::STATUS_NEW,
         ]);
 
-        return back()->with('status', 'Thank you. Your feedback has been sent to the MRCPWorld team.');
+        return back()->with('status', isset($data['question_id'])
+            ? 'Thank you. The MCQ report has been sent to the editors.'
+            : 'Thank you. Your feedback has been sent to the '.config('app.name').' team.');
     }
 }

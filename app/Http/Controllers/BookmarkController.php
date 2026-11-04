@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Bookmark;
 use App\Models\Exam;
 use App\Services\BookmarkService;
+use App\Support\CurrentExam;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -15,7 +16,7 @@ class BookmarkController extends Controller
 {
     private function exam(Request $request): Exam
     {
-        return Exam::where('is_active', true)->find($request->session()->get('exam_id')) ?? Exam::where('is_active', true)->orderBy('id')->firstOrFail();
+        return CurrentExam::content($request);
     }
 
     public function index(Request $request, BookmarkService $bookmarks): Response
@@ -40,7 +41,7 @@ class BookmarkController extends Controller
         $list = $query->simplePaginate(20)->withQueryString();
 
         return Inertia::render('revision/Bookmarks', [
-            'exam' => $exam->only(['id', 'name']),
+            'exam' => CurrentExam::props($request),
             'notesOnly' => $notesOnly,
             'bookmarks' => [
                 'data' => $list->getCollection()->map(fn (Bookmark $bookmark): array => [

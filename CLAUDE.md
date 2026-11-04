@@ -11,7 +11,8 @@ MRCP World is a question bank (Qbank) for the MRCP Part 1 and MRCP Part 2 Writte
 - Past papers are organised sets of MCQs (exam, year, title, slug). Uploading a PDF does not create questions.
 - Only **published** questions are visible to students. A question tied to a paper also requires that paper to be published.
 - **Explanations must be detailed and reference NICE and WHO guidelines** wherever the subject has relevant guidance. Do not invent guideline titles, years or URLs; if unsure of a citation, say so and flag it for human review.
-- Textbooks, flashcards and the knowledge tutor are placeholders, not implemented features. Do not describe them as working.
+- The extended textbook (chapters by subject) is implemented. Flashcards and the knowledge tutor are not implemented; do not describe them as working.
+- **Subscriptions:** each Qbank is sold separately (£8 for 6 months). Payment is manual: students request, admins activate in **Subscriptions**. Without access a student only gets demo questions (`is_demo`); subscription pages use the `qbank` route middleware.
 
 ## Stack
 
@@ -22,7 +23,7 @@ MRCP World is a question bank (Qbank) for the MRCP Part 1 and MRCP Part 2 Writte
 - **Tests:** Pest 3 (with PHPUnit 11 underneath). Tests run on an isolated in-memory SQLite database.
 - **Static analysis / style:** Larastan level 6 (no baseline), Laravel Pint, ESLint, Prettier
 - **Imports:** CSV via streamed reads, XLSX via OpenSpout 4
-- **Other packages:** Ziggy, yajra/laravel-datatables-oracle, predis (no phpredis extension needed)
+- **Other packages:** Ziggy, predis (no phpredis extension needed). yajra/laravel-datatables-oracle and datatables.net are still installed but no longer used (the admin user list is a Filament resource).
 
 ## Local environment
 
@@ -69,7 +70,11 @@ Report results faithfully. If a check fails or was not run, say so and include t
 - **Comment visibility** is applied in the query, not in the browser. Hidden threads remain visible only to their author and moderators.
 - **Imports** run in a queue worker, not in the HTTP request. Files are stored privately in `storage/app/private/question-imports`. Matching exam + code updates the existing question. Limits: 20 MB per file, 50,000 rows, 100 MB expanded XLSX. Legacy `.xls` is not supported.
 - **Performance and review queries** group by UTC day. Every selected column must appear in `GROUP BY`.
+- **Qbanks:** a Qbank groups exams; an exam may read another exam's bank via `content_exam_id` (IMM → MRCP 1, FCPS Part 2 → MRCP 2). Student controllers resolve the exam through `App\Support\CurrentExam`: `content()` for queries and stored rows, `selected()`/`props()` for the name shown. Never query questions by the selected exam's id.
+- **Rich content:** MCQ text fields are Markdown rendered by `App\Support\QuestionContent` with raw HTML stripped. Everything that reveals the answer (explanation, key points, mnemonics, references, video, image links) is in `Question::$hidden` and only sent inside `result`.
+- **Candidate stats** are read from `question_stats`/`category_stats`, refreshed by `stats:refresh`; do not aggregate all students' answers in a request.
 - **Session creation** uses an indexed random starting point with wraparound. It is not a uniform random sample. Do not replace it with a full-table `ORDER BY RAND()`.
+- **Roles and permissions** (spatie): permissions are defined in `config/permissions.php` (with labels); admins manage roles, role permissions and user accounts in **Users and billing → Users / Roles & permissions**. `admin`, `editor`, `student` are protected names. Panel access is any user with at least one permission (`User::isStaff()`). `RoleSeeder` never undoes panel changes; it only adds new permissions.
 - **Brand:** the name comes from `APP_NAME`. Vue reads it from `resources/js/lib/brand.ts`. Design tokens are in README.md.
 
 ## Working conventions

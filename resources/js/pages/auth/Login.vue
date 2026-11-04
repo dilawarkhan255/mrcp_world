@@ -12,6 +12,8 @@ import { LoaderCircle } from 'lucide-vue-next';
 defineProps<{
     status?: string;
     canResetPassword: boolean;
+    /** The visitor chose a plan: the subscription form opens after logging in. */
+    subscribing?: boolean;
 }>();
 
 const form = useForm({
@@ -30,6 +32,10 @@ const submit = () => {
 <template>
     <AuthBase title="Log in to your account" description="Enter your email and password below to log in">
         <Head title="Log in" />
+
+        <div v-if="subscribing" role="status" class="mb-4 rounded-lg border bg-secondary p-3 text-center text-sm text-secondary-foreground">
+            Log in to renew or add a Qbank. New here? Your account is created when you subscribe.
+        </div>
 
         <div v-if="status" class="mb-4 text-center text-sm font-medium text-green-600">
             {{ status }}

@@ -8,7 +8,7 @@ import { defineConfig } from 'vite';
 export default defineConfig({
     plugins: [
         laravel({
-            input: ['resources/js/app.ts', 'resources/js/admin-datatables.ts'],
+            input: ['resources/js/app.ts'],
             refresh: true,
         }),
         vue({

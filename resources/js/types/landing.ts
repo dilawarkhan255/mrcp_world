@@ -10,6 +10,10 @@ export interface LandingExam {
 export interface LandingPlan {
     id: number;
     name: string;
+    /** The Qbank the plan unlocks, and the exams it covers. */
+    qbank?: string | null;
+    exams?: string[];
+    duration?: string;
     duration_days: number;
     price: string;
     amount: string;

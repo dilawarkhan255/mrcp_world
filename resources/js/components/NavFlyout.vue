@@ -3,8 +3,10 @@
 import { DropdownMenuItem, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger } from '@/components/ui/dropdown-menu';
 import { useSidebar } from '@/components/ui/sidebar';
 import { useNavActive } from '@/composables/useNavActive';
+import { navIcon } from '@/lib/nav-icons';
 import type { NavNode } from '@/types';
 import { Link } from '@inertiajs/vue3';
+import { Lock } from 'lucide-vue-next';
 
 defineProps<{ nodes: NavNode[] }>();
 
@@ -20,11 +22,16 @@ const { isActive, containsActive } = useNavActive();
                 :class="isActive(node) ? 'font-semibold text-primary' : ''"
                 @click="setOpenMobile(false)"
             >
-                {{ node.title }}
+                <component :is="navIcon(node.icon)" v-if="navIcon(node.icon)" class="size-4" aria-hidden="true" />{{ node.title
+                }}<Lock v-if="node.locked" class="ml-auto size-3 text-muted-foreground" aria-label="Needs a subscription" />
             </Link>
         </DropdownMenuItem>
         <DropdownMenuSub v-else>
-            <DropdownMenuSubTrigger :class="containsActive(node) ? 'font-semibold text-primary' : ''">{{ node.title }}</DropdownMenuSubTrigger>
+            <DropdownMenuSubTrigger :class="containsActive(node) ? 'font-semibold text-primary' : ''"
+                ><component :is="navIcon(node.icon)" v-if="navIcon(node.icon)" class="mr-2 size-4" aria-hidden="true" />{{
+                    node.title
+                }}</DropdownMenuSubTrigger
+            >
             <DropdownMenuSubContent class="min-w-56">
                 <NavFlyout :nodes="node.children ?? []" />
             </DropdownMenuSubContent>

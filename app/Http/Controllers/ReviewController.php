@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Exam;
 use App\Models\Question;
 use App\Services\ReviewService;
+use App\Support\CurrentExam;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -15,7 +16,7 @@ class ReviewController extends Controller
 {
     private function exam(Request $request): Exam
     {
-        return Exam::where('is_active', true)->find($request->session()->get('exam_id')) ?? Exam::where('is_active', true)->orderBy('id')->firstOrFail();
+        return CurrentExam::content($request);
     }
 
     public function index(Request $request, ReviewService $review): Response
@@ -27,7 +28,7 @@ class ReviewController extends Controller
         $queue = $review->queue($userId, $exam->id)->simplePaginate(20)->withQueryString();
 
         return Inertia::render('questions/Review', [
-            'exam' => $exam->only(['id', 'name']),
+            'exam' => CurrentExam::props($request),
             'items' => [
                 'data' => $queue->getCollection()->map(fn (Question $question): array => [
                     'id' => $question->id,

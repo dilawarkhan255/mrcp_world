@@ -12,15 +12,62 @@ export interface SessionSummary {
     completed_at: string | null;
     created_at?: string;
 }
+export interface QuestionLabels {
+    subject: string | null;
+    system: string | null;
+    repeats: number;
+    reference: string | null;
+}
+export interface QuestionReference {
+    source: string;
+    title: string;
+    url: string | null;
+    year: string | null;
+}
+export interface ImageLink {
+    label: string;
+    url: string;
+}
+/** Aggregated answers of every student; null until enough students answered. */
+export interface CandidateStats {
+    attempts: number;
+    correct_percent: number;
+    average_seconds: number | null;
+    options: Record<string, number>;
+    topic_percent: number | null;
+}
+export interface QuestionResult {
+    is_correct: boolean;
+    correct_option: string;
+    explanation: string | null;
+    /** Server-rendered Markdown with raw HTML stripped. */
+    explanation_html?: string | null;
+    key_points_html?: string | null;
+    mnemonics_html?: string | null;
+    references?: QuestionReference[];
+    youtube_id?: string | null;
+    image_links?: ImageLink[];
+    image_search?: string | null;
+    /** Live search links on Radiopaedia, DermNet, LITFL and EyeWiki for the search term. */
+    image_searches?: { site: string; label: string; url: string }[];
+    time_seconds?: number | null;
+    candidates?: CandidateStats | null;
+}
 export interface PracticeQuestion {
     position: number;
+    code?: string | null;
     body: string;
+    /** Server-rendered Markdown with raw HTML stripped. */
+    body_html?: string | null;
     options: Record<string, string>;
     selected_option: string | null;
+    is_read?: boolean;
+    labels?: QuestionLabels;
     question_id?: number;
     is_bookmarked?: boolean;
     bookmark_id?: number | null;
-    result?: { is_correct: boolean; correct_option: string; explanation: string | null };
+    note?: string | null;
+    result?: QuestionResult;
 }
 export interface MockPreset {
     title: string;
@@ -53,6 +100,9 @@ export interface MockSession {
 export interface NavigatorItem {
     position: number;
     answered: boolean;
+    read?: boolean;
+    /** Null while the answer is hidden (an open mock) or unanswered. */
+    correct?: boolean | null;
 }
 export interface ReviewItem {
     id: number;
