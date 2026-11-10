@@ -7,11 +7,17 @@
      | Brand colours from the MRCPWorld logo: navy (the word "World") for
      | buttons and links, the logo's cyan in dark mode, and the rainbow of the
      | "M" as an accent (see .brand-rainbow).
+     |
+     | .force-light: the public site (PublicLayout) is designed in light colours
+     | only. It sets the light tokens again on its wrapper, so a visitor whose
+     | system is in dark mode (html.dark) does not get dark borders and badges
+     | on the light page.
      */
-    :root {
+    :root,
+    .force-light {
         --ink: #0b2a6f;
-        --teal: #0b2a6f;
-        --light-teal: #e8edf8;
+        --teal: #15803d;
+        --light-teal: #e9f7ee;
         --amber: #f5a524;
         --background: 220 40% 97%;
         --foreground: 222 60% 14%;
@@ -90,13 +96,16 @@
 @layer base {
     /*
      | Landing page tokens. Every colour used by the public page comes from
-     | this list, so the palette is changed in one place.
+     | this list, so the palette is changed in one place. They follow the
+     | logo: "teal" is the action colour (the logo's green, darkened so white
+     | text on it passes WCAG AA), amber is the logo's orange for accents and
+     | hovers, and navy (ink) is only used for text, like the word "World".
      */
     :root {
         --ink: #0b2a6f;
-        --teal: #0b2a6f;
-        --dark-teal: #071c4d;
-        --light-teal: #e8edf8;
+        --teal: #15803d;
+        --dark-teal: #166534;
+        --light-teal: #e9f7ee;
         --amber: #f5a524;
         --amber-soft: #e0952a;
         --surface: #f4f7fa;
@@ -171,8 +180,8 @@
     }
 }
 
-/* Copy protection of the student app (see useContentProtection). Form fields
-   stay selectable so students can type and paste their own notes. */
+/* Copy protection of every page of the web app (see useContentProtection).
+   Form fields stay selectable so students can type and paste their own notes. */
 @layer base {
     html.content-protected body {
         -webkit-user-select: none;
@@ -186,7 +195,8 @@
         -webkit-user-select: text;
         user-select: text;
     }
-    html.content-protected img {
+    html.content-protected img,
+    html.content-protected a {
         -webkit-user-drag: none;
     }
     @media print {
@@ -213,6 +223,23 @@
         background-clip: text;
         color: transparent;
     }
+}
+
+/* The sidebar menu scrolls on its own, under the logo row, with a thin scrollbar. */
+.mw-sidebar-scroll {
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--sidebar-border)) transparent;
+}
+.mw-sidebar-scroll::-webkit-scrollbar {
+    width: 6px;
+}
+.mw-sidebar-scroll::-webkit-scrollbar-thumb {
+    border-radius: 9999px;
+    background: hsl(var(--sidebar-border));
+}
+.mw-sidebar-scroll::-webkit-scrollbar-track {
+    background: transparent;
 }
 
 /* Yajra data tables (components/YajraTable.vue) in the app's colours, light and dark. */
@@ -267,4 +294,57 @@
     .yajra-badge {
         @apply inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium;
     }
+}
+
+/*
+ | The logo's colour mix everywhere (student app; the admin panel has the same rules
+ | in resources/views/filament/admin-styles.blade.php):
+ | - icons are stroked with the logo gradient (components/LogoGradientDefs.vue),
+ | - primary buttons, badges and the active sidebar item use a deeper version of it,
+ |   so white text on them stays readable (WCAG AA).
+ */
+:root {
+    --logo-gradient: linear-gradient(90deg, #f28c28 0%, #f5c518 22%, #2dbe4e 45%, #1bb8d6 68%, #1e6fd9 85%, #5b3fc4 100%);
+    --logo-gradient-strong: linear-gradient(115deg, #c2410c 0%, #a16207 20%, #15803d 42%, #0e7490 64%, #1d4ed8 84%, #6d28d9 100%);
+}
+.mw-nav-icon,
+.lucide.text-primary {
+    stroke: url(#mw-logo-stroke);
+}
+.dark .mw-nav-icon,
+.dark .lucide.text-primary {
+    stroke: url(#mw-logo-stroke-dark);
+}
+/* Primary buttons and badges (shadcn Button, and the hand-made ones). */
+.bg-primary.text-primary-foreground,
+.mw-nav-item[data-active='true'] {
+    background-image: var(--logo-gradient-strong);
+    background-size: 140% 100%;
+    background-position: 0 0;
+    color: #fff !important;
+    transition:
+        background-position 0.3s ease,
+        filter 0.2s ease;
+}
+.bg-primary.text-primary-foreground:hover,
+.mw-nav-item[data-active='true']:hover {
+    background-position: 100% 0;
+    filter: brightness(1.05);
+}
+/* Icons on a gradient button or the active item stay white. */
+.bg-primary.text-primary-foreground .lucide,
+.mw-nav-item[data-active='true'] .mw-nav-icon,
+.mw-nav-item[data-active='true'] .lucide {
+    stroke: currentColor;
+}
+/* Outline buttons with a logo-gradient border. */
+.mw-gradient-border {
+    border: 2px solid transparent !important;
+    background:
+        linear-gradient(hsl(var(--card)), hsl(var(--card))) padding-box,
+        var(--logo-gradient-strong) border-box;
+}
+/* The thin logo line on top of cards. */
+.mw-logo-line {
+    background: var(--logo-gradient);
 }

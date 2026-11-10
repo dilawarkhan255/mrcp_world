@@ -13,7 +13,7 @@ A **Qbank** is the product a student subscribes to. Each Qbank groups exams:
 
 ## Subscriptions
 
-Each Qbank is sold on its own: **£8 for 6 months** (plans are in **Users and billing → Plans**). Payment is manual until a payment gateway is added:
+Each Qbank is sold on its own: **3 months for £8** or **5 months for £12** (plans are in **Users and billing → Plans**; the old 6-month plans are switched off). Payment is manual until a payment gateway is added:
 
 1. The student opens **Subscription**, picks the Qbank, pays through the method the team gave them and sends the payment reference. The text above the form comes from `SUBSCRIPTION_PAYMENT_INSTRUCTIONS` in `.env` (put your real payment details there; none are invented in the code).
 2. The request appears under **Users and billing → Subscriptions** with a badge. Check the payment, then **Activate** (180 days by default, editable). Activating while an earlier subscription is still running starts the new period when the old one ends, so no days are lost.
@@ -174,3 +174,42 @@ Set `ANTHROPIC_API_KEY` in `.env` to switch it on (`ANTHROPIC_MODEL` defaults to
 - **AI advice** on the AI Study Plan page sends the student's subjects and scores only.
 - No name or email is sent. The prompt forbids inventing guideline titles, years or URLs. Answers are rendered with raw HTML stripped and labelled as AI-written.
 - Requests use low effort for short answers, and the server-side refusal fallback (`fallbacks: "default"`).
+
+## Admin tables (Yajra)
+
+Every admin list (questions, imports, past papers, exams, subjects, Qbanks, plans, subscriptions, users, roles, feedback, textbook chapters, Image Atlas) is a server-side Yajra DataTable: search, sort, 10/25/50/100 rows per page, a Filters panel, row icon actions (edit, delete, activate…) and, where a resource has them, checkboxes with bulk actions. The columns, filters and actions are still defined in each resource's Filament `table()`, so edit forms, confirmations, permissions and notifications work as before. After an action or a filter change the table reloads and stays on its page.
+
+## MCQ learning resources (right sidebar)
+
+Next to every MCQ, once it is answered (in a mock, once the mock is closed), students see five sections: **Extended Textbook**, **Image Atlas**, **References & guidelines**, **Image links** and **YouTube videos**. Before the answer the sections are locked, because a chapter title or an image can give the diagnosis away.
+
+Fill them in the MCQ form:
+
+- **Learning resources (right sidebar):** pick up to 4 textbook chapters of the exam and up to 6 Image Atlas images. Only published chapters, and published images with confirmed copyright, reach students. Without a chapter, the published chapters of the MCQ's subject are shown; without an image, published atlas images whose title or diagnosis contains the search term.
+- **References and media:** the guideline references (never guess a title, year or link), the YouTube video and the curated image links.
+- **Live image search term:** also builds the Google Images and YouTube search links. Without a term, no search links are shown.
+
+## Card payments (Stripe)
+
+With `STRIPE_SECRET` and `STRIPE_WEBHOOK_SECRET` in `.env`, students pay by card on Stripe Checkout (Stripe's hosted page; cards from every country Stripe accepts, Pakistan included). Without the keys, the manual request with a payment reference is used.
+
+1. In the Stripe dashboard (Developers → Webhooks), add the endpoint `https://<your-domain>/stripe/webhook` with the events `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `checkout.session.expired` and `charge.refunded`, and copy its signing secret into `STRIPE_WEBHOOK_SECRET`.
+2. A new student chooses a plan, creates the account and goes straight to Stripe. A member pays from **Subscription → Pay by card**.
+3. When Stripe confirms the payment, the subscription is activated automatically for the plan's period (3 or 5 months); a renewal is added after the current period. The staff get a "Card payment received" notification. The amount and currency must match the plan, or the row waits with a note for an admin.
+4. In **Subscriptions**, the "Paid by" column shows Card (Stripe) or Manual. "Card payment not completed" rows are abandoned checkouts; they close when Stripe expires the session.
+5. Refunds are made in the Stripe dashboard. A full refund closes the access automatically (the subscription is deactivated with a note, and the student and the staff are told). A partial refund keeps the access and leaves a note on the subscription, so an admin can decide. Every refund is recorded (`stripe_refunds`), so a refund that Stripe reports before the payment itself is still applied: the access is then never opened.
+
+## Flashcards
+
+Admin → **Content → Flashcards** (permission "Manage flashcards", given to editors). A card has a front (question or prompt) and a back (the answer), in Markdown, a subject and an order; only published cards reach students.
+
+- **From MCQs:** in **MCQs**, select questions and choose **Make flashcards**. Each MCQ gets one card: the stem on the front, the correct answer and the key points (or the start of the explanation) on the back. An MCQ that already has a card is skipped. Edit the cards afterwards to make them shorter.
+- **Students:** **Flashcards** in the sidebar lists a deck per subject with its due and new cards. On the study screen, Space shows the answer and 1–4 rate it (Again / Hard / Good / Easy); each rating schedules the next review (spaced repetition).
+
+## Knowledge Tutor
+
+**Knowledge Tutor** in the sidebar is a conversation with Claude about any topic of the syllabus (for one MCQ, students use Ask AI under the question). It needs `ANTHROPIC_API_KEY`; each message counts towards the daily AI limit. The conversation stays in the student's browser and is not stored.
+
+## Admin lists
+
+Every admin list has **View** (read-only), **Edit** and **Delete** on each row, and checkboxes with **Delete selected**. Records that are still in use are skipped, not deleted: a subject with MCQs, an exam with subjects or sessions, a paper with MCQs, a plan with subscriptions, a Qbank with exams, your own account. MCQs are archived instead of deleted. Bulk uploads are kept as a record (open their report with View).

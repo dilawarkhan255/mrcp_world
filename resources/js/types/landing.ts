@@ -20,8 +20,10 @@ export interface LandingPlan {
     currency: string;
 }
 
+/** The plans of one Qbank (for example 3 months and 5 months). */
 export interface LandingPlanGroup {
-    duration_days: number;
+    qbank: string | null;
+    exams: string[];
     plans: LandingPlan[];
 }
 

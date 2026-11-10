@@ -15,6 +15,8 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias(['qbank' => EnsureQbankAccess::class]);
+        // Stripe signs its webhook instead (StripeWebhookController).
+        $middleware->validateCsrfTokens(except: ['stripe/webhook']);
         $middleware->web(append: [
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,

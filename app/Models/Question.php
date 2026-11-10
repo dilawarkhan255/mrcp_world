@@ -6,6 +6,7 @@ use App\Support\QuestionContent;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Validation\ValidationException;
 
@@ -94,5 +95,25 @@ class Question extends Model
     public function pastPaper(): BelongsTo
     {
         return $this->belongsTo(PastPaper::class);
+    }
+
+    /**
+     * Textbook chapters to read about this MCQ (right sidebar of the practice screen).
+     *
+     * @return BelongsToMany<TextbookChapter, $this>
+     */
+    public function textbookChapters(): BelongsToMany
+    {
+        return $this->belongsToMany(TextbookChapter::class)->withPivot('sort_order')->orderByPivot('sort_order');
+    }
+
+    /**
+     * Image Atlas images that belong to this MCQ (right sidebar of the practice screen).
+     *
+     * @return BelongsToMany<AtlasImage, $this>
+     */
+    public function atlasImages(): BelongsToMany
+    {
+        return $this->belongsToMany(AtlasImage::class)->withPivot('sort_order')->orderByPivot('sort_order');
     }
 }

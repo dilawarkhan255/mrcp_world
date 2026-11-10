@@ -2,12 +2,15 @@
 
 namespace App\Filament\Resources\CategoryResource\Pages;
 
+use App\Filament\Concerns\UsesYajraTable;
 use App\Filament\Resources\CategoryResource;
 use Filament\Actions;
 use Filament\Resources\Pages\ManageRecords;
 
 class ManageCategories extends ManageRecords
 {
+    use UsesYajraTable;
+
     protected static string $resource = CategoryResource::class;
 
     protected function getHeaderActions(): array

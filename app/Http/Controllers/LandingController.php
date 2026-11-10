@@ -59,9 +59,10 @@ class LandingController extends Controller
     }
 
     /**
-     * Active plans grouped by their duration in days.
+     * Active plans, one group per Qbank (for example 3 months and 5 months),
+     * in display order. A plan without a Qbank is a group of its own.
      *
-     * @return list<array{duration_days: int, plans: list<array<string, mixed>>}>
+     * @return list<array{qbank: string|null, exams: list<string>, plans: list<array<string, mixed>>}>
      */
     private function plans(): array
     {
@@ -82,9 +83,10 @@ class LandingController extends Controller
                 'amount' => $plan->amountLabel(),
                 'currency' => $plan->currency,
             ])
-            ->groupBy('duration_days')
-            ->map(fn ($group, $days): array => [
-                'duration_days' => (int) $days,
+            ->groupBy(fn (array $plan): string => $plan['qbank'] ?? 'plan-'.$plan['id'])
+            ->map(fn ($group): array => [
+                'qbank' => $group->first()['qbank'],
+                'exams' => $group->first()['exams'],
                 'plans' => $group->values()->all(),
             ])
             ->values()

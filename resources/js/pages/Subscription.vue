@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import InputError from '@/components/InputError.vue';
+import PaymentMethods from '@/components/PaymentMethods.vue';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { Head, useForm } from '@inertiajs/vue3';
-import { CheckCircle2, Clock, CreditCard, PoundSterling } from 'lucide-vue-next';
-import { nextTick, onMounted, ref } from 'vue';
+import type { SharedData } from '@/types';
+import { Head, router, useForm, usePage } from '@inertiajs/vue3';
+import { CheckCircle2, Clock, CreditCard, LoaderCircle, PoundSterling } from 'lucide-vue-next';
+import { computed, nextTick, onMounted, ref } from 'vue';
 
 interface QbankPlan {
     id: number;
@@ -34,7 +36,29 @@ interface HistoryRow {
     created_at: string | null;
 }
 
-const props = defineProps<{ qbanks: QbankCard[]; history: HistoryRow[]; paymentInstructions: string; selectedPlan?: number | null }>();
+const props = defineProps<{
+    qbanks: QbankCard[];
+    history: HistoryRow[];
+    paymentInstructions: string;
+    selectedPlan?: number | null;
+    checkoutCancelled?: boolean;
+}>();
+/** Card payments on Stripe Checkout; the manual request stays for other ways of paying. */
+const card = computed(() => !!usePage<SharedData>().props.payments?.card);
+const paying = ref<number | null>(null);
+const cardErrors = ref<Record<number, string>>({});
+function payByCard(plan: QbankPlan) {
+    paying.value = plan.id;
+    cardErrors.value = {};
+    router.post(
+        '/subscription/checkout',
+        { plan_id: plan.id },
+        {
+            onError: (errors) => (cardErrors.value = { [plan.id]: errors.plan_id ?? 'The card payment could not be started.' }),
+            onFinish: () => (paying.value = null),
+        },
+    );
+}
 
 const requesting = ref<number | null>(null);
 const form = useForm({ plan_id: 0, payment_reference: '', note: '' });
@@ -52,11 +76,11 @@ function submit() {
         },
     });
 }
-// A plan chosen on the landing page opens its request form straight away.
+// A plan chosen on the landing page opens its request form (manual payment) straight away.
 onMounted(() => {
     const plan = props.qbanks.flatMap((qbank) => (qbank.pending ? [] : qbank.plans)).find((item) => item.id === props.selectedPlan);
     if (plan) {
-        open(plan);
+        if (!card.value) open(plan);
         nextTick(() => document.getElementById('plan-' + plan.id)?.scrollIntoView({ block: 'center' }));
     }
 });
@@ -74,7 +98,13 @@ function date(value: string | null): string {
                 <p class="mt-3 max-w-2xl text-sm text-muted-foreground">
                     Each Qbank includes its main MCQ bank and every past paper MCQ, the extended textbook and the Image Atlas.
                 </p>
+                <div v-if="card" class="mt-3 max-w-2xl rounded-lg border bg-card p-3">
+                    <PaymentMethods />
+                </div>
             </div>
+            <p v-if="checkoutCancelled" role="status" class="bg-amber/10 rounded-lg border border-amber p-3 text-sm">
+                The card payment was cancelled. You have not been charged; you can try again below.
+            </p>
 
             <div v-if="!qbanks.length" class="rounded-xl border border-dashed p-10 text-center text-muted-foreground">
                 No Qbanks are available at the moment. Please check back later.
@@ -110,16 +140,36 @@ function date(value: string | null): string {
                         <li v-for="plan in qbank.plans" :id="'plan-' + plan.id" :key="plan.id" class="rounded-lg border p-4">
                             <div class="flex flex-wrap items-baseline justify-between gap-2">
                                 <p>
+                                    <span class="block text-sm font-medium text-muted-foreground">{{ plan.duration }}</span>
                                     <span class="inline-flex items-center gap-0.5 text-2xl font-semibold text-primary"
                                         ><PoundSterling v-if="plan.price.startsWith('£')" class="size-5" aria-label="GBP" />{{
                                             plan.price.replace(/^£/, '')
                                         }}</span
                                     >
                                 </p>
-                                <Button v-if="requesting !== plan.id" size="sm" :disabled="qbank.pending" @click="open(plan)"
+                                <div v-if="card" class="flex flex-wrap items-center gap-2">
+                                    <Button size="sm" :disabled="qbank.pending || paying !== null" @click="payByCard(plan)"
+                                        ><LoaderCircle v-if="paying === plan.id" class="size-4 animate-spin" aria-hidden="true" /><CreditCard
+                                            v-else
+                                            class="size-4"
+                                            aria-hidden="true"
+                                        />{{ qbank.has_access ? 'Renew by card' : 'Pay by card' }}</Button
+                                    >
+                                    <button
+                                        v-if="requesting !== plan.id"
+                                        type="button"
+                                        class="text-xs font-medium text-muted-foreground underline-offset-2 hover:underline disabled:opacity-50"
+                                        :disabled="qbank.pending"
+                                        @click="open(plan)"
+                                    >
+                                        Paid another way?
+                                    </button>
+                                </div>
+                                <Button v-else-if="requesting !== plan.id" size="sm" :disabled="qbank.pending" @click="open(plan)"
                                     ><CreditCard class="size-4" aria-hidden="true" />{{ qbank.has_access ? 'Renew' : 'Subscribe' }}</Button
                                 >
                             </div>
+                            <InputError v-if="cardErrors[plan.id]" class="mt-2" :message="cardErrors[plan.id]" />
                             <form v-if="requesting === plan.id" class="mt-4 space-y-3" @submit.prevent="submit">
                                 <p class="rounded-md bg-muted/60 p-3 text-xs leading-relaxed">{{ paymentInstructions }}</p>
                                 <label class="grid gap-1.5 text-sm font-medium"

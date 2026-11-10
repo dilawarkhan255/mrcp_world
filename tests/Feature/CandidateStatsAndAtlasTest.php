@@ -145,7 +145,8 @@ it('lets editors manage the atlas and bulk publish only confirmed images', funct
     $ready = AtlasImage::create(['title' => 'Ready', 'image_path' => 'atlas/r.png', 'license' => 'own', 'copyright_confirmed' => true]);
     $pending = AtlasImage::create(['title' => 'Pending', 'image_path' => 'atlas/p.png', 'license' => 'unknown']);
 
-    $this->get('/admin/atlas-images')->assertOk()->assertSee('Ready');
+    $this->get('/admin/atlas-images')->assertOk();
+    expect(yajraHtml(ManageAtlasImages::class))->toContain('Ready');
     Livewire::test(ManageAtlasImages::class)->callTableBulkAction('publish', [$ready, $pending]);
 
     expect($ready->refresh()->is_published)->toBeTrue()->and($pending->refresh()->is_published)->toBeFalse();

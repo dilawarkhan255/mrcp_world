@@ -35,19 +35,19 @@ function tileStyle(index: number): Record<string, string> {
                     <div class="mt-6 flex flex-wrap gap-3">
                         <a
                             :href="'/exams/' + exam.slug + '/demo'"
-                            class="hover:border-teal/50 inline-flex min-h-[44px] flex-1 items-center justify-center rounded-control border border-border bg-white px-4 text-sm font-semibold text-ink transition hover:text-dark-teal focus-visible:ring-2 focus-visible:ring-teal focus-visible:ring-offset-2"
+                            class="inline-flex min-h-[44px] flex-1 items-center justify-center whitespace-nowrap rounded-control border border-border bg-white px-4 text-sm font-semibold text-ink transition hover:border-amber hover:text-[#d9620b] focus-visible:ring-2 focus-visible:ring-teal focus-visible:ring-offset-2"
                         >
                             {{ landingCopy.exams.demo }}
                         </a>
                         <a
                             :href="'/login?exam=' + exam.slug"
-                            class="hover:border-teal/50 inline-flex min-h-[44px] flex-1 items-center justify-center rounded-control border border-border bg-white px-4 text-sm font-semibold text-ink transition hover:text-dark-teal focus-visible:ring-2 focus-visible:ring-teal focus-visible:ring-offset-2"
+                            class="inline-flex min-h-[44px] flex-1 items-center justify-center whitespace-nowrap rounded-control border border-border bg-white px-4 text-sm font-semibold text-ink transition hover:border-amber hover:text-[#d9620b] focus-visible:ring-2 focus-visible:ring-teal focus-visible:ring-offset-2"
                         >
                             {{ landingCopy.exams.logIn }}
                         </a>
                         <a
                             :href="'/register?exam=' + exam.slug"
-                            class="inline-flex min-h-[44px] flex-1 items-center justify-center rounded-control bg-teal px-4 text-sm font-semibold text-white transition hover:bg-dark-teal focus-visible:ring-2 focus-visible:ring-teal focus-visible:ring-offset-2"
+                            class="inline-flex min-h-[44px] flex-1 items-center justify-center whitespace-nowrap rounded-control bg-primary px-4 text-sm font-semibold text-primary-foreground transition focus-visible:ring-2 focus-visible:ring-teal focus-visible:ring-offset-2"
                         >
                             {{ landingCopy.exams.signUp }}
                         </a>

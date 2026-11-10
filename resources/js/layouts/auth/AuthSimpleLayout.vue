@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import AppLogoIcon from '@/components/AppLogoIcon.vue';
 import { APP_NAME } from '@/lib/brand';
 import { Link } from '@inertiajs/vue3';
 
@@ -14,11 +13,10 @@ defineProps<{
         <div class="w-full max-w-sm">
             <div class="flex flex-col gap-8">
                 <div class="flex flex-col items-center gap-4">
-                    <Link :href="route('home')" class="flex flex-col items-center gap-2 font-medium">
-                        <div class="mb-1 flex h-9 w-9 items-center justify-center rounded-md">
-                            <AppLogoIcon class="size-9 text-primary" />
-                        </div>
-                        <span class="font-heading text-lg font-semibold">{{ APP_NAME }}</span>
+                    <!-- The brand logo (light "World" in dark mode), linking to the home page. -->
+                    <Link :href="route('home')" class="flex flex-col items-center" :aria-label="APP_NAME + ', home page'">
+                        <img src="/brand/mrcp-world-logo.trim.png" :alt="APP_NAME" class="h-20 w-auto object-contain dark:hidden" height="80" />
+                        <img src="/brand/mrcp-world-logo.dark.png" :alt="APP_NAME" class="hidden h-20 w-auto object-contain dark:block" height="80" />
                     </Link>
                     <div class="space-y-2 text-center">
                         <h1 class="text-xl font-medium">{{ title }}</h1>

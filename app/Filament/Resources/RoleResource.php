@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\RoleResource\Pages\ManageRoles;
+use App\Filament\Support\CrudActions;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Pages\PageRegistration;
@@ -80,6 +81,7 @@ class RoleResource extends Resource
             Tables\Columns\TextColumn::make('permissions.name')->label('Areas')
                 ->formatStateUsing(fn (string $state): string => self::area($state))->badge()->color('gray')->distinctList()->limitList(4),
         ])->actions([
+            CrudActions::view(),
             Tables\Actions\EditAction::make()->after(function (Role $record): void {
                 if ($record->name === 'admin') {
                     $record->syncPermissions(Permission::where('guard_name', 'web')->get());
@@ -87,7 +89,7 @@ class RoleResource extends Resource
                 app(PermissionRegistrar::class)->forgetCachedPermissions();
             }),
             Tables\Actions\DeleteAction::make()->after(fn () => app(PermissionRegistrar::class)->forgetCachedPermissions()),
-        ])->modifyQueryUsing(fn (Builder $query) => $query->where('guard_name', 'web')->with('permissions:id,name'))->defaultSort('id');
+        ])->bulkActions([CrudActions::bulkDelete()->after(fn () => app(PermissionRegistrar::class)->forgetCachedPermissions())])->modifyQueryUsing(fn (Builder $query) => $query->where('guard_name', 'web')->with('permissions:id,name'))->defaultSort('id');
     }
 
     /** @return array<string, PageRegistration> */

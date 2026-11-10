@@ -52,6 +52,16 @@ export interface QuestionResult {
     image_searches?: { site: string; label: string; url: string }[];
     time_seconds?: number | null;
     candidates?: CandidateStats | null;
+    /** Right sidebar resources of this MCQ (App\Services\QuestionResources). */
+    resources?: QuestionResources;
+}
+export interface QuestionResources {
+    textbook: { items: { title: string; summary: string | null; url: string }[]; linked: boolean; subject: string | null };
+    atlas: {
+        items: { id: number; title: string; diagnosis: string | null; image_url: string; url: string; credit: string | null }[];
+        linked: boolean;
+    };
+    web: { term: string | null; google_images: string | null; youtube: string | null };
 }
 export interface PracticeQuestion {
     position: number;
@@ -77,15 +87,6 @@ export interface MockPreset {
 export interface MockLimits {
     maxQuestions: number;
     maxMinutes: number;
-}
-export interface MockAttempt {
-    id: number;
-    total_questions: number;
-    answered_count: number;
-    correct_count: number;
-    completed_at: string | null;
-    started_at: string | null;
-    duration_seconds: number | null;
 }
 export interface MockSession {
     id: number;

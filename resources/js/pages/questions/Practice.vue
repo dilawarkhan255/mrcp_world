@@ -7,6 +7,7 @@ import QuestionComments from '@/components/practice/QuestionComments.vue';
 import QuestionGrid from '@/components/practice/QuestionGrid.vue';
 import QuestionLabels from '@/components/practice/QuestionLabels.vue';
 import ReportMcqDialog from '@/components/practice/ReportMcqDialog.vue';
+import ResourcesPanel from '@/components/practice/resources/ResourcesPanel.vue';
 import RichText from '@/components/practice/RichText.vue';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -133,7 +134,8 @@ function toggleBookmark() {
                 </p>
             </section>
 
-            <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]">
+            <!-- MCQ and explanation on the left (70%); the navigator and the learning resources on the right (30%). -->
+            <div class="grid gap-6 lg:grid-cols-[minmax(0,7fr)_minmax(0,3fr)]">
                 <div class="min-w-0 space-y-6">
                     <form class="space-y-6 rounded-xl border bg-card p-5 md:p-8" @submit.prevent="submit">
                         <QuestionLabels :labels="question.labels" :code="question.code" />
@@ -206,8 +208,10 @@ function toggleBookmark() {
                     </p>
                 </div>
 
-                <aside class="space-y-4 lg:sticky lg:top-4 lg:self-start">
+                <!-- Scrolls on its own on desktop, below the 80px navbar. -->
+                <aside class="mw-sidebar-scroll space-y-4 lg:sticky lg:top-24 lg:max-h-[calc(100vh-7rem)] lg:self-start lg:overflow-y-auto lg:pr-1">
                     <QuestionGrid :items="navigator" :current="question.position" :base-url="baseUrl" />
+                    <ResourcesPanel :key="question.position" :result="question.result" />
                     <PrivateNote
                         v-if="question.question_id"
                         :question-id="question.question_id"

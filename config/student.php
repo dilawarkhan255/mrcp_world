@@ -20,6 +20,7 @@ return [
         ['title' => 'Past Papers', 'icon' => 'FileClock', 'href' => '/questions/past-papers', 'subscription' => true],
         ['title' => 'Extended Textbook', 'icon' => 'BookOpen', 'href' => '/textbooks', 'match' => ['/textbooks/'], 'subscription' => true],
         ['title' => 'Image Atlas', 'icon' => 'Images', 'href' => '/image-atlas', 'subscription' => true],
+        ['title' => 'Flashcards', 'icon' => 'Layers', 'href' => '/flashcards', 'match' => ['/flashcards/'], 'subscription' => true],
         ['title' => 'Review Questions', 'icon' => 'RotateCcw', 'href' => '/questions/review', 'subscription' => true],
         // A heading, not a link: the items below it are grouped under "More".
         ['title' => 'More', 'section' => 'More'],
@@ -27,6 +28,7 @@ return [
         ['title' => 'Performance', 'icon' => 'TrendingUp', 'href' => '/questions/performance'],
         ['title' => 'Leaderboard', 'icon' => 'Trophy', 'href' => '/leaderboard', 'subscription' => true],
         ['title' => 'AI Study Plan', 'icon' => 'Sparkles', 'href' => '/study-plan', 'subscription' => true],
+        ['title' => 'Knowledge Tutor', 'icon' => 'GraduationCap', 'href' => '/tutor', 'subscription' => true],
         ['title' => 'Subscription', 'icon' => 'CreditCard', 'href' => '/subscription'],
         ['title' => 'Feedback', 'icon' => 'MessageSquare', 'href' => '/feedback'],
     ],
@@ -91,9 +93,9 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Copy protection for students: copying, selecting, the context menu and
-    | printing are blocked, and a faint watermark with the student's email is
-    | shown. Content staff are never protected. This deters copying; it cannot
+    | Copy protection on every page, for students and guests: copying, cutting,
+    | selecting, dragging, the context menu and printing are blocked, and a
+    | signed-in student sees a faint watermark with their email. Content staff are never protected. This deters copying; it cannot
     | stop screenshots, which the watermark makes traceable.
     |--------------------------------------------------------------------------
     */

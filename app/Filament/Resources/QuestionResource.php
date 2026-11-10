@@ -3,16 +3,23 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\QuestionResource\Pages\ManageQuestions;
+use App\Filament\Support\CrudActions;
+use App\Models\AtlasImage;
+use App\Models\Flashcard;
 use App\Models\Question;
+use App\Services\FlashcardService;
+use App\Services\QuestionResources;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Forms\Get;
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\PageRegistration;
 use Filament\Resources\Resource;
 use Filament\Support\Enums\MaxWidth;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Validation\Rules\Unique;
 
@@ -145,6 +152,19 @@ class QuestionResource extends Resource
                     Forms\Components\TextInput::make('url')->url()->required()->maxLength(2048)->placeholder('https://…'),
                 ])->columns(2)->maxItems(20)->defaultItems(0)->addActionLabel('Add image link'),
             ]),
+            Forms\Components\Section::make('Learning resources (right sidebar)')->icon('heroicon-o-book-open')->collapsible()
+                ->description('Shown next to the MCQ once it is answered. Without a chapter, the subject\'s chapters are shown; without an image, atlas images matching the search term above.')
+                ->columns(2)->schema([
+                    Forms\Components\Select::make('textbookChapters')->label('Extended textbook chapters')
+                        ->relationship('textbookChapters', 'title', modifyQueryUsing: fn (Builder $query, Get $get) => $query->where('textbook_chapters.exam_id', $get('exam_id'))->orderBy('textbook_chapters.title'))
+                        ->multiple()->searchable()->preload()->maxItems(QuestionResources::TEXTBOOK_LIMIT)
+                        ->helperText('Chapters of this exam. Only published chapters are shown to students.'),
+                    Forms\Components\Select::make('atlasImages')->label('Image Atlas images')
+                        ->relationship('atlasImages', 'title', modifyQueryUsing: fn (Builder $query) => $query->orderBy('atlas_images.title'))
+                        ->getOptionLabelFromRecordUsing(fn (AtlasImage $record): string => $record->title.($record->diagnosis ? ' — '.$record->diagnosis : ''))
+                        ->multiple()->searchable(['title', 'diagnosis'])->preload()->maxItems(QuestionResources::ATLAS_LIMIT)
+                        ->helperText('Only published images with confirmed copyright are shown to students.'),
+                ]),
             Forms\Components\Section::make('Review and publishing')->icon('heroicon-o-shield-check')->columns(2)->schema([
                 Forms\Components\Toggle::make('needs_review')->label('Flag for human review')->helperText('Use when a citation, guideline or fact is uncertain. Flagged MCQs are listed for review.')->live(),
                 Forms\Components\Toggle::make('is_published')->label('Published — visible to students')->default(false),
@@ -172,6 +192,8 @@ class QuestionResource extends Resource
             Tables\Filters\TernaryFilter::make('is_published')->label('Published'),
             Tables\Filters\TernaryFilter::make('needs_review')->label('Flagged for review'),
         ])->actions([
+            CrudActions::view(slideOver: true)->modalWidth(MaxWidth::FiveExtraLarge)
+                ->mutateRecordDataUsing(fn (array $data, Question $record): array => [...$data, ...$record->only(['correct_option', 'explanation', 'key_points', 'mnemonics', 'references', 'youtube_url', 'image_links', 'image_search', 'image_search_sites', 'review_note'])]),
             Tables\Actions\EditAction::make()->slideOver()->modalWidth(MaxWidth::FiveExtraLarge)
                 ->mutateRecordDataUsing(fn (array $data, Question $record): array => [...$data, ...$record->only(['correct_option', 'explanation', 'key_points', 'mnemonics', 'references', 'youtube_url', 'image_links', 'image_search', 'image_search_sites', 'review_note'])]),
             Tables\Actions\Action::make('resolveReview')->iconButton()->label('Mark reviewed')->icon('heroicon-o-check')->color('success')
@@ -180,6 +202,20 @@ class QuestionResource extends Resource
                 ->requiresConfirmation()->modalDescription('Confirm that the citations and facts of this MCQ were checked by a person.')
                 ->action(fn (Question $record) => $record->update(['needs_review' => false, 'review_note' => null])),
             Tables\Actions\DeleteAction::make()->label('Archive')->icon('heroicon-o-archive-box'),
+        ])->bulkActions([
+            // A flashcard from each selected MCQ: stem on the front, answer and key points on the back.
+            Tables\Actions\BulkAction::make('makeFlashcards')->label('Make flashcards')->icon('heroicon-o-rectangle-stack')->color('warning')
+                ->authorize(fn (): bool => auth()->user()?->can('create', Flashcard::class) ?? false)
+                ->requiresConfirmation()->modalDescription('Each MCQ gets one flashcard (an MCQ that already has one is skipped). The cards are published like their MCQ; edit them in Flashcards.')
+                ->action(function (Collection $records): void {
+                    $service = app(FlashcardService::class);
+                    $created = 0;
+                    foreach ($records as $record) {
+                        $created += $record instanceof Question && $service->fromQuestion($record)->wasRecentlyCreated ? 1 : 0;
+                    }
+                    Notification::make()->success()->title($created.' flashcards made'.($records->count() > $created ? ', '.($records->count() - $created).' already had one' : ''))->send();
+                }),
+            CrudActions::bulkDelete(label: 'Archive selected', done: 'archived'),
         ])->defaultSort('id', 'desc')->paginationPageOptions([25, 50, 100]);
     }
 

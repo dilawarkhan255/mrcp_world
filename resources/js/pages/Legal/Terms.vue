@@ -1,11 +1,14 @@
 <script setup lang="ts">
-import Page from '@/pages/Legal/Page.vue';
-defineProps<{ appName: string }>();
+import LegalDocument from '@/components/legal/LegalDocument.vue';
+defineProps<{ appName: string; summary: string; sections: { title: string; body: string }[]; updated: string }>();
 </script>
 <template>
-    <Page
+    <LegalDocument
         :app-name="appName"
         title="Terms of use"
-        intro="The terms that apply when you use MRCP World, including the accounts, the question bank and the mock exams."
+        :description="`The terms that apply when you use ${appName}.`"
+        :summary="summary"
+        :sections="sections"
+        :updated="updated"
     />
 </template>

@@ -61,6 +61,8 @@ export interface SharedData {
     notifications?: { unread: number } | null;
     /** Copy protection of the student app; watermark is the signed-in student's email and the date. */
     protection?: { enabled: boolean; watermark: string | null };
+    /** card: payments by card on Stripe Checkout are on. */
+    payments?: { card: boolean };
     name: string;
     quote: { message: string; author: string };
     auth: Auth;

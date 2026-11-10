@@ -3,6 +3,7 @@
 namespace Tests\Feature\Auth;
 
 use App\Models\Plan;
+use App\Models\Qbank;
 use App\Models\Subscription;
 use App\Models\User;
 use Database\Seeders\ExamSeeder;
@@ -28,12 +29,16 @@ class RegistrationTest extends TestCase
 
         $this->get('/register?plan='.$plan->id)->assertOk()->assertInertia(fn (Assert $page) => $page
             ->component('auth/Register')
-            ->has('plans', 2)
-            ->where('plans.0.qbank', 'MRCPWorld 1 Qbank')
-            ->where('plans.0.price', '£8')
+            ->has('plans', 4)
+            // One Qbank after the other: 3 months (£8), then 5 months (£12).
+            ->where('plans.0.qbank', 'MRCPWorld 1 Qbank')->where('plans.0.duration', '3 months')->where('plans.0.price', '£8')
+            ->where('plans.1.qbank', 'MRCPWorld 1 Qbank')->where('plans.1.duration', '5 months')->where('plans.1.price', '£12')
+            ->where('plans.2.qbank', 'MRCPWorld 2 Qbank')->where('plans.2.duration', '3 months')
             ->where('selectedPlan', $plan->id));
+        // ?exam= preselects the 3-month plan of that exam's Qbank.
+        $qbank2 = Qbank::where('slug', 'qbank-2')->value('id');
         $this->get('/register?exam=fcps-part-2')->assertInertia(fn (Assert $page) => $page
-            ->where('selectedPlan', Plan::orderByDesc('sort_order')->value('id')));
+            ->where('selectedPlan', Plan::where('qbank_id', $qbank2)->where('duration_days', 90)->value('id')));
     }
 
     public function test_new_users_register_with_a_subscription_request()

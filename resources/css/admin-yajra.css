@@ -1,0 +1,140 @@
+/* Yajra DataTables inside the Filament admin, in Filament's colours (light and dark). */
+.mw-yajra .dt-container {
+    font-size: 0.875rem;
+    color: rgb(var(--gray-950));
+}
+.dark .mw-yajra .dt-container {
+    color: rgb(255 255 255);
+}
+.mw-yajra .dt-layout-row {
+    margin: 0.5rem 0;
+}
+.mw-yajra .dt-search input,
+.mw-yajra .dt-length select {
+    height: 2.25rem;
+    border-radius: 0.5rem;
+    border: 1px solid rgb(var(--gray-300));
+    background: rgb(255 255 255);
+    padding: 0 0.75rem;
+    color: inherit;
+    box-shadow: none;
+}
+.mw-yajra .dt-search input {
+    min-width: 16rem;
+}
+.mw-yajra .dt-search input:focus,
+.mw-yajra .dt-length select:focus {
+    outline: 2px solid rgb(var(--primary-600));
+    outline-offset: 0;
+    border-color: transparent;
+}
+.dark .mw-yajra .dt-search input,
+.dark .mw-yajra .dt-length select {
+    border-color: rgb(255 255 255 / 0.1);
+    background: rgb(255 255 255 / 0.05);
+}
+.dark .mw-yajra .dt-length select option {
+    background: rgb(var(--gray-900));
+}
+.mw-yajra table.dataTable {
+    border-collapse: collapse;
+    width: 100% !important;
+}
+.mw-yajra table.dataTable thead th {
+    border-bottom: 1px solid rgb(var(--gray-200));
+    background: rgb(var(--gray-50));
+    padding: 0.75rem;
+    text-align: start;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: rgb(var(--gray-950));
+    white-space: nowrap;
+}
+.dark .mw-yajra table.dataTable thead th {
+    border-color: rgb(255 255 255 / 0.05);
+    background: rgb(255 255 255 / 0.05);
+    color: rgb(255 255 255);
+}
+.mw-yajra table.dataTable tbody td {
+    border-top: 1px solid rgb(var(--gray-200));
+    padding: 0;
+    vertical-align: middle;
+}
+.dark .mw-yajra table.dataTable tbody td {
+    border-color: rgb(255 255 255 / 0.05);
+}
+.mw-yajra table.dataTable tbody td.mw-yajra-select,
+.mw-yajra table.dataTable thead th.mw-yajra-select {
+    width: 2.5rem;
+    padding: 0.75rem;
+}
+.mw-yajra table.dataTable tbody td.mw-yajra-actions {
+    padding: 0.75rem;
+    white-space: nowrap;
+}
+.mw-yajra table.dataTable tbody tr {
+    background: transparent;
+}
+.mw-yajra table.dataTable tbody tr:hover {
+    background: rgb(var(--gray-50));
+}
+.dark .mw-yajra table.dataTable tbody tr:hover {
+    background: rgb(255 255 255 / 0.03);
+}
+.mw-yajra table.dataTable > tbody > tr > td.dt-empty {
+    padding: 2.5rem 1rem;
+    text-align: center;
+    color: rgb(var(--gray-500));
+}
+.mw-yajra table.dataTable.no-footer {
+    border-bottom: 0;
+}
+.mw-yajra .dt-info {
+    font-size: 0.8125rem;
+    color: rgb(var(--gray-500));
+}
+.mw-yajra .dt-paging .dt-paging-button {
+    border-radius: 0.5rem !important;
+    border: 1px solid transparent !important;
+    background: transparent !important;
+    color: inherit !important;
+    padding: 0.25rem 0.75rem !important;
+}
+.mw-yajra .dt-paging .dt-paging-button.current,
+.mw-yajra .dt-paging .dt-paging-button:hover:not(.disabled) {
+    border-color: rgb(var(--gray-200)) !important;
+    background: rgb(var(--gray-50)) !important;
+    color: rgb(var(--primary-600)) !important;
+}
+.dark .mw-yajra .dt-paging .dt-paging-button.current,
+.dark .mw-yajra .dt-paging .dt-paging-button:hover:not(.disabled) {
+    border-color: rgb(255 255 255 / 0.1) !important;
+    background: rgb(255 255 255 / 0.05) !important;
+    color: rgb(var(--primary-400)) !important;
+}
+.mw-yajra .dt-paging .dt-paging-button.disabled {
+    opacity: 0.4;
+}
+.mw-yajra div.dt-processing {
+    border-radius: 0.75rem;
+    border: 1px solid rgb(var(--gray-200));
+    background: rgb(255 255 255);
+    box-shadow: 0 1px 3px rgb(0 0 0 / 0.1);
+}
+.dark .mw-yajra div.dt-processing {
+    border-color: rgb(255 255 255 / 0.1);
+    background: rgb(var(--gray-900));
+}
+.mw-yajra div.dt-processing > div:last-child > div {
+    background: rgb(var(--primary-600));
+}
+.mw-yajra-checkbox {
+    border-radius: 0.25rem;
+}
+/* Row checkboxes in the brand colour (Filament draws the tick with currentColor). */
+.mw-yajra .mw-yajra-checkbox {
+    color: #0b2a6f;
+}
+.dark .mw-yajra .mw-yajra-checkbox {
+    color: #1bb8d6;
+}

@@ -44,7 +44,7 @@ it('ignores a plan that is not on sale', function () {
 it('points the landing pricing at sign-up with the plan, and members at the subscription page', function () {
     expect(file_get_contents(resource_path('js/components/landing/PricingPlans.vue')))
         ->toContain("'/register?plan=' + plan.id")
-        ->toContain("'/subscription?plan=' + plan.id");
+        ->toContain("'/subscription?plan=' + group.plans[0]?.id");
 });
 
 it('protects content for students with their own email as the watermark', function () {
@@ -67,6 +67,17 @@ it('does not protect content staff and can be switched off', function () {
 it('protects the public demo without a watermark', function () {
     $this->get('/exams/mrcp-part-1/demo')->assertInertia(fn (Assert $page) => $page
         ->where('protection.enabled', true)->where('protection.watermark', null));
+});
+
+it('protects every public page and mounts the protection once for the whole app', function () {
+    foreach (['/', '/login', '/register', '/terms', '/privacy'] as $url) {
+        $this->get($url)->assertInertia(fn (Assert $page) => $page->where('protection.enabled', true)->where('protection.watermark', null));
+    }
+    // Mounted at the root (app.ts), not per layout, so no page is left out.
+    expect(file_get_contents(resource_path('js/app.ts')))->toContain('h(ContentProtection)')
+        ->and(file_get_contents(resource_path('js/layouts/app/AppSidebarLayout.vue')))->not->toContain('ContentProtection');
+    $composable = file_get_contents(resource_path('js/composables/useContentProtection.ts'));
+    expect($composable)->toContain('blockClipboard')->toContain('Insert')->toContain('dragstart')->toContain('contextmenu');
 });
 
 it('has a login link per exam that opens that exam after logging in', function () {

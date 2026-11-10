@@ -2,12 +2,15 @@
 
 namespace App\Filament\Resources\PlanResource\Pages;
 
+use App\Filament\Concerns\UsesYajraTable;
 use App\Filament\Resources\PlanResource;
 use Filament\Actions;
 use Filament\Resources\Pages\ManageRecords;
 
 class ManagePlans extends ManageRecords
 {
+    use UsesYajraTable;
+
     protected static string $resource = PlanResource::class;
 
     /** @return array<Actions\Action> */

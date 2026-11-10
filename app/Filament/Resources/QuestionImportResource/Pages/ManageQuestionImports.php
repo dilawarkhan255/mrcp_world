@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\QuestionImportResource\Pages;
 
+use App\Filament\Concerns\UsesYajraTable;
 use App\Filament\Resources\QuestionImportResource;
 use App\Jobs\ImportQuestions;
 use App\Models\QuestionImport;
@@ -11,6 +12,8 @@ use Filament\Resources\Pages\ManageRecords;
 
 class ManageQuestionImports extends ManageRecords
 {
+    use UsesYajraTable;
+
     protected static string $resource = QuestionImportResource::class;
 
     /** @return array<Actions\Action> */

@@ -4,8 +4,9 @@ import type { SharedData } from '@/types';
 import { usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
 /**
- * Copy protection and a faint watermark with the student's own email and the
- * date, so a screenshot that is shared can be traced. Content staff are not
+ * Copy protection for every page (mounted once in app.ts) and, for a signed-in
+ * student, a faint watermark with their email and the date, so a screenshot
+ * that is shared can be traced. Guests are protected too. Content staff are not
  * protected, because they need to copy content while editing.
  */
 const page = usePage<SharedData>();

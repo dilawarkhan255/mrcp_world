@@ -8,12 +8,17 @@
     .fi-body { background-color: #f3f6fb; }
     .dark .fi-body { background-color: #0b1224; }
     .dark .fi-sidebar, .dark .fi-sidebar-header, .dark .fi-topbar > nav { background-color: #0e1730; }
-    .fi-sidebar-item-active > a, .fi-sidebar-item-active > button { background-color: #e8edf8; }
-    .dark .fi-sidebar-item-active > a, .dark .fi-sidebar-item-active > button { background-color: #123047; }
-    /* Thin rainbow line from the logo under the top bar. */
-    /* The top bar stays sticky above the page (it is already positioned, so the line below needs no override). */
+    /* The top bar stays sticky above the page. Its 1px bottom border and the one under the logo
+       form a single line (both bars are 5rem), so no extra strip is drawn below it. */
     .fi-topbar { z-index: 30; }
-    .fi-topbar::after { content: ''; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; background: linear-gradient(90deg, #f28c28 0%, #f5c518 22%, #2dbe4e 45%, #1bb8d6 68%, #1e6fd9 85%, #5b3fc4 100%); opacity: 0.85; }
+    /* Only the menu scrolls; the logo row stays above it, and the scrollbar is thin. */
+    .fi-sidebar-header { position: relative; z-index: 10; flex-shrink: 0; }
+    .fi-sidebar-nav { overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: #dde4ef transparent; }
+    .dark .fi-sidebar-nav { scrollbar-color: #26304a transparent; }
+    .fi-sidebar-nav::-webkit-scrollbar { width: 6px; }
+    .fi-sidebar-nav::-webkit-scrollbar-thumb { border-radius: 9999px; background: #dde4ef; }
+    .dark .fi-sidebar-nav::-webkit-scrollbar-thumb { background: #26304a; }
+    .fi-sidebar-nav::-webkit-scrollbar-track { background: transparent; }
     .fi-sidebar-group-label { letter-spacing: 0.06em; text-transform: uppercase; font-size: 0.7rem; }
     .fi-header-heading { font-family: 'Sora', 'Manrope', sans-serif; letter-spacing: -0.01em; }
     .fi-wi-stats-overview-stat { transition: box-shadow 150ms ease, transform 150ms ease; }
@@ -40,14 +45,37 @@
     .fi-sidebar-item-label { font-size: 0.875rem; font-weight: 500; }
     .fi-sidebar-item a:hover, .fi-sidebar-item button:hover { background-color: #eef2fa; }
     .dark .fi-sidebar-item a:hover, .dark .fi-sidebar-item button:hover { background-color: #172241; }
-    .fi-sidebar-item-active .fi-sidebar-item-label, .fi-sidebar-item-active .fi-sidebar-item-icon { color: #0B2A6F !important; font-weight: 600; }
+    .fi-sidebar-item-active .fi-sidebar-item-label { font-weight: 600; }
     .mw-topbar-btn:hover { background: rgba(11, 42, 111, 0.08); color: #0B2A6F; }
     .dark .mw-topbar-btn:hover { background: rgba(27, 184, 214, 0.12); color: #1BB8D6; }
     /* Filament's dark primary text uses the lighter shade, which is too dark for navy: use the logo's cyan. */
-    .dark .fi-sidebar-item-active .fi-sidebar-item-label, .dark .fi-sidebar-item-active .fi-sidebar-item-icon { color: #1BB8D6 !important; }
     /* The sidebar's own collapse button is replaced by the top bar toggle on desktop. */
     .fi-sidebar-header .fi-icon-btn.ms-auto { display: none !important; }
 
+    /* ---- The logo's colour mix, as in the student app (resources/css/app.css). ---- */
+    :root { --logo-gradient: linear-gradient(90deg, #f28c28 0%, #f5c518 22%, #2dbe4e 45%, #1bb8d6 68%, #1e6fd9 85%, #5b3fc4 100%);
+            --logo-gradient-strong: linear-gradient(115deg, #c2410c 0%, #a16207 20%, #15803d 42%, #0e7490 64%, #1d4ed8 84%, #6d28d9 100%); }
+    /* Icons stroked (outline icons) or filled (solid icons) with the logo gradient (partials/logo-gradient-defs). */
+    .fi-sidebar-item:not(.fi-sidebar-item-active) .fi-sidebar-item-icon,
+    .mw-yajra td.mw-yajra-actions .fi-icon-btn svg[stroke="currentColor"] { stroke: url(#mw-logo-stroke); }
+    .mw-yajra td.mw-yajra-actions .fi-icon-btn svg[fill="currentColor"] { fill: url(#mw-logo-stroke); }
+    .dark .fi-sidebar-item:not(.fi-sidebar-item-active) .fi-sidebar-item-icon,
+    .dark .mw-yajra td.mw-yajra-actions .fi-icon-btn svg[stroke="currentColor"] { stroke: url(#mw-logo-stroke-dark); }
+    .dark .mw-yajra td.mw-yajra-actions .fi-icon-btn svg[fill="currentColor"] { fill: url(#mw-logo-stroke-dark); }
+    .mw-yajra td.mw-yajra-actions .fi-icon-btn:hover { background: rgba(30, 111, 217, 0.08); }
+    /* The active sidebar item and the primary buttons: the deeper logo gradient with white text. */
+    .fi-sidebar-item-active > a, .fi-sidebar-item-active > button,
+    .dark .fi-sidebar-item-active > a, .dark .fi-sidebar-item-active > button,
+    .fi-btn.fi-btn-color-primary:not(.fi-btn-outlined) {
+        background-image: var(--logo-gradient-strong) !important; background-size: 140% 100%; background-position: 0 0;
+        transition: background-position 0.3s ease, filter 0.2s ease; }
+    .fi-sidebar-item-active > a:hover, .fi-btn.fi-btn-color-primary:not(.fi-btn-outlined):hover { background-position: 100% 0; filter: brightness(1.05); }
+    .fi-sidebar-item-active .fi-sidebar-item-label, .fi-sidebar-item-active .fi-sidebar-item-icon,
+    .dark .fi-sidebar-item-active .fi-sidebar-item-label, .dark .fi-sidebar-item-active .fi-sidebar-item-icon,
+    .fi-btn.fi-btn-color-primary:not(.fi-btn-outlined), .fi-btn.fi-btn-color-primary:not(.fi-btn-outlined) * { color: #fff !important; }
+    /* Stat cards of the dashboard: the logo line on top, like the student cards. */
+    .fi-wi-stats-overview-stat { position: relative; overflow: hidden; }
+    .fi-wi-stats-overview-stat::before { content: ''; position: absolute; inset: 0 0 auto 0; height: 3px; background: var(--logo-gradient); }
     .mw-workflow { display: grid; gap: 1rem; grid-template-columns: repeat(1, minmax(0, 1fr)); counter-reset: none; }
     @media (min-width: 768px) { .mw-workflow { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
     @media (min-width: 1280px) { .mw-workflow { grid-template-columns: repeat(4, minmax(0, 1fr)); } }

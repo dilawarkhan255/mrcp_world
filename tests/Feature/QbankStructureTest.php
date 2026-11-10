@@ -83,8 +83,10 @@ it('lets content staff manage Qbanks and exams from the admin panel', function (
     $this->actingAs($editor);
     Filament::setCurrentPanel(Filament::getPanel('admin'));
 
-    $this->get('/admin/qbanks')->assertOk()->assertSee('MRCPWorld 1 Qbank');
-    $this->get('/admin/exams')->assertOk()->assertSee('FCPS Part 2');
+    $this->get('/admin/qbanks')->assertOk();
+    $this->get('/admin/exams')->assertOk();
+    expect(yajraHtml(ManageQbanks::class))->toContain('MRCPWorld 1 Qbank')
+        ->and(yajraHtml(ManageExams::class))->toContain('FCPS Part 2');
     Livewire::test(ManageQbanks::class)
         ->callAction('create', data: ['name' => 'PACES', 'slug' => 'paces', 'sort_order' => 3, 'is_active' => false])
         ->assertHasNoActionErrors();

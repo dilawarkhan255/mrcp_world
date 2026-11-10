@@ -66,9 +66,10 @@ class SubscriptionService
 
     /**
      * Activate for the plan's period. Renewing while still active extends the
-     * current period instead of losing the remaining days.
+     * current period instead of losing the remaining days. Without an admin,
+     * the activation comes from a confirmed card payment.
      */
-    public function activate(Subscription $subscription, User $admin, ?int $days = null): Subscription
+    public function activate(Subscription $subscription, ?User $admin, ?int $days = null): Subscription
     {
         return DB::transaction(function () use ($subscription, $admin, $days) {
             $locked = Subscription::whereKey($subscription->id)->lockForUpdate()->firstOrFail();
@@ -81,7 +82,7 @@ class SubscriptionService
             $locked->update([
                 'status' => Subscription::STATUS_ACTIVE,
                 'starts_at' => $start, 'ends_at' => $start->copy()->addDays($days),
-                'activated_by' => $admin->id, 'activated_at' => now(), 'reminded_at' => null,
+                'activated_by' => $admin?->id, 'activated_at' => now(), 'reminded_at' => null,
             ]);
             Notify::student($locked->user, 'Your subscription is active',
                 ($locked->qbank->name ?? 'Your Qbank').' is open until '.$locked->ends_at?->toFormattedDateString().'. Happy studying!',

@@ -6,7 +6,7 @@ defineProps<{ demoSlug: string | null }>();
     <section class="bg-gradient-to-b from-light-teal via-surface to-surface">
         <div class="mx-auto w-full max-w-[1280px] px-5 py-16 text-center md:px-8 md:py-24">
             <p
-                class="border-teal/20 inline-flex items-center rounded-full border bg-white px-4 py-2 text-xs font-semibold tracking-wide text-dark-teal shadow-sm sm:text-sm"
+                class="inline-flex items-center rounded-full border border-amber bg-white px-4 py-2 text-xs font-semibold tracking-wide text-dark-teal shadow-sm sm:text-sm"
             >
                 {{ landingCopy.hero.badge }}
             </p>
@@ -17,14 +17,14 @@ defineProps<{ demoSlug: string | null }>();
             <div class="mt-10 flex flex-wrap items-center justify-center gap-4">
                 <a
                     href="#exams"
-                    class="inline-flex min-h-[44px] items-center justify-center rounded-control bg-teal px-7 py-3 text-base font-semibold text-white shadow-sm transition hover:bg-dark-teal focus-visible:ring-2 focus-visible:ring-teal focus-visible:ring-offset-2"
+                    class="inline-flex min-h-[44px] items-center justify-center rounded-control bg-primary px-7 py-3 text-base font-semibold text-primary-foreground shadow-sm transition focus-visible:ring-2 focus-visible:ring-teal focus-visible:ring-offset-2"
                 >
                     {{ landingCopy.hero.primary }}
                 </a>
                 <a
                     v-if="demoSlug"
                     :href="'/exams/' + demoSlug + '/demo'"
-                    class="hover:border-teal/40 inline-flex min-h-[44px] items-center justify-center rounded-control border border-border bg-white px-7 py-3 text-base font-semibold text-ink shadow-sm transition focus-visible:ring-2 focus-visible:ring-teal focus-visible:ring-offset-2"
+                    class="inline-flex min-h-[44px] items-center justify-center rounded-control border border-border bg-white px-7 py-3 text-base font-semibold text-ink shadow-sm transition hover:border-amber hover:text-[#d9620b] focus-visible:ring-2 focus-visible:ring-teal focus-visible:ring-offset-2"
                 >
                     {{ landingCopy.hero.secondary }}
                 </a>

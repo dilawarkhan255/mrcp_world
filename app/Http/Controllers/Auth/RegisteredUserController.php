@@ -6,9 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Exam;
 use App\Models\Plan;
 use App\Models\User;
+use App\Services\StripeCheckout;
 use App\Services\SubscriptionService;
 use Illuminate\Auth\Events\Registered;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -19,12 +19,14 @@ use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 use Spatie\Permission\Models\Role;
+use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 
 /**
- * An account is created when a student buys a subscription: the sign-up form
- * asks for the plan and the payment reference, and the account and the
- * subscription request are saved together. An admin activates the request
- * once the payment is confirmed (payment is manual for now).
+ * An account is created when a student buys a subscription. With card
+ * payments on (Stripe), the account is created and the student goes straight
+ * to Stripe Checkout; access opens when Stripe confirms the payment. Without
+ * them, the form also asks for a payment reference and an admin activates the
+ * request once the payment is confirmed.
  */
 class RegisteredUserController extends Controller
 {
@@ -43,14 +45,16 @@ class RegisteredUserController extends Controller
     /**
      * @throws ValidationException
      */
-    public function store(Request $request, SubscriptionService $subscriptions): RedirectResponse
+    public function store(Request $request, SubscriptionService $subscriptions, StripeCheckout $checkout): SymfonyResponse
     {
+        // Paying by card needs no payment reference: Stripe confirms the payment.
+        $card = $checkout->enabled();
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'plan_id' => ['required', 'integer', Rule::exists('plans', 'id')->where('is_active', true)->whereNotNull('qbank_id')],
-            'payment_reference' => ['required', 'string', 'min:3', 'max:255'],
+            'payment_reference' => [$card ? 'nullable' : 'required', 'string', 'min:3', 'max:255'],
             'note' => ['nullable', 'string', 'max:1000'],
         ], [
             'plan_id.required' => 'Choose the Qbank you are subscribing to.',
@@ -61,15 +65,17 @@ class RegisteredUserController extends Controller
             throw ValidationException::withMessages(['plan_id' => 'This Qbank is not on sale at the moment.']);
         }
 
-        // The account and its subscription request are saved together or not at all.
-        $user = DB::transaction(function () use ($request, $plan, $subscriptions): User {
+        // The account and (for a manual payment) its subscription request are saved together or not at all.
+        $user = DB::transaction(function () use ($request, $plan, $subscriptions, $card): User {
             $user = User::create([
                 'name' => $request->string('name')->toString(),
                 'email' => $request->string('email')->toString(),
                 'password' => Hash::make($request->string('password')->toString()),
             ]);
             $user->assignRole(Role::findOrCreate('student', 'web'));
-            $subscriptions->request($user, $plan->qbank, $plan, $request->string('payment_reference')->toString(), $request->filled('note') ? $request->string('note')->toString() : null);
+            if (! $card) {
+                $subscriptions->request($user, $plan->qbank, $plan, $request->string('payment_reference')->toString(), $request->filled('note') ? $request->string('note')->toString() : null);
+            }
 
             return $user;
         });
@@ -77,6 +83,15 @@ class RegisteredUserController extends Controller
         event(new Registered($user));
         Auth::login($user);
         $request->session()->forget('url.intended');
+
+        if ($card) {
+            try {
+                // Straight to Stripe Checkout; the student comes back logged in.
+                return Inertia::location($checkout->start($user, $plan));
+            } catch (ValidationException $exception) {
+                return redirect()->route('subscription.index')->with('status', 'Your account is ready. '.$exception->getMessage());
+            }
+        }
 
         return redirect()->route('subscription.index')
             ->with('status', 'Your account is ready and your request for '.$plan->qbank->name.' was sent. Access opens once the team confirms your payment.');
@@ -91,9 +106,12 @@ class RegisteredUserController extends Controller
     {
         return Plan::where('is_active', true)->whereNotNull('qbank_id')
             ->whereHas('qbank', fn ($query) => $query->where('is_active', true))
-            ->with(['qbank:id,name', 'qbank.exams' => fn ($query) => $query->where('is_active', true)->orderBy('sort_order')->select(['id', 'qbank_id', 'name'])])
+            ->with(['qbank:id,name,sort_order', 'qbank.exams' => fn ($query) => $query->where('is_active', true)->orderBy('sort_order')->select(['id', 'qbank_id', 'name'])])
             ->orderBy('sort_order')->orderBy('id')
             ->get()
+            // Grouped by Qbank (in the Qbank order), then 3 months before 5 months.
+            ->sortBy([fn (Plan $a, Plan $b): int => [$a->qbank?->sort_order, $a->qbank_id] <=> [$b->qbank?->sort_order, $b->qbank_id]])
+            ->values()
             ->map(fn (Plan $plan): array => [
                 'id' => $plan->id,
                 'qbank' => (string) $plan->qbank?->name,

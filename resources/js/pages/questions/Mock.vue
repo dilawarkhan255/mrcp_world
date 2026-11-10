@@ -6,6 +6,7 @@ import QuestionComments from '@/components/practice/QuestionComments.vue';
 import QuestionGrid from '@/components/practice/QuestionGrid.vue';
 import QuestionLabels from '@/components/practice/QuestionLabels.vue';
 import ReportMcqDialog from '@/components/practice/ReportMcqDialog.vue';
+import ResourcesPanel from '@/components/practice/resources/ResourcesPanel.vue';
 import RichText from '@/components/practice/RichText.vue';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -161,7 +162,7 @@ function toggleBookmark() {
                     {{ session.total_questions }} questions. Use the navigator to review every question.
                 </p>
             </section>
-            <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]">
+            <div class="grid gap-6 lg:grid-cols-[minmax(0,7fr)_minmax(0,3fr)]">
                 <form class="space-y-6 rounded-xl border bg-card p-6 md:p-8" @submit.prevent="save">
                     <div class="flex flex-wrap items-center justify-between gap-2">
                         <p class="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Question {{ question.position }}</p>
@@ -214,7 +215,7 @@ function toggleBookmark() {
                     </div>
                     <AnswerReveal v-if="question.result" :result="question.result" :selected="question.selected_option" :options="question.options" />
                 </form>
-                <aside class="space-y-3 lg:sticky lg:top-4 lg:self-start">
+                <aside class="mw-sidebar-scroll space-y-3 lg:sticky lg:top-24 lg:max-h-[calc(100vh-7rem)] lg:self-start lg:overflow-y-auto lg:pr-1">
                     <QuestionGrid
                         :items="navigator"
                         :current="question.position"
@@ -222,6 +223,13 @@ function toggleBookmark() {
                         :hide-correctness="!isCompleted"
                     />
                     <p class="text-xs text-muted-foreground">Saved answers are not scored until the mock is closed.</p>
+                    <!-- No learning resources during an open mock: it is an exam. -->
+                    <ResourcesPanel
+                        v-if="isCompleted"
+                        :key="question.position"
+                        :result="question.result"
+                        locked-text="You did not answer this question in the mock."
+                    />
                 </aside>
                 <AskAi
                     v-if="isCompleted && page.props.ai?.enabled && question.question_id"

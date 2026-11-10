@@ -11,20 +11,20 @@ MRCP World is a question bank (Qbank) for the MRCP Part 1 and MRCP Part 2 Writte
 - Past papers are organised sets of MCQs (exam, year, title, slug). Uploading a PDF does not create questions.
 - Only **published** questions are visible to students. A question tied to a paper also requires that paper to be published.
 - **Explanations must be detailed and reference NICE and WHO guidelines** wherever the subject has relevant guidance. Do not invent guideline titles, years or URLs; if unsure of a citation, say so and flag it for human review.
-- The extended textbook (chapters by subject) is implemented. Flashcards and the knowledge tutor are not implemented; do not describe them as working.
-- **Subscriptions:** each Qbank is sold separately (£8 for 6 months). Payment is manual: students request, admins activate in **Subscriptions**. Without access a student only gets demo questions (`is_demo`); subscription pages use the `qbank` route middleware.
+- Implemented: the extended textbook (chapters by subject), flashcards with spaced repetition (`App\Services\FlashcardService`, SM-2; admin can make cards from MCQs) and the Knowledge Tutor (`/tutor`, a Claude conversation kept in the browser, counted in the AI daily limit).
+- **Subscriptions:** each Qbank is sold separately: 3 months for £8 or 5 months for £12 (plans in **Users and billing → Plans**). Payment by card through Stripe Checkout (`App\Services\StripeCheckout`, on when `STRIPE_SECRET` is set): the row waits in `checkout` until the signed webhook (`/stripe/webhook`) or the success page confirms it, then it is activated once; amount and currency must match. `charge.refunded` closes access on a full refund (recorded in `stripe_refunds`, so a refund that arrives before the confirmation is applied too). Otherwise manual: students request, admins activate in **Subscriptions**. Without access a student only gets demo questions (`is_demo`); subscription pages use the `qbank` route middleware.
 
 ## Stack
 
 - **Backend:** Laravel 12 (PHP 8.2+, 8.3 preferred)
-- **Frontend:** Inertia 2 + Vue 3 + TypeScript, Vite 6, Tailwind CSS 3, shadcn-vue (starter-kit components), TanStack Vue Table for the reusable DataTable
+- **Frontend:** Inertia 2 + Vue 3 + TypeScript, Vite 6, Tailwind CSS 3, shadcn-vue (starter-kit components); data tables use Yajra DataTables (see Other packages)
 - **Admin:** Filament v3, mounted inside Laravel at `/admin`
 - **Permissions:** spatie/laravel-permission 6
 - **Tests:** Pest 3 (with PHPUnit 11 underneath). Tests run on an isolated in-memory SQLite database.
 - **Static analysis / style:** Larastan level 6 (no baseline), Laravel Pint, ESLint, Prettier
 - **Imports:** CSV via streamed reads, XLSX via OpenSpout 4
 - **AI tutor:** the official Anthropic PHP SDK (`anthropic-ai/sdk`) in `App\Services\AiTutor`, model `claude-opus-5-5` (`ANTHROPIC_MODEL`), off without `ANTHROPIC_API_KEY`. Answers are cached and limited per student per day. "Ask AI" works on every question, but Claude gets the answer key only after the answer is revealed, and never in an open mock.
-- **Other packages:** Ziggy, predis (no phpredis extension needed). yajra/laravel-datatables-oracle + datatables.net-dt power the student data tables (`StudentTableController`, `resources/js/components/YajraTable.vue`); admin tables stay Filament.
+- **Other packages:** Ziggy, predis (no phpredis extension needed). yajra/laravel-datatables-oracle + datatables.net-dt power every data table. Student side: `StudentTableController` + `resources/js/components/YajraTable.vue`. Admin side: each resource list page uses `App\Filament\Concerns\UsesYajraTable` (its view also renders the action modals, which Filament otherwise leaves to the table markup); row actions View/Edit/Delete and the safe bulk delete come from `App\Filament\Support\CrudActions` with a per-resource `deletable()` rule (view `filament/pages/yajra-list-records`, JS `resources/js/admin-yajra.ts`); the Filament `table()` definition stays the source of columns, filters and actions, and rows come from the page's `yajraRows()` Livewire call. In tests, check admin rows with the `yajraRows()`/`yajraHtml()` helpers in `tests/Pest.php`, not `assertSee` on the page.
 
 ## Local environment
 
@@ -73,6 +73,7 @@ Report results faithfully. If a check fails or was not run, say so and include t
 - **Performance and review queries** group by UTC day. Every selected column must appear in `GROUP BY`.
 - **Qbanks:** a Qbank groups exams; an exam may read another exam's bank via `content_exam_id` (IMM → MRCP 1, FCPS Part 2 → MRCP 2). Student controllers resolve the exam through `App\Support\CurrentExam`: `content()` for queries and stored rows, `selected()`/`props()` for the name shown. Never query questions by the selected exam's id.
 - **Rich content:** MCQ text fields are Markdown rendered by `App\Support\QuestionContent` with raw HTML stripped. Everything that reveals the answer (explanation, key points, mnemonics, references, video, image links) is in `Question::$hidden` and only sent inside `result`.
+- **MCQ resources sidebar:** the right column of the practice and closed-mock screens (`components/practice/resources/ResourcesPanel.vue`) shows Extended Textbook, Image Atlas, References, Image links and YouTube for the current MCQ. Data comes from `App\Services\QuestionResources` inside `result` only (after the answer), because a chapter or image can name the diagnosis. Editors link chapters and atlas images per MCQ (pivots `question_textbook_chapter`, `atlas_image_question`); otherwise it falls back to the subject's chapters and atlas images matching the search term. Google Images and YouTube links are built only from the editor's search term.
 - **Candidate stats** are read from `question_stats`/`category_stats`, refreshed by `stats:refresh`; do not aggregate all students' answers in a request.
 - **Session creation** uses an indexed random starting point with wraparound. It is not a uniform random sample. Do not replace it with a full-table `ORDER BY RAND()`.
 - **Roles and permissions** (spatie): permissions are defined in `config/permissions.php` (with labels); admins manage roles, role permissions and user accounts in **Users and billing → Users / Roles & permissions**. `admin`, `editor`, `student` are protected names. Panel access is any user with at least one permission (`User::isStaff()`). `RoleSeeder` never undoes panel changes; it only adds new permissions.

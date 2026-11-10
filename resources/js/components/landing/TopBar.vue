@@ -1,90 +1,109 @@
 <script setup lang="ts">
-import { landingCopy } from '@/content/landing';
-import { useForm } from '@inertiajs/vue3';
+import { sectionLinks } from '@/content/public-nav';
+import type { SharedData } from '@/types';
+import { usePage } from '@inertiajs/vue3';
+import { LayoutGrid, LogIn, Menu, X } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
+
+/**
+ * The public top bar: logo (home), the section links and the account
+ * buttons. There is no inline login form: a student logs in after
+ * subscribing, from the Log in page.
+ */
 defineProps<{ appName: string }>();
-const form = useForm({ email: '', password: '' });
-const showErrors = ref(false);
-const errors = computed(() => [form.errors.email, form.errors.password].filter((message): message is string => Boolean(message)));
-function submit() {
-    showErrors.value = true;
-    form.post('/login', {
-        onError: () => {
-            showErrors.value = true;
-        },
-    });
-}
+const page = usePage<SharedData>();
+const signedIn = computed(() => !!page.props.auth?.user);
+const open = ref(false);
+/** The section links, plus Contact, on every public page. */
+const links = [...sectionLinks, { label: 'Contact', href: '/contact' }];
+const current = computed(() => (typeof window === 'undefined' ? '' : window.location.pathname + window.location.hash));
+const isCurrent = (href: string) => current.value === href || (href === '/contact' && current.value.startsWith('/contact'));
 </script>
 <template>
-    <header class="bg-ink text-white">
-        <div class="mx-auto flex w-full max-w-[1280px] flex-wrap items-center gap-x-8 gap-y-4 px-5 py-4 md:px-8">
-            <a href="#top" class="flex items-center" :aria-label="appName">
-                <!-- The bar is navy, so the logo with the light "World" is used. -->
-                <img src="/brand/mrcp-world-logo.dark.png" :alt="appName" class="h-14 w-auto object-contain" height="56" />
+    <header class="sticky top-0 z-40 bg-white/95 text-ink shadow-sm backdrop-blur">
+        <div class="mx-auto flex w-full max-w-[1280px] items-center gap-6 px-5 py-3 md:px-8">
+            <!-- The logo always goes back to the home page. -->
+            <a href="/" class="flex shrink-0 items-center" :aria-label="appName + ', home page'">
+                <img src="/brand/mrcp-world-logo.trim.png" :alt="appName" class="h-14 w-auto object-contain" height="56" />
             </a>
-            <nav aria-label="Primary" class="order-3 flex w-full items-center gap-6 sm:order-none sm:w-auto">
-                <a href="#exams" class="rounded-lg px-1 py-2 text-sm font-semibold text-white/80 transition hover:text-white">{{
-                    landingCopy.topBar.exams
-                }}</a>
-                <a href="#features" class="rounded-lg px-1 py-2 text-sm font-semibold text-white/80 transition hover:text-white">{{
-                    landingCopy.topBar.features
-                }}</a>
-                <a href="#pricing" class="rounded-lg px-1 py-2 text-sm font-semibold text-white/80 transition hover:text-white">{{
-                    landingCopy.topBar.pricing
-                }}</a>
-            </nav>
-            <div class="ml-auto flex items-center gap-3">
-                <form class="relative hidden items-center gap-2 sm:flex" novalidate @submit.prevent="submit">
-                    <div class="relative">
-                        <label for="landing-email" class="sr-only">{{ landingCopy.topBar.email }}</label>
-                        <input
-                            id="landing-email"
-                            v-model="form.email"
-                            type="email"
-                            name="email"
-                            autocomplete="email"
-                            :aria-invalid="Boolean(form.errors.email)"
-                            :aria-describedby="errors.length ? 'landing-login-errors' : undefined"
-                            placeholder="Email"
-                            class="h-11 w-44 rounded-control border border-white/20 bg-white/10 px-3 text-sm text-white placeholder:text-white/60 focus:border-white/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
-                        />
-                    </div>
-                    <div class="relative">
-                        <label for="landing-password" class="sr-only">{{ landingCopy.topBar.password }}</label>
-                        <input
-                            id="landing-password"
-                            v-model="form.password"
-                            type="password"
-                            name="password"
-                            autocomplete="current-password"
-                            :aria-invalid="Boolean(form.errors.password)"
-                            :aria-describedby="errors.length ? 'landing-login-errors' : undefined"
-                            placeholder="Password"
-                            class="h-11 w-40 rounded-control border border-white/20 bg-white/10 px-3 text-sm text-white placeholder:text-white/60 focus:border-white/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
-                        />
-                    </div>
-                    <button
-                        type="submit"
-                        :disabled="form.processing"
-                        class="h-11 rounded-control bg-teal px-5 text-sm font-semibold text-white transition hover:bg-dark-teal focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-ink disabled:opacity-60"
-                    >
-                        {{ form.processing ? '…' : landingCopy.topBar.logIn }}
-                    </button>
-                    <div
-                        v-if="showErrors && errors.length"
-                        id="landing-login-errors"
-                        role="alert"
-                        class="absolute right-0 top-full z-20 mt-2 w-64 rounded-lg border border-red-300 bg-white p-3 text-left text-xs font-medium text-red-700 shadow-lg"
-                    >
-                        <p v-for="message in errors" :key="message">{{ message }}</p>
-                    </div>
-                </form>
+
+            <nav aria-label="Primary" class="hidden items-center gap-1 md:flex">
                 <a
-                    href="/login"
-                    class="inline-flex h-11 items-center rounded-control bg-teal px-5 text-sm font-semibold text-white transition hover:bg-dark-teal focus-visible:ring-2 focus-visible:ring-white/70 sm:hidden"
-                    >{{ landingCopy.topBar.logIn }}</a
+                    v-for="link in links"
+                    :key="link.href"
+                    :href="link.href"
+                    :aria-current="isCurrent(link.href) ? 'page' : undefined"
+                    class="rounded-full px-3.5 py-2 text-sm font-semibold text-muted-strong transition hover:bg-[#fff4e8] hover:text-[#d9620b] aria-[current=page]:bg-light-teal aria-[current=page]:text-dark-teal"
+                    >{{ link.label }}</a
                 >
+            </nav>
+
+            <div class="ml-auto hidden items-center gap-2 sm:flex">
+                <template v-if="signedIn">
+                    <a
+                        href="/dashboard"
+                        class="inline-flex h-11 items-center gap-2 rounded-control bg-primary px-5 text-sm font-semibold text-primary-foreground shadow-sm transition focus-visible:ring-2 focus-visible:ring-teal focus-visible:ring-offset-2"
+                        ><LayoutGrid class="size-4" aria-hidden="true" />Dashboard</a
+                    >
+                </template>
+                <template v-else>
+                    <a
+                        href="/login"
+                        class="inline-flex h-11 items-center gap-2 rounded-control border border-border bg-white px-5 text-sm font-semibold text-ink transition hover:border-amber hover:text-[#d9620b] focus-visible:ring-2 focus-visible:ring-teal focus-visible:ring-offset-2"
+                        ><LogIn class="size-4" aria-hidden="true" />Log in</a
+                    >
+                    <a
+                        href="/#pricing"
+                        class="inline-flex h-11 items-center rounded-control bg-primary px-5 text-sm font-semibold text-primary-foreground shadow-sm transition focus-visible:ring-2 focus-visible:ring-teal focus-visible:ring-offset-2"
+                        >Subscribe</a
+                    >
+                </template>
             </div>
+
+            <button
+                type="button"
+                class="ml-auto inline-flex size-11 items-center justify-center rounded-control border border-border text-ink sm:ml-0 md:hidden"
+                :aria-expanded="open"
+                aria-controls="public-menu"
+                :aria-label="open ? 'Close menu' : 'Open menu'"
+                @click="open = !open"
+            >
+                <X v-if="open" class="size-5" aria-hidden="true" /><Menu v-else class="size-5" aria-hidden="true" />
+            </button>
         </div>
+
+        <!-- Small screens: the same links and buttons in a panel. -->
+        <nav v-show="open" id="public-menu" aria-label="Menu" class="border-t bg-white px-5 pb-5 pt-2 md:hidden">
+            <a
+                v-for="link in links"
+                :key="link.href"
+                :href="link.href"
+                class="block rounded-lg px-3 py-3 text-base font-semibold text-ink hover:bg-[#fff4e8] hover:text-[#d9620b]"
+                @click="open = false"
+                >{{ link.label }}</a
+            >
+            <div class="mt-3 grid grid-cols-2 gap-3 sm:hidden">
+                <a
+                    v-if="signedIn"
+                    href="/dashboard"
+                    class="col-span-2 inline-flex h-11 items-center justify-center rounded-control bg-primary text-sm font-semibold text-primary-foreground"
+                    >Dashboard</a
+                >
+                <template v-else>
+                    <a
+                        href="/login"
+                        class="inline-flex h-11 items-center justify-center rounded-control border border-border text-sm font-semibold text-ink"
+                        >Log in</a
+                    >
+                    <a
+                        href="/#pricing"
+                        class="inline-flex h-11 items-center justify-center rounded-control bg-primary text-sm font-semibold text-primary-foreground"
+                        @click="open = false"
+                        >Subscribe</a
+                    >
+                </template>
+            </div>
+        </nav>
+        <span class="brand-rainbow absolute inset-x-0 bottom-0 h-1" aria-hidden="true" />
     </header>
 </template>

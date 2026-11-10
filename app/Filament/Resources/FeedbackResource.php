@@ -3,8 +3,10 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\FeedbackResource\Pages\ListFeedback;
+use App\Filament\Support\CrudActions;
 use App\Models\Feedback;
 use App\Support\Notify;
+use Filament\Forms;
 use Filament\Resources\Pages\PageRegistration;
 use Filament\Resources\Resource;
 use Filament\Tables;
@@ -56,6 +58,13 @@ class FeedbackResource extends Resource
             Tables\Filters\SelectFilter::make('type')->options(Feedback::TYPES),
             Tables\Filters\TernaryFilter::make('question_id')->label('MCQ reports')->nullable(),
         ])->actions([
+            Tables\Actions\ViewAction::make()->modalHeading('Feedback')->form([
+                Forms\Components\Placeholder::make('student')->content(fn (Feedback $record): string => ($record->user->name ?? '—').' · '.($record->created_at?->toDayDateTimeString() ?? '')),
+                Forms\Components\Placeholder::make('kind')->label('Type')->content(fn (Feedback $record): string => Feedback::TYPES[$record->type] ?? $record->type),
+                Forms\Components\Placeholder::make('mcq')->label('MCQ')->content(fn (Feedback $record): string => $record->question->code ?? 'General feedback'),
+                Forms\Components\Placeholder::make('text')->label('Message')->content(fn (Feedback $record): string => $record->message),
+                Forms\Components\Placeholder::make('state')->label('Status')->content(fn (Feedback $record): string => ucfirst($record->status)),
+            ]),
             Tables\Actions\Action::make('markReviewed')->iconButton()
                 ->label('Mark reviewed')
                 ->icon('heroicon-o-check')
@@ -69,7 +78,8 @@ class FeedbackResource extends Resource
                     }
                 }),
             Tables\Actions\DeleteAction::make(),
-        ])->modifyQueryUsing(fn ($query) => $query->with(['user:id,name', 'exam:id,name', 'question:id,code']))->defaultSort('id', 'desc')->paginationPageOptions([25, 50, 100]);
+        ])->bulkActions([CrudActions::bulkDelete()])
+            ->modifyQueryUsing(fn ($query) => $query->with(['user:id,name', 'exam:id,name', 'question:id,code']))->defaultSort('id', 'desc')->paginationPageOptions([25, 50, 100]);
     }
 
     /** @return array<string, PageRegistration> */

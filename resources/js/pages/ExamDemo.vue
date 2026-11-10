@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import ContentProtection from '@/components/ContentProtection.vue';
 import RichText from '@/components/practice/RichText.vue';
 import { landingCopy, landingSeo } from '@/content/landing';
 import PublicLayout from '@/layouts/PublicLayout.vue';
@@ -26,7 +25,6 @@ defineProps<{
         <meta property="og:type" :content="landingSeo.ogType" />
     </Head>
     <PublicLayout :app-name="appName">
-        <ContentProtection />
         <div class="mx-auto w-full max-w-3xl px-5 py-16 md:px-8 md:py-20">
             <p class="text-sm font-semibold uppercase tracking-widest text-teal">{{ exam.name }}</p>
             <h1 class="mt-3 text-3xl font-bold tracking-tight text-ink sm:text-4xl">{{ landingCopy.demo.title }}</h1>
@@ -59,12 +57,12 @@ defineProps<{
             <div class="mt-12 flex flex-wrap gap-3">
                 <Link
                     :href="'/register?exam=' + exam.slug"
-                    class="inline-flex min-h-[44px] items-center justify-center rounded-control bg-teal px-6 text-sm font-semibold text-white transition hover:bg-dark-teal focus-visible:ring-2 focus-visible:ring-teal focus-visible:ring-offset-2"
+                    class="inline-flex min-h-[44px] items-center justify-center rounded-control bg-primary px-6 text-sm font-semibold text-primary-foreground transition focus-visible:ring-2 focus-visible:ring-teal focus-visible:ring-offset-2"
                     >{{ landingCopy.demo.signUp }}</Link
                 >
                 <Link
                     href="/"
-                    class="hover:border-teal/40 inline-flex min-h-[44px] items-center justify-center rounded-control border border-border bg-white px-6 text-sm font-semibold text-ink transition focus-visible:ring-2 focus-visible:ring-teal focus-visible:ring-offset-2"
+                    class="inline-flex min-h-[44px] items-center justify-center rounded-control border border-border bg-white px-6 text-sm font-semibold text-ink transition hover:border-teal focus-visible:ring-2 focus-visible:ring-teal focus-visible:ring-offset-2"
                     >{{ landingCopy.demo.back }}</Link
                 >
             </div>

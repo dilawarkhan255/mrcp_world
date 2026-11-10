@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\ExamResource\Pages;
+use App\Filament\Support\CrudActions;
 use App\Models\Exam;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -12,6 +13,8 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 
 class ExamResource extends Resource
 {
@@ -53,9 +56,25 @@ class ExamResource extends Resource
             Tables\Columns\TextColumn::make('sort_order')->label('Order')->sortable(),
             Tables\Columns\IconColumn::make('is_active')->boolean(),
         ])->actions([
+            CrudActions::view(),
             Tables\Actions\EditAction::make(),
-            Tables\Actions\DeleteAction::make()->visible(fn (Exam $record): bool => ! $record->categories()->exists()),
-        ])->defaultSort('sort_order')->modifyQueryUsing(fn (Builder $query) => $query->with(['qbank:id,name', 'contentExam:id,name']));
+            Tables\Actions\DeleteAction::make()->visible(self::deletable()),
+        ])->bulkActions([CrudActions::bulkDelete(self::deletable())])
+            ->defaultSort('sort_order')->modifyQueryUsing(fn (Builder $query) => $query->with(['qbank:id,name', 'contentExam:id,name']));
+    }
+
+    /** @return \Closure(Model): bool Only an exam nothing refers to may go. */
+    public static function deletable(): \Closure
+    {
+        return function (Model $record): bool {
+            foreach (['categories', 'past_papers', 'questions', 'textbook_chapters', 'practice_sessions', 'question_imports'] as $table) {
+                if (DB::table($table)->where('exam_id', $record->getKey())->exists()) {
+                    return false;
+                }
+            }
+
+            return ! DB::table('exams')->where('content_exam_id', $record->getKey())->exists();
+        };
     }
 
     /** @return array<string, PageRegistration> */

@@ -51,7 +51,8 @@ class QuestionImportResource extends Resource
             Tables\Columns\TextColumn::make('rejected'),
             Tables\Columns\TextColumn::make('created_at')->dateTime(),
         ])->actions([
-            Tables\Actions\Action::make('report')->iconButton()->icon('heroicon-o-document-magnifying-glass')->modalHeading('Import report')->modalSubmitAction(false)->modalCancelActionLabel('Close')
+            // The report is the view of an upload; uploads are kept as a record and are not deleted.
+            Tables\Actions\Action::make('report')->label('View report')->iconButton()->icon('heroicon-o-eye')->color('gray')->modalHeading('Import report')->modalSubmitAction(false)->modalCancelActionLabel('Close')
                 ->modalContent(fn (QuestionImport $record) => view('imports.report', ['record' => $record])),
         ])->poll('10s')->defaultSort('id', 'desc')->paginationPageOptions([25, 50, 100]);
     }

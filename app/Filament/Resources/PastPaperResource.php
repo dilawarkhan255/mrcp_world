@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\PastPaperResource\Pages\ManagePastPapers;
+use App\Filament\Support\CrudActions;
 use App\Models\PastPaper;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -12,6 +13,8 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Unique;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
@@ -79,9 +82,10 @@ class PastPaperResource extends Resource
                 ->url(fn (PastPaper $record): string => QuestionResource::getUrl('index', ['tableFilters' => ['past_paper' => ['value' => $record->id]]])),
             Tables\Actions\Action::make('upload')->label('Add MCQs (bulk upload)')->iconButton()->icon('heroicon-o-arrow-up-tray')->color('gray')
                 ->url('/admin/question-imports'),
+            CrudActions::view(slideOver: true),
             Tables\Actions\EditAction::make()->slideOver(),
-            Tables\Actions\DeleteAction::make()->visible(fn (PastPaper $record): bool => (int) $record->getAttribute('questions_count') === 0),
-        ])->modifyQueryUsing(fn (Builder $query) => $query->with('exam:id,name')
+            Tables\Actions\DeleteAction::make()->visible(self::deletable()),
+        ])->bulkActions([CrudActions::bulkDelete(self::deletable())])->modifyQueryUsing(fn (Builder $query) => $query->with('exam:id,name')
             ->withCount(['questions as published_questions_count' => fn (Builder $query) => $query->where('is_published', true)]))
             ->defaultSort('year', 'desc')->paginationPageOptions([25, 50, 100]);
     }
@@ -93,5 +97,12 @@ class PastPaperResource extends Resource
     public static function getPages(): array
     {
         return ['index' => ManagePastPapers::route('/')];
+    }
+
+    /** @return \Closure(Model): bool Only a paper without MCQs (archived too) or uploads may go. */
+    public static function deletable(): \Closure
+    {
+        return fn (Model $record): bool => ! DB::table('questions')->where('past_paper_id', $record->getKey())->exists()
+            && ! DB::table('question_imports')->where('past_paper_id', $record->getKey())->exists();
     }
 }

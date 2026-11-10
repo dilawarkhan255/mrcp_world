@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\SubscriptionResource\Pages\ManageSubscriptions;
+use App\Filament\Support\CrudActions;
 use App\Models\Plan;
 use App\Models\Subscription;
 use App\Models\User;
@@ -115,6 +116,11 @@ class SubscriptionResource extends Resource
                     $record->status === Subscription::STATUS_PENDING => 'warning',
                     default => 'gray',
                 }),
+            Tables\Columns\TextColumn::make('payment_provider')->label('Paid by')->badge()
+                ->formatStateUsing(fn (?string $state): string => $state === Subscription::PROVIDER_STRIPE ? 'Card (Stripe)' : 'Manual')
+                ->color(fn (?string $state): string => $state === Subscription::PROVIDER_STRIPE ? 'info' : 'gray')
+                ->description(fn (Subscription $record): ?string => $record->paid_at?->toFormattedDateString())
+                ->placeholder('Manual'),
             Tables\Columns\TextColumn::make('payment_reference')->label('Payment ref.')->searchable()->limit(24)->toggleable(),
             Tables\Columns\TextColumn::make('starts_at')->label('From')->date()->sortable(),
             Tables\Columns\TextColumn::make('ends_at')->label('Until')->date()->sortable()
@@ -150,9 +156,10 @@ class SubscriptionResource extends Resource
                 ->requiresConfirmation()->modalDescription('The student loses access to this Qbank straight away.')
                 ->form([Forms\Components\TextInput::make('note')->label('Reason (optional)')->maxLength(1000)])
                 ->action(fn (Subscription $record, array $data) => app(SubscriptionService::class)->cancel($record, $data['note'] ?? null)),
+            CrudActions::view(),
             Tables\Actions\EditAction::make(),
             Tables\Actions\DeleteAction::make(),
-        ])->modifyQueryUsing(fn (Builder $query) => $query->with(['user:id,name,email', 'qbank:id,name', 'plan:id,duration_days']))
+        ])->bulkActions([CrudActions::bulkDelete()])->modifyQueryUsing(fn (Builder $query) => $query->with(['user:id,name,email', 'qbank:id,name', 'plan:id,duration_days']))
             ->defaultSort('id', 'desc')->paginationPageOptions([25, 50, 100]);
     }
 

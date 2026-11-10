@@ -36,7 +36,8 @@ it('keeps the user list for administrators only', function () {
     $this->actingAs($this->student)->get('/admin/users')->assertForbidden();
     $this->actingAs($this->admin)->get('/admin/users')->assertOk();
     Filament::setCurrentPanel(Filament::getPanel('admin'));
-    Livewire::test(ManageUsers::class)->assertCanSeeTableRecords([$this->admin, $this->editor, $this->student])->assertCountTableRecords(3);
+    expect(collect(yajraRows(ManageUsers::class))->pluck('_key')->sort()->values()->all())
+        ->toBe(collect([$this->admin, $this->editor, $this->student])->map(fn (User $user): string => (string) $user->id)->sort()->values()->all());
 });
 
 it('masks the email address of a student for a panel user without the manage permission', function () {
@@ -44,14 +45,14 @@ it('masks the email address of a student for a panel user without the manage per
     $this->editor->givePermissionTo('billing.users.view');
     $this->actingAs($this->editor);
     Filament::setCurrentPanel(Filament::getPanel('admin'));
-    Livewire::test(ManageUsers::class)->assertSee('st***@example.test')->assertDontSee('student@example.test');
+    expect(yajraHtml(ManageUsers::class))->toContain('st***@example.test')->not->toContain('student@example.test');
 });
 
 it('searches the users on the server', function () {
     $findable = User::factory()->create(['name' => 'Findable Student', 'email' => 'findable@example.test']);
     $this->actingAs($this->admin);
     Filament::setCurrentPanel(Filament::getPanel('admin'));
-    Livewire::test(ManageUsers::class)->searchTable('Findable')->assertCanSeeTableRecords([$findable])->assertCountTableRecords(1);
+    expect(collect(yajraRows(ManageUsers::class, ['search' => 'Findable']))->pluck('_key')->all())->toBe([(string) $findable->id]);
 });
 
 it('renders the admin dashboard with the content stats widget', function () {
@@ -95,8 +96,9 @@ it('shows the privacy notice to the panel staff and hides it from students', fun
 it('publishes the privacy notice on the public site', function () {
     $this->get('/privacy')->assertOk()->assertInertia(fn (Assert $page) => $page
         ->component('Legal/Privacy')
-        ->has('sections', 5)
-        ->where('sections.0.title', 'What we store')
+        ->has('sections', 11)
+        ->where('sections.0.title', 'Who is responsible')
+        ->where('sections.1.title', 'What we store')
     );
 });
 
@@ -140,4 +142,14 @@ it('shows table row actions as icon buttons with their name as a tooltip', funct
         ->and($delete->isIconButton())->toBeTrue()
         ->and($delete->getIcon())->toBe('heroicon-m-trash')
         ->and($delete->getTooltip())->toBe($delete->getLabel());
+});
+
+it('joins the admin top bar border with the logo row and scrolls only the menu', function () {
+    $this->actingAs($this->admin)->get('/admin')->assertOk()
+        ->assertDontSee('.fi-topbar::after', false)
+        ->assertSee('.fi-sidebar-header { position: relative; z-index: 10; flex-shrink: 0; }', false)
+        ->assertSee('.fi-sidebar-nav { overscroll-behavior: contain;', false);
+    $sidebar = file_get_contents(resource_path('js/components/AppSidebar.vue'));
+    expect($sidebar)->toContain('mw-sidebar-scroll')->toContain('relative z-10 h-20 shrink-0')
+        ->and(file_get_contents(resource_path('js/components/AppSidebarHeader.vue')))->not->toContain('brand-rainbow');
 });

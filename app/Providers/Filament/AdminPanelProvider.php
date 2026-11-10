@@ -20,6 +20,7 @@ use Filament\Widgets;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
+use Illuminate\Foundation\Vite;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
@@ -38,6 +39,9 @@ class AdminPanelProvider extends PanelProvider
             ->iconButton()->color('primary'));
         Tables\Actions\DeleteAction::configureUsing(fn (Tables\Actions\DeleteAction $action) => $action
             ->iconButton());
+        // View: an eye icon in the logo's cyan, before Edit.
+        Tables\Actions\ViewAction::configureUsing(fn (Tables\Actions\ViewAction $action) => $action
+            ->iconButton()->color('info'));
         Tables\Actions\Action::configureUsing(fn (Tables\Actions\Action $action) => $action
             ->tooltip(fn (): ?string => $action->isIconButton() ? $action->getLabel() : null));
     }
@@ -85,9 +89,13 @@ class AdminPanelProvider extends PanelProvider
                 MenuItem::make()->label('Open the student app')->url('/dashboard')->icon('heroicon-o-academic-cap'),
             ])
             ->renderHook(PanelsRenderHook::HEAD_START, fn (): string => view('filament.appearance-sync')->render())
+            // The logo-gradient definitions the icons are stroked with (same as the student app).
+            ->renderHook(PanelsRenderHook::BODY_START, fn (): string => view('partials.logo-gradient-defs')->render())
             ->renderHook(PanelsRenderHook::STYLES_AFTER, fn (): string => view('filament.admin-styles')->render())
             ->renderHook(PanelsRenderHook::TOPBAR_START, fn (): string => view('filament.topbar-toggle')->render())
             ->renderHook(PanelsRenderHook::USER_MENU_BEFORE, fn (): string => view('filament.appearance-switch')->render())
+            // DataTables for the resource lists (App\Filament\Concerns\UsesYajraTable).
+            ->renderHook(PanelsRenderHook::BODY_END, fn (): string => app(Vite::class)(['resources/js/admin-yajra.ts'])->toHtml())
             ->globalSearchKeyBindings(['command+k', 'ctrl+k'])
             ->globalSearchFieldSuffix(fn (): string => 'Ctrl K')
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')

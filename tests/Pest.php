@@ -3,7 +3,10 @@
 use App\Models\Qbank;
 use App\Models\Subscription;
 use App\Models\User;
+use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Livewire\Component;
+use Livewire\Livewire;
 use Tests\TestCase;
 
 /*
@@ -54,4 +57,25 @@ function grantAccess(User $user, Qbank|int $qbank, int $days = 180): Subscriptio
         'user_id' => $user->id, 'qbank_id' => $qbank instanceof Qbank ? $qbank->id : $qbank,
         'status' => Subscription::STATUS_ACTIVE, 'starts_at' => now()->subMinute(), 'ends_at' => now()->addDays($days),
     ]);
+}
+
+/**
+ * The rows an admin list (Yajra DataTable, App\Filament\Concerns\UsesYajraTable)
+ * returns for the signed-in user, as the browser would request them.
+ *
+ * @param  class-string<Component>  $page
+ * @return list<array<string, string>>
+ */
+function yajraRows(string $page, array $params = []): array
+{
+    Filament::setCurrentPanel(Filament::getPanel('admin'));
+
+    return Livewire::test($page)->instance()
+        ->yajraRows(array_merge(['draw' => 1, 'start' => 0, 'length' => 100, 'search' => '', 'sort' => '', 'dir' => ''], $params))['data'];
+}
+
+/** Every cell of an admin list as one HTML string, for assertions on what is shown. */
+function yajraHtml(string $page, array $params = []): string
+{
+    return collect(yajraRows($page, $params))->flatten()->implode("\n");
 }

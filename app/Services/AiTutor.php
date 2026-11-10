@@ -35,7 +35,53 @@ class AiTutor
         If you are not sure about a fact, say so plainly. Do not give advice about a real patient.
         TXT;
 
+    /** The Knowledge Tutor: a conversation about any topic of the syllabus, not tied to one MCQ. */
+    private const TUTOR_SYSTEM = <<<'TXT'
+        You are the MRCPWorld Knowledge Tutor for doctors preparing for MRCP Part 1, MRCP Part 2, IMM and FCPS Part 2 (internal medicine).
+        Teach the topic the student asks about: explain mechanisms, key features, investigations and management at exam level, and point out what examiners like to test. Use short paragraphs and bullet points in Markdown. Do not use HTML or tables.
+        Be accurate. Never invent a guideline title, year, number or URL. If you mention guidance, say "check the current NICE (or WHO) guidance on …" unless you are certain of the exact title; say plainly when you are not sure.
+        This is exam teaching, not medical advice: do not advise about a real patient, and if the student shares patient details, ask them not to.
+        Stay on medicine and exam preparation; for anything else, say briefly that you can only help with exam topics.
+        TXT;
+
+    /** Turns of an earlier conversation sent with a new question (oldest are dropped). */
+    public const TUTOR_HISTORY = 10;
+
     public function __construct(private ?Client $client = null) {}
+
+    /**
+     * A message to the Knowledge Tutor, with the earlier turns of the same
+     * conversation (kept in the browser, not stored). Counts towards the
+     * daily limit; not cached, because the conversation is personal.
+     *
+     * @param  list<array{role: string, content: string}>  $history
+     */
+    public function tutorChat(User $user, string $examName, array $history, string $message): string
+    {
+        if (! $this->enabled()) {
+            throw new RuntimeException('The AI tutor is not switched on.');
+        }
+        $limiter = $this->limiterKey($user);
+        if (RateLimiter::tooManyAttempts($limiter, $this->dailyLimit())) {
+            throw new AiTutorException('You have used today\'s AI requests. They reset tomorrow.');
+        }
+        RateLimiter::hit($limiter, (int) now()->secondsUntilEndOfDay() + 1);
+
+        $messages = [];
+        foreach (array_slice($history, -self::TUTOR_HISTORY) as $turn) {
+            $messages[] = ['role' => $turn['role'] === 'assistant' ? 'assistant' : 'user', 'content' => $turn['content']];
+        }
+        // The conversation must start with the student and alternate.
+        while ($messages !== [] && $messages[0]['role'] !== 'user') {
+            array_shift($messages);
+        }
+        if ($messages !== [] && end($messages)['role'] === 'user') {
+            array_pop($messages);
+        }
+        $messages[] = ['role' => 'user', 'content' => $message];
+
+        return $this->sendMessages($messages, self::TUTOR_SYSTEM."\nThe student is preparing for: {$examName}.");
+    }
 
     public function enabled(): bool
     {
@@ -138,12 +184,23 @@ Answer in at most 200 words.';
     /** One request to Claude. Overridden in tests. */
     protected function send(string $prompt): string
     {
+        return $this->sendMessages([['role' => 'user', 'content' => $prompt]], self::SYSTEM);
+    }
+
+    /**
+     * One request to Claude with a whole conversation (oldest first, ending
+     * with the student's message).
+     *
+     * @param  list<array{role: string, content: string}>  $messages
+     */
+    protected function sendMessages(array $messages, string $system): string
+    {
         try {
             $message = $this->client()->beta->messages->create(
                 model: (string) config('services.anthropic.model'),
                 maxTokens: 4000,
-                system: self::SYSTEM,
-                messages: [['role' => 'user', 'content' => $prompt]],
+                system: $system,
+                messages: $messages,
                 // Short, focused answers: low effort keeps them quick and inexpensive.
                 outputConfig: ['effort' => 'low'],
                 // If Claude declines for a safety reason, the API retries on its recommended fallback model.

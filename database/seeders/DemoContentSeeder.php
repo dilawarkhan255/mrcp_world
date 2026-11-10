@@ -14,6 +14,7 @@ use App\Models\Subscription;
 use App\Models\TextbookChapter;
 use App\Models\User;
 use App\Services\CandidateStatsService;
+use App\Services\FlashcardService;
 use App\Services\LeaderboardService;
 use App\Services\PracticeService;
 use Illuminate\Database\Seeder;
@@ -63,6 +64,9 @@ class DemoContentSeeder extends Seeder
                 }
             }
             $this->seedTextbook();
+            // Flashcards made from the sample MCQs (only their own stem, answer and key points).
+            $cards = app(FlashcardService::class);
+            Question::where('code', 'like', 'SAMPLE-%')->each(fn (Question $question) => $cards->fromQuestion($question));
         });
 
         $this->seedActivity();

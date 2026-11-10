@@ -4,7 +4,8 @@ import TopBar from '@/components/landing/TopBar.vue';
 defineProps<{ appName: string }>();
 </script>
 <template>
-    <div class="flex min-h-screen flex-col bg-surface text-ink">
+    <!-- force-light: the public pages are light only, whatever the visitor's dark-mode setting (see app.css). -->
+    <div class="force-light flex min-h-screen flex-col bg-surface text-ink [color-scheme:light]">
         <a
             href="#main-content"
             class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-white focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-ink"

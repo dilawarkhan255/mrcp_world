@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\CategoryResource\Pages;
+use App\Filament\Support\CrudActions;
 use App\Models\Category;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -13,6 +14,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rules\Unique;
 
 class CategoryResource extends Resource
@@ -77,7 +79,17 @@ class CategoryResource extends Resource
             Tables\Columns\TextColumn::make('slug')->searchable(),
         ])->filters([
             Tables\Filters\SelectFilter::make('exam')->relationship('exam', 'name'),
-        ])->actions([Tables\Actions\EditAction::make(), Tables\Actions\DeleteAction::make()]);
+        ])->actions([
+            CrudActions::view(),
+            Tables\Actions\EditAction::make(),
+            Tables\Actions\DeleteAction::make()->visible(self::deletable()),
+        ])->bulkActions([CrudActions::bulkDelete(self::deletable())]);
+    }
+
+    /** @return \Closure(Model): bool A subject that still has MCQs stays. */
+    public static function deletable(): \Closure
+    {
+        return fn (Model $record): bool => ! DB::table('questions')->where('category_id', $record->getKey())->exists();
     }
 
     /** @return array<string, PageRegistration> */

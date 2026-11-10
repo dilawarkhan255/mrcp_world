@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\QbankResource\Pages;
+use App\Filament\Support\CrudActions;
 use App\Models\Qbank;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -10,6 +11,8 @@ use Filament\Resources\Pages\PageRegistration;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Qbanks are the products students subscribe to. Each groups one or more exams.
@@ -48,9 +51,18 @@ class QbankResource extends Resource
             Tables\Columns\TextColumn::make('sort_order')->label('Order')->sortable(),
             Tables\Columns\IconColumn::make('is_active')->boolean(),
         ])->actions([
+            CrudActions::view(),
             Tables\Actions\EditAction::make(),
-            Tables\Actions\DeleteAction::make()->visible(fn (Qbank $record): bool => ! $record->exams()->exists()),
-        ])->defaultSort('sort_order')->modifyQueryUsing(fn ($query) => $query->with('exams:id,qbank_id,name'));
+            Tables\Actions\DeleteAction::make()->visible(self::deletable()),
+        ])->bulkActions([CrudActions::bulkDelete(self::deletable())])
+            ->defaultSort('sort_order')->modifyQueryUsing(fn ($query) => $query->with('exams:id,qbank_id,name'));
+    }
+
+    /** @return \Closure(Model): bool A Qbank with exams or subscriptions stays. */
+    public static function deletable(): \Closure
+    {
+        return fn (Model $record): bool => ! DB::table('exams')->where('qbank_id', $record->getKey())->exists()
+            && ! DB::table('subscriptions')->where('qbank_id', $record->getKey())->exists();
     }
 
     /** @return array<string, PageRegistration> */

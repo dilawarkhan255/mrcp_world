@@ -46,7 +46,8 @@ const closeMobile = () => setOpenMobile(false);
 
 <template>
     <Sidebar collapsible="icon">
-        <SidebarHeader class="h-20 shrink-0 flex-row items-center justify-center border-b border-sidebar-border p-0">
+        <!-- The logo row and the navbar are both 80px with a 1px bottom border, so the two borders form one line. -->
+        <SidebarHeader class="relative z-10 h-20 shrink-0 flex-row items-center justify-center border-b border-sidebar-border bg-sidebar p-0">
             <Link href="/dashboard" class="flex h-full items-center justify-center px-3" aria-label="MRCPWorld dashboard">
                 <!-- Full logo when expanded; the small mark alone when the sidebar is icon-only. -->
                 <img
@@ -64,7 +65,7 @@ const closeMobile = () => setOpenMobile(false);
             </Link>
         </SidebarHeader>
 
-        <SidebarContent class="gap-0 p-2">
+        <SidebarContent class="mw-sidebar-scroll gap-0 p-2">
             <div class="mb-2 border-b border-sidebar-border pb-2">
                 <ExamSwitcher />
             </div>
@@ -79,7 +80,7 @@ const closeMobile = () => setOpenMobile(false);
                     <SidebarMenuItem v-else-if="!item.children?.length">
                         <SidebarMenuButton as-child :is-active="isActive(item)" :tooltip="item.title" :class="ACTIVE_CLASS">
                             <Link :href="item.href ?? '/dashboard'" :aria-current="isActive(item) ? 'page' : undefined" @click="closeMobile">
-                                <component :is="navIcon(item.icon)" v-if="navIcon(item.icon)" />
+                                <component :is="navIcon(item.icon)" v-if="navIcon(item.icon)" class="mw-nav-icon" />
                                 <span class="group-data-[collapsible=icon]:hidden">{{ item.title }}</span>
                                 <Lock
                                     v-if="item.locked"
@@ -95,7 +96,7 @@ const closeMobile = () => setOpenMobile(false);
                         <DropdownMenu v-if="collapsed">
                             <DropdownMenuTrigger as-child>
                                 <SidebarMenuButton :is-active="containsActive(item)" :tooltip="item.title" :class="ACTIVE_CLASS">
-                                    <component :is="navIcon(item.icon)" v-if="navIcon(item.icon)" />
+                                    <component :is="navIcon(item.icon)" v-if="navIcon(item.icon)" class="mw-nav-icon" />
                                     <span class="group-data-[collapsible=icon]:hidden">{{ item.title }}</span>
                                 </SidebarMenuButton>
                             </DropdownMenuTrigger>
@@ -108,7 +109,7 @@ const closeMobile = () => setOpenMobile(false);
                         <Collapsible v-else v-slot="{ open }" :default-open="containsActive(item)">
                             <CollapsibleTrigger as-child>
                                 <SidebarMenuButton :is-active="containsActive(item)" :class="ACTIVE_CLASS">
-                                    <component :is="navIcon(item.icon)" v-if="navIcon(item.icon)" />
+                                    <component :is="navIcon(item.icon)" v-if="navIcon(item.icon)" class="mw-nav-icon" />
                                     <span class="group-data-[collapsible=icon]:hidden">{{ item.title }}</span>
                                     <Minus v-if="open" class="ml-auto size-4" />
                                     <Plus v-else class="ml-auto size-4" />

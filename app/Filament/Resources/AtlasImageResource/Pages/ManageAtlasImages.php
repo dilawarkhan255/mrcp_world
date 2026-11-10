@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\AtlasImageResource\Pages;
 
+use App\Filament\Concerns\UsesYajraTable;
 use App\Filament\Resources\AtlasImageResource;
 use App\Models\AtlasImage;
 use Filament\Actions;
@@ -13,6 +14,8 @@ use Illuminate\Support\Str;
 
 class ManageAtlasImages extends ManageRecords
 {
+    use UsesYajraTable;
+
     protected static string $resource = AtlasImageResource::class;
 
     /** @return array<Actions\Action> */

@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\PlanResource\Pages\ManagePlans;
+use App\Filament\Support\CrudActions;
 use App\Models\Plan;
 use App\Models\Subscription;
 use Filament\Forms;
@@ -11,6 +12,7 @@ use Filament\Resources\Pages\PageRegistration;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 
 class PlanResource extends Resource
 {
@@ -44,9 +46,16 @@ class PlanResource extends Resource
             Tables\Columns\TextColumn::make('duration_days')->label('Access')->formatStateUsing(fn (Plan $record): string => $record->durationLabel()),
             Tables\Columns\IconColumn::make('is_active')->label('On sale')->boolean(),
         ])->actions([
+            CrudActions::view(),
             Tables\Actions\EditAction::make(),
-            Tables\Actions\DeleteAction::make()->visible(fn (Plan $record): bool => ! Subscription::where('plan_id', $record->id)->exists()),
-        ])->defaultSort('sort_order');
+            Tables\Actions\DeleteAction::make()->visible(self::deletable()),
+        ])->bulkActions([CrudActions::bulkDelete(self::deletable())])->defaultSort('sort_order');
+    }
+
+    /** @return \Closure(Model): bool A plan with subscriptions stays (switch it off instead). */
+    public static function deletable(): \Closure
+    {
+        return fn (Model $record): bool => ! Subscription::where('plan_id', $record->getKey())->exists();
     }
 
     /** @return array<string, PageRegistration> */

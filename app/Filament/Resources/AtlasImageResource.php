@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\AtlasImageResource\Pages\ManageAtlasImages;
+use App\Filament\Support\CrudActions;
 use App\Models\AtlasImage;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -144,6 +145,7 @@ class AtlasImageResource extends Resource
             Tables\Filters\TernaryFilter::make('copyright_confirmed')->label('Copyright confirmed'),
             Tables\Filters\TernaryFilter::make('is_published')->label('Published'),
         ])->actions([
+            CrudActions::view(slideOver: true),
             Tables\Actions\EditAction::make()->slideOver(),
             Tables\Actions\DeleteAction::make(),
         ])->bulkActions([
@@ -156,7 +158,7 @@ class AtlasImageResource extends Resource
                 }),
             Tables\Actions\BulkAction::make('unpublish')->label('Unpublish')->icon('heroicon-o-eye-slash')
                 ->action(fn (Collection $records) => AtlasImage::whereIn('id', $records->modelKeys())->update(['is_published' => false])),
-            Tables\Actions\DeleteBulkAction::make(),
+            CrudActions::bulkDelete(),
         ])->defaultSort('id', 'desc')->paginationPageOptions([24, 48, 96]);
     }
 

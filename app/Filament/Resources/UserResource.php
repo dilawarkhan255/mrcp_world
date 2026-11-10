@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\UserResource\Pages\ManageUsers;
+use App\Filament\Support\CrudActions;
 use App\Models\Subscription;
 use App\Models\User;
 use App\Support\RoleGuard;
@@ -16,6 +17,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rules\Password;
 use Spatie\Permission\Models\Permission;
 
@@ -172,6 +174,7 @@ class UserResource extends Resource
             Tables\Filters\Filter::make('subscribed')->label('Has an active subscription')
                 ->query(fn (Builder $query) => $query->whereIn('id', Subscription::query()->current()->select('user_id'))),
         ])->actions([
+            CrudActions::view(slideOver: true),
             Tables\Actions\EditAction::make()->slideOver()
                 ->using(fn (User $record, array $data): User => self::saveAccount($record, $data)),
             Tables\Actions\Action::make('removeFromLeaderboard')->iconButton()->label('Remove from leaderboard')->icon('heroicon-o-trophy')->color('gray')
@@ -183,9 +186,10 @@ class UserResource extends Resource
                     $record->update(['leaderboard_opt_in' => false, 'leaderboard_name' => null]);
                     Notification::make()->success()->title('Removed from the leaderboard')->send();
                 }),
-            Tables\Actions\DeleteAction::make(),
-        ])->modifyQueryUsing(fn (Builder $query) => $query->with('roles:id,name')
-            ->withCount(['subscriptions as active_subscriptions' => fn (Builder $query) => $query->whereIn('id', Subscription::query()->current()->select('id'))]))
+            Tables\Actions\DeleteAction::make()->visible(self::deletable()),
+        ])->bulkActions([CrudActions::bulkDelete(self::deletable())])
+            ->modifyQueryUsing(fn (Builder $query) => $query->with('roles:id,name')
+                ->withCount(['subscriptions as active_subscriptions' => fn (Builder $query) => $query->whereIn('id', Subscription::query()->current()->select('id'))]))
             ->defaultSort('id', 'desc')->paginationPageOptions([25, 50, 100]);
     }
 
@@ -193,5 +197,12 @@ class UserResource extends Resource
     public static function getPages(): array
     {
         return ['index' => ManageUsers::route('/')];
+    }
+
+    /** @return Closure(Model): bool Never your own account, nor one that uploaded MCQ imports (kept for the record). */
+    public static function deletable(): Closure
+    {
+        return fn (Model $record): bool => $record->getKey() !== auth()->id()
+            && ! DB::table('question_imports')->where('user_id', $record->getKey())->exists();
     }
 }

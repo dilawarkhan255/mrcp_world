@@ -41,6 +41,5 @@ defineProps<{
             <ThemeToggle />
             <TopbarUser />
         </div>
-        <span class="brand-rainbow pointer-events-none absolute inset-x-0 -bottom-px h-0.5 opacity-80" aria-hidden="true" />
     </header>
 </template>

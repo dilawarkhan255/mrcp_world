@@ -68,6 +68,8 @@ class SubscriptionController extends Controller
             ])->all(),
             'paymentInstructions' => (string) config('student.subscription.payment_instructions'),
             'selectedPlan' => $this->chosenPlan($request),
+            // Back from Stripe Checkout without paying.
+            'checkoutCancelled' => $request->query('checkout') === 'cancelled',
         ]);
     }
 

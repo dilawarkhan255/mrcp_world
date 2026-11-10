@@ -230,6 +230,8 @@ class PracticeService
                 ...QuestionContent::reveal($snapshot),
                 'time_seconds' => $item->time_seconds,
                 'candidates' => $item->question_id === null ? null : app(CandidateStatsService::class)->forQuestion($item->question_id),
+                // Right sidebar: textbook, atlas and search links of this MCQ (after the answer only).
+                'resources' => app(QuestionResources::class)->forQuestion($item->question_id, $snapshot),
             ];
         }
 

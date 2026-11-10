@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import RichText from '@/components/practice/RichText.vue';
 import type { QuestionResult } from '@/types/practice';
-import { CheckCircle2, Clock, ExternalLink, Image as ImageIcon, Lightbulb, Search, Sparkles, Users, XCircle } from 'lucide-vue-next';
+import { CheckCircle2, Clock, Lightbulb, Sparkles, Users, XCircle } from 'lucide-vue-next';
 import { computed } from 'vue';
 const props = defineProps<{
     result: QuestionResult;
@@ -94,83 +94,6 @@ function seconds(value: number | null | undefined): string {
                 <Sparkles class="size-4" aria-hidden="true" />Mnemonic
             </h3>
             <RichText :html="result.mnemonics_html" class="text-sm" />
-        </div>
-
-        <div v-if="result.youtube_id" class="space-y-2">
-            <h3 class="text-sm font-semibold">Video</h3>
-            <div class="aspect-video overflow-hidden rounded-xl border bg-black">
-                <iframe
-                    class="h-full w-full"
-                    :src="'https://www.youtube-nocookie.com/embed/' + result.youtube_id"
-                    title="Explanation video"
-                    loading="lazy"
-                    referrerpolicy="strict-origin-when-cross-origin"
-                    allow="accelerometer; encrypted-media; gyroscope; picture-in-picture"
-                    allowfullscreen
-                />
-            </div>
-        </div>
-
-        <div v-if="result.image_searches?.length" class="space-y-2">
-            <h3 class="flex items-center gap-2 text-sm font-semibold">
-                <Search class="size-4 text-primary" aria-hidden="true" />Search images for “{{ result.image_search }}”
-            </h3>
-            <ul class="flex flex-wrap gap-2">
-                <li v-for="link in result.image_searches" :key="link.site">
-                    <a
-                        :href="link.url"
-                        target="_blank"
-                        rel="noopener noreferrer nofollow"
-                        class="inline-flex items-center gap-1 rounded-full border bg-card px-3 py-1 text-xs font-medium hover:border-primary"
-                        >{{ link.label }}<ExternalLink class="size-3" aria-hidden="true"
-                    /></a>
-                </li>
-            </ul>
-        </div>
-
-        <div v-if="result.image_links?.length" class="space-y-2">
-            <h3 class="flex items-center gap-2 text-sm font-semibold"><ImageIcon class="size-4 text-primary" aria-hidden="true" />Image links</h3>
-            <ul class="flex flex-wrap gap-2">
-                <li v-for="link in result.image_links" :key="link.url">
-                    <a
-                        :href="link.url"
-                        target="_blank"
-                        rel="noopener noreferrer nofollow"
-                        class="inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium hover:border-primary"
-                        >{{ link.label }}<ExternalLink class="size-3" aria-hidden="true"
-                    /></a>
-                </li>
-            </ul>
-        </div>
-
-        <div v-if="result.references?.length" class="space-y-2">
-            <h3 class="text-sm font-semibold">References</h3>
-            <ol class="space-y-2 text-sm">
-                <li v-for="(reference, index) in result.references" :key="index" class="flex gap-2">
-                    <span
-                        class="h-fit shrink-0 rounded px-1.5 py-0.5 text-[10px] font-bold uppercase"
-                        :class="
-                            reference.source === 'NICE'
-                                ? 'bg-primary text-primary-foreground'
-                                : reference.source === 'WHO'
-                                  ? 'bg-sky-600 text-white'
-                                  : 'bg-muted text-muted-foreground'
-                        "
-                        >{{ reference.source }}</span
-                    >
-                    <span class="min-w-0">
-                        <a
-                            v-if="reference.url"
-                            :href="reference.url"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            class="font-medium text-primary underline-offset-2 hover:underline"
-                            >{{ reference.title }}</a
-                        ><span v-else>{{ reference.title }}</span>
-                        <span v-if="reference.year" class="text-muted-foreground"> ({{ reference.year }})</span>
-                    </span>
-                </li>
-            </ol>
         </div>
     </section>
 </template>

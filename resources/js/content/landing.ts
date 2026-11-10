@@ -1,30 +1,20 @@
 /**
  * Every piece of copy on the public landing page lives in this file.
  *
- * Paragraphs that still need real wording are marked with [YOUR COPY HERE] and
- * are shown on the page as that visible placeholder, so nothing is silently
- * invented.
+ * Keep every claim true to what the app does: no pass rates, question counts
+ * or guideline titles that are not in the product.
  */
 export const landingCopy = {
-    topBar: {
-        exams: 'Exams',
-        features: 'Features',
-        pricing: 'Pricing',
-        logIn: 'Log in',
-        email: 'Email address',
-        password: 'Password',
-        logInTitle: 'Log in to your account',
-    },
     hero: {
-        badge: 'Built for postgraduate and undergraduate medical exams',
+        badge: 'For MRCP Part 1, MRCP Part 2, IMM and FCPS Part 2',
         title: 'Revise smarter. Walk into the exam knowing your score.',
-        body: '[YOUR COPY HERE] Describe in two sentences what students get: a question bank built from the real syllabus, timed mock exams, and a score history that shows exactly where the gaps are.',
+        body: 'Practise exam-style MCQs by subject or past paper, with detailed explanations that cite NICE and WHO guidance where it applies. Sit timed mock exams and see exactly which subjects still need work.',
         primary: 'Find your exam',
         secondary: 'Try a free demo',
     },
     exams: {
         heading: 'Choose your exam',
-        intro: 'Pick the exam you are sitting. Every exam has its own question bank, past papers and mock exams.',
+        intro: 'Pick the exam you are sitting. MRCP 1 and IMM share the MRCPWorld 1 Qbank; MRCP 2 and FCPS Part 2 share the MRCPWorld 2 Qbank.',
         demo: 'Take a demo',
         signUp: 'Sign up',
         logIn: 'Log in',
@@ -34,15 +24,15 @@ export const landingCopy = {
     features: {
         textbook: {
             title: 'A textbook that follows the syllabus',
-            body: '[YOUR COPY HERE] Explain that the reading material is organised by the topics of each exam, so every paragraph maps to a question you can practise immediately.',
+            body: 'The extended textbook is arranged by subject, in short chapters. Read up on a weak area, then go straight to the questions on the same subject.',
         },
         build: {
             title: 'Build a test from exactly what you need',
-            body: '[YOUR COPY HERE] Explain that a student can choose a category, a past paper or a set of questions, set the time, and sit the test straight away.',
+            body: 'Choose a subject or a past paper and how many questions you want, then start. For exam practice, sit a timed mock: the clock runs on the server and the answers are revealed only when the mock ends.',
         },
         compare: {
             title: 'Am I on track? See how you compare',
-            body: '[YOUR COPY HERE] Explain that the score history compares every mock with the candidates who sat the same paper, so the student knows whether the result is competitive.',
+            body: 'After each answer, see how other candidates answered the same question. Your performance page tracks accuracy by subject and by day, and the weekly leaderboard shows where you stand.',
         },
     },
     progress: {
@@ -61,21 +51,13 @@ export const landingCopy = {
     },
     pricing: {
         heading: 'Simple plans',
-        intro: 'One price per Qbank. Each Qbank includes its main MCQ bank and every past paper MCQ.',
+        intro: 'Each Qbank is sold separately, for 3 or 5 months. It includes its main MCQ bank and every past paper MCQ.',
         choose: 'Subscribe',
         member: 'Already a member? Log in to renew',
         placeholderPrice: '[PRICE]',
-        month: '1 month',
-        quarter: '3 months',
-        year: '12 months',
-        popular: '3 months · most popular',
         empty: 'Plans are being set up. Check back shortly.',
     },
     footer: {
-        terms: 'Terms',
-        privacy: 'Privacy',
-        contact: 'Contact',
-        cookies: 'Cookie settings',
         rights: 'All rights reserved.',
     },
     demo: {
@@ -90,8 +72,8 @@ export const landingCopy = {
 export const landingSeo = {
     title: 'Revise smarter. Walk into the exam knowing your score.',
     description:
-        'MRCP World is a question bank, textbook and mock exam platform for medical students. Practise the real syllabus, sit timed mock exams and track your score against other candidates.',
-    ogTitle: 'MRCP World — medical exam question bank and mock exams',
-    ogDescription: 'Question banks, timed mock exams, past papers and score history for medical students.',
+        'MCQ question bank, past paper MCQs, timed mock exams and an extended textbook for MRCP Part 1, MRCP Part 2, IMM and FCPS Part 2. Detailed explanations with NICE and WHO references where relevant.',
+    ogTitle: 'MRCP World — MRCP question bank and mock exams',
+    ogDescription: 'MCQ banks, past paper MCQs and timed mock exams for MRCP Part 1, MRCP Part 2, IMM and FCPS Part 2.',
     ogType: 'website',
 };

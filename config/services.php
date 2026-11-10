@@ -32,6 +32,12 @@ return [
     | The AI tutor (Claude). Without a key the AI buttons stay hidden and the
     | rule-based study plan is used. daily_limit is per student.
     */
+    // Card payments with Stripe Checkout (App\Services\StripeCheckout). Off without the secret key.
+    'stripe' => [
+        'secret' => env('STRIPE_SECRET'),
+        'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
+    ],
+
     'anthropic' => [
         'key' => env('ANTHROPIC_API_KEY'),
         'model' => env('ANTHROPIC_MODEL', 'claude-opus-5-5'),

@@ -1,12 +1,15 @@
 <script setup lang="ts">
 import InputError from '@/components/InputError.vue';
+import PaymentMethods from '@/components/PaymentMethods.vue';
 import TextLink from '@/components/TextLink.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AuthBase from '@/layouts/AuthLayout.vue';
-import { Head, useForm } from '@inertiajs/vue3';
-import { CheckCircle2, LoaderCircle, PoundSterling } from 'lucide-vue-next';
+import type { SharedData } from '@/types';
+import { Head, useForm, usePage } from '@inertiajs/vue3';
+import { CheckCircle2, CreditCard, LoaderCircle, Lock, PoundSterling } from 'lucide-vue-next';
+import { computed } from 'vue';
 
 interface PlanOption {
     id: number;
@@ -22,6 +25,9 @@ const props = defineProps<{
     selectedPlan?: number | null;
     paymentInstructions: string;
 }>();
+
+/** With card payments on, the account is created and the student goes straight to Stripe Checkout. */
+const card = computed(() => !!usePage<SharedData>().props.payments?.card);
 
 // The account is created together with the subscription request.
 const form = useForm({
@@ -60,7 +66,9 @@ const submit = () => {
                     <input v-model="form.plan_id" type="radio" name="plan" :value="plan.id" class="mt-1 accent-primary" required />
                     <span class="min-w-0 flex-1">
                         <span class="flex items-baseline justify-between gap-2">
-                            <span class="font-semibold">{{ plan.qbank }}</span>
+                            <span class="font-semibold"
+                                >{{ plan.qbank }} <span class="font-normal text-muted-foreground">· {{ plan.duration }}</span></span
+                            >
                             <span class="text-sm"
                                 ><strong class="inline-flex items-center text-primary"
                                     ><PoundSterling v-if="plan.price.startsWith('£')" class="size-4" aria-label="GBP" />{{
@@ -77,7 +85,15 @@ const submit = () => {
                 <p v-if="selectedExam" class="text-xs text-muted-foreground">You came from {{ selectedExam.name }}.</p>
             </fieldset>
 
-            <fieldset class="grid gap-2">
+            <div v-if="card" class="grid gap-2 rounded-md border bg-muted/40 p-3">
+                <p class="flex items-center gap-2 text-sm font-medium"><CreditCard class="size-4 text-primary" aria-hidden="true" />2. Pay by card</p>
+                <p class="text-xs leading-relaxed text-muted-foreground">
+                    After you create your account you go to Stripe's secure payment page. Cards from every country Stripe accepts, Pakistan included,
+                    work there. Your Qbank opens as soon as the payment is confirmed.
+                </p>
+                <PaymentMethods />
+            </div>
+            <fieldset v-else class="grid gap-2">
                 <legend class="mb-2 text-sm font-medium">2. Pay and enter your payment reference</legend>
                 <p class="rounded-md bg-muted/60 p-3 text-xs leading-relaxed">{{ paymentInstructions }}</p>
                 <Label for="payment_reference">Payment reference</Label>
@@ -129,9 +145,12 @@ const submit = () => {
 
                 <Button type="submit" class="mt-2 w-full" :disabled="form.processing">
                     <LoaderCircle v-if="form.processing" class="h-4 w-4 animate-spin" />
-                    Subscribe and create account
+                    {{ card ? 'Create account and pay by card' : 'Subscribe and create account' }}
                 </Button>
-                <p class="text-center text-xs text-muted-foreground">
+                <p v-if="card" class="flex items-center justify-center gap-1 text-center text-xs text-muted-foreground">
+                    <Lock class="size-3" aria-hidden="true" />Payments are handled by Stripe. We never see your card details.
+                </p>
+                <p v-else class="text-center text-xs text-muted-foreground">
                     You can log in straight away. Your Qbank opens once the team confirms the payment.
                 </p>
             </div>

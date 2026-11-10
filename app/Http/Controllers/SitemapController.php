@@ -20,6 +20,8 @@ class SitemapController extends Controller
 
         $urls[] = ['loc' => route('legal.terms'), 'changefreq' => 'yearly', 'priority' => '0.3'];
         $urls[] = ['loc' => route('legal.privacy'), 'changefreq' => 'yearly', 'priority' => '0.3'];
+        $urls[] = ['loc' => route('contact'), 'changefreq' => 'yearly', 'priority' => '0.3'];
+        $urls[] = ['loc' => route('cookie-settings'), 'changefreq' => 'yearly', 'priority' => '0.2'];
 
         return response()
             ->view('sitemap', ['urls' => $urls])

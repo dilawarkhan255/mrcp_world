@@ -7,6 +7,7 @@ use App\Http\Controllers\CommentController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExamDemoController;
 use App\Http\Controllers\FeedbackController;
+use App\Http\Controllers\FlashcardController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\LeaderboardController;
 use App\Http\Controllers\MockExamController;
@@ -19,33 +20,49 @@ use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\SelectExamController;
 use App\Http\Controllers\SitemapController;
+use App\Http\Controllers\StripeWebhookController;
 use App\Http\Controllers\StudentTableController;
 use App\Http\Controllers\StudyPlanController;
 use App\Http\Controllers\SubjectController;
+use App\Http\Controllers\SubscriptionCheckoutController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\TextbookController;
+use App\Support\LegalText;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', [LandingController::class, 'index'])->name('home');
 Route::get('/exams/{slug}/demo', [ExamDemoController::class, 'show'])->name('landing.demo');
-Route::get('/terms', fn () => Inertia::render('Legal/Terms', ['appName' => (string) config('app.name')]))->name('legal.terms');
-Route::get('/privacy', fn () => Inertia::render('Legal/Privacy', [
+// Texts in config/terms.php and config/privacy.php, owner details in config/legal.php.
+Route::get('/terms', fn () => Inertia::render('Legal/Terms', ['appName' => (string) config('app.name'), ...LegalText::document('terms')]))->name('legal.terms');
+Route::get('/privacy', fn () => Inertia::render('Legal/Privacy', ['appName' => (string) config('app.name'), ...LegalText::document('privacy')]))->name('legal.privacy');
+Route::get('/contact', fn () => Inertia::render('Legal/Contact', [
     'appName' => (string) config('app.name'),
-    'summary' => (string) config('privacy.summary'),
-    'sections' => (array) config('privacy.sections'),
-]))->name('legal.privacy');
-Route::get('/contact', fn () => Inertia::render('Legal/Page', [
-    'appName' => (string) config('app.name'),
-    'title' => 'Contact',
-    'intro' => 'How to reach the team behind MRCP World.',
+    'email' => (string) config('legal.email'),
+    'address' => (string) config('legal.address'),
+    'whatsapp' => config('services.community.whatsapp_url') ?: null,
 ]))->name('contact');
-Route::get('/cookie-settings', fn () => Inertia::render('Legal/Page', [
-    'appName' => (string) config('app.name'),
-    'title' => 'Cookie settings',
-    'intro' => 'The cookies this site uses and how to change your choices.',
-]))->name('cookie-settings');
+Route::get('/cookie-settings', fn () => Inertia::render('Legal/Cookies', ['appName' => (string) config('app.name'), ...LegalText::document('cookies')]))->name('cookie-settings');
 Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
+// Subscribing and paying (manual or by card on Stripe Checkout). Logged in, but
+// no email check yet: a new student pays straight after creating the account.
+Route::middleware('auth')->group(function () {
+    Route::get('/subscription', [SubscriptionController::class, 'index'])->name('subscription.index');
+    Route::post('/subscription', [SubscriptionController::class, 'store'])->middleware('throttle:5,1')->name('subscription.store');
+    Route::post('/subscription/checkout', [SubscriptionCheckoutController::class, 'store'])->middleware('throttle:10,1')->name('subscription.checkout');
+    Route::get('/subscription/checkout/success', [SubscriptionCheckoutController::class, 'success'])->name('subscription.checkout.success');
+});
+// Opened in a browser: say what this address is instead of a "method not allowed" error.
+Route::get('/stripe/webhook', fn () => response(
+    '<!doctype html><meta charset="utf-8"><title>Stripe webhook</title>'
+    .'<body style="font-family:sans-serif;max-width:40rem;margin:4rem auto;padding:0 1rem;line-height:1.5">'
+    .'<h1 style="font-size:1.25rem">Stripe webhook</h1>'
+    .'<p>This address receives payment events from Stripe. Stripe sends them as POST requests, so opening it in a browser does nothing.</p>'
+    .'<p>To test payments, buy a plan with a Stripe test card, or run <code>stripe listen --forward-to '.e(url('/stripe/webhook')).'</code>.</p>'
+    .'<p><a href="'.e(url('/')).'">Back to the home page</a></p></body>',
+))->name('stripe.webhook.info');
+// Signed by Stripe (checked in the controller); exempt from CSRF in bootstrap/app.php.
+Route::post('/stripe/webhook', StripeWebhookController::class)->middleware('throttle:120,1')->name('stripe.webhook');
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
     Route::post('/exam', SelectExamController::class)->name('exam.select');
@@ -90,10 +107,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/notifications', [NotificationController::class, 'index'])->middleware('throttle:60,1')->name('notifications.index');
     Route::post('/notifications/read-all', [NotificationController::class, 'readAll'])->name('notifications.read-all');
     Route::post('/notifications/{id}/read', [NotificationController::class, 'read'])->whereUuid('id')->name('notifications.read');
-    Route::get('/subscription', [SubscriptionController::class, 'index'])->name('subscription.index');
-    Route::post('/subscription', [SubscriptionController::class, 'store'])->middleware('throttle:5,1')->name('subscription.store');
     Route::get('/textbooks', [TextbookController::class, 'index'])->middleware('qbank')->name('textbooks.index');
     Route::get('/textbooks/{slug}', [TextbookController::class, 'show'])->where('slug', '[a-z0-9-]+')->middleware('qbank')->name('textbooks.show');
+    // Flashcards with spaced repetition, and the Knowledge Tutor (AI conversation).
+    Route::get('/flashcards', [FlashcardController::class, 'index'])->middleware('qbank')->name('flashcards.index');
+    Route::get('/flashcards/study', [FlashcardController::class, 'study'])->middleware('qbank')->name('flashcards.study');
+    Route::post('/flashcards/{flashcard}/review', [FlashcardController::class, 'review'])->middleware(['qbank', 'throttle:120,1'])->name('flashcards.review');
+    Route::get('/tutor', [AiTutorController::class, 'tutor'])->middleware('qbank')->name('tutor.index');
+    Route::post('/tutor/chat', [AiTutorController::class, 'tutorChat'])->middleware(['qbank', 'throttle:10,1'])->name('tutor.chat');
     Route::get('/feedback', [FeedbackController::class, 'index'])->name('feedback.index');
     Route::post('/feedback', [FeedbackController::class, 'store'])->middleware('throttle:5,1')->name('feedback.store');
     Route::get('/admin/mcq-template', QuestionTemplateController::class)->name('imports.template');
