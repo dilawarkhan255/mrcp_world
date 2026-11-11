@@ -10,7 +10,7 @@ use Illuminate\Validation\ValidationException;
 
 /**
  * A chapter of the extended textbook. Chapters belong to the exam that owns
- * the content (so IMM reads the MRCP 1 textbook) and optionally to
+ * the content (so a shared-bank exam reads the owner's textbook) and optionally to
  * a subject of that exam. Body and key points are Markdown.
  */
 class TextbookChapter extends Model

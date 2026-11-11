@@ -1,9 +1,12 @@
 <?php
 
+use App\Models\AtlasImage;
 use App\Models\Category;
 use App\Models\Exam;
+use App\Models\Flashcard;
 use App\Models\PracticeSession;
 use App\Models\Question;
+use App\Models\TextbookChapter;
 use App\Models\User;
 use App\Services\AiTutor;
 use App\Services\AiTutorException;
@@ -102,6 +105,26 @@ it('writes study plan advice from subjects and scores only', function () {
         ->not->toContain('private@example.test')->not->toContain('Private Person');
 });
 
+it('answers the student own revision question with the exam date and study hours', function () {
+    $examDate = now()->addDays(30)->toDateString();
+    $this->postJson('/study-plan/ai', ['question' => 'How should I revise renal?', 'exam_date' => $examDate, 'hours' => 3])
+        ->assertOk()->assertJsonStructure(['html', 'remaining']);
+
+    expect($this->fake->prompts[0])->toContain('How should I revise renal?')
+        ->toContain('Exam date: '.$examDate.' (30 days from today)')
+        ->toContain('about 3 hours a day')
+        ->toContain('Renal')
+        ->not->toContain('private@example.test');
+});
+
+it('validates the study plan question, exam date and hours', function () {
+    $this->postJson('/study-plan/ai', ['question' => 'x'])->assertUnprocessable();
+    $this->postJson('/study-plan/ai', ['exam_date' => now()->subDay()->toDateString()])->assertUnprocessable();
+    $this->postJson('/study-plan/ai', ['exam_date' => 'soon'])->assertUnprocessable();
+    $this->postJson('/study-plan/ai', ['hours' => 30])->assertUnprocessable();
+    expect($this->fake->prompts)->toBe([]);
+});
+
 it('stops at the daily limit and shows a friendly error', function () {
     $session = aiSession();
     $this->post('/questions/sessions/'.$session->id.'/answer/1', ['option' => 'A']);
@@ -131,4 +154,45 @@ it('stays off without an API key', function () {
 
 it('asks Claude Opus 5.5 by default', function () {
     expect(config('services.anthropic.model'))->toBe('claude-opus-5-5');
+});
+
+it('answers a question about a published textbook chapter from the chapter text', function () {
+    $chapter = TextbookChapter::create(['exam_id' => $this->exam->id, 'title' => 'Nephrotic syndrome', 'body' => 'Membranous nephropathy is the commonest cause in adults.', 'is_published' => true]);
+    TextbookChapter::create(['exam_id' => $this->exam->id, 'title' => 'Draft chapter', 'body' => 'Secret draft', 'is_published' => false]);
+
+    $this->postJson('/textbooks/'.$chapter->slug.'/ask', ['question' => 'Summarise this chapter'])->assertOk()->assertJsonStructure(['html', 'remaining']);
+    expect($this->fake->prompts[0])->toContain('Nephrotic syndrome')->toContain('Membranous nephropathy')->toContain('Summarise this chapter');
+
+    $this->postJson('/textbooks/draft-chapter/ask', ['question' => 'Summarise this chapter'])->assertNotFound();
+    $this->postJson('/textbooks/'.$chapter->slug.'/ask', ['question' => 'x'])->assertUnprocessable();
+});
+
+it('keeps the back of a flashcard from Claude until the card is turned', function () {
+    $card = Flashcard::create(['exam_id' => $this->exam->id, 'front' => 'First-line drug for absence seizures?', 'back' => 'Ethosuximide', 'is_published' => true]);
+
+    $this->postJson('/flashcards/'.$card->id.'/ask', ['question' => 'Give me a hint', 'revealed' => false])->assertOk();
+    expect($this->fake->prompts[0])->toContain('absence seizures')->not->toContain('Ethosuximide')->toContain('Do not give the answer away');
+
+    $this->postJson('/flashcards/'.$card->id.'/ask', ['question' => 'Explain the answer', 'revealed' => true])->assertOk();
+    expect($this->fake->prompts[1])->toContain('Ethosuximide');
+
+    $other = Flashcard::create(['exam_id' => Exam::factory()->create()->id, 'front' => 'Other', 'back' => 'Other', 'is_published' => true]);
+    $this->postJson('/flashcards/'.$other->id.'/ask', ['question' => 'Give me a hint'])->assertNotFound();
+});
+
+it('answers about a published atlas picture and refuses an unpublished one', function () {
+    $image = AtlasImage::create(['title' => 'Erythema nodosum', 'diagnosis' => 'Erythema nodosum', 'description' => 'Tender red nodules on the shins.', 'image_path' => 'atlas/en.png', 'license' => 'cc-by', 'copyright_confirmed' => true, 'is_published' => true]);
+    $hidden = AtlasImage::create(['title' => 'Hidden', 'image_path' => 'atlas/h.png', 'license' => 'cc-by', 'is_published' => false]);
+
+    $this->postJson('/image-atlas/'.$image->id.'/ask', ['question' => 'What are the differentials?'])->assertOk();
+    expect($this->fake->prompts[0])->toContain('Erythema nodosum')->toContain('Tender red nodules')->toContain('You cannot see the picture');
+
+    $this->postJson('/image-atlas/'.$hidden->id.'/ask', ['question' => 'What are the differentials?'])->assertNotFound();
+});
+
+it('refuses AI help on the material pages without an API key', function () {
+    config(['services.anthropic.key' => null]);
+    $chapter = TextbookChapter::create(['exam_id' => $this->exam->id, 'title' => 'Off', 'body' => 'Text', 'is_published' => true]);
+    $this->postJson('/textbooks/'.$chapter->slug.'/ask', ['question' => 'Summarise this chapter'])->assertNotFound();
+    expect($this->fake->prompts)->toBe([]);
 });

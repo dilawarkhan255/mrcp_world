@@ -36,7 +36,7 @@ class QbankResource extends Resource
         return $form->schema([
             Forms\Components\TextInput::make('name')->required()->maxLength(255),
             Forms\Components\TextInput::make('slug')->required()->maxLength(255)->regex('/^[a-z0-9]+(?:-[a-z0-9]+)*$/')->unique(ignoreRecord: true),
-            Forms\Components\Textarea::make('description')->maxLength(1000)->rows(2)->columnSpanFull()->helperText('For example "MRCP 1 and IMM".'),
+            Forms\Components\Textarea::make('description')->maxLength(1000)->rows(2)->columnSpanFull()->helperText('For example "MRCP 2".'),
             Forms\Components\TextInput::make('sort_order')->numeric()->minValue(0)->default(0),
             Forms\Components\Toggle::make('is_active')->default(true),
         ])->columns(2);
@@ -54,7 +54,8 @@ class QbankResource extends Resource
             CrudActions::view(),
             Tables\Actions\EditAction::make(),
             Tables\Actions\DeleteAction::make()->visible(self::deletable()),
-        ])->bulkActions([CrudActions::bulkDelete(self::deletable())])
+            CrudActions::deleteWithContents(self::deletable(), 'name'),
+        ])->bulkActions([CrudActions::bulkDelete(self::deletable()), CrudActions::bulkDeleteWithContents()])
             ->defaultSort('sort_order')->modifyQueryUsing(fn ($query) => $query->with('exams:id,qbank_id,name'));
     }
 

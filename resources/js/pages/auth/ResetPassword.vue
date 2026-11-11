@@ -38,13 +38,24 @@ const submit = () => {
             <div class="grid gap-6">
                 <div class="grid gap-2">
                     <Label for="email">Email</Label>
-                    <Input id="email" type="email" name="email" autocomplete="email" v-model="form.email" class="mt-1 block w-full" readonly />
+                    <Input
+                        placeholder="you@example.com"
+                        required
+                        id="email"
+                        type="email"
+                        name="email"
+                        autocomplete="email"
+                        v-model="form.email"
+                        class="mt-1 block w-full"
+                        readonly
+                    />
                     <InputError :message="form.errors.email" class="mt-2" />
                 </div>
 
                 <div class="grid gap-2">
                     <Label for="password">Password</Label>
                     <Input
+                        required
                         id="password"
                         type="password"
                         name="password"
@@ -60,6 +71,7 @@ const submit = () => {
                 <div class="grid gap-2">
                     <Label for="password_confirmation"> Confirm Password </Label>
                     <Input
+                        required
                         id="password_confirmation"
                         type="password"
                         name="password_confirmation"

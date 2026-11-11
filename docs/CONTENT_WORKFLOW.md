@@ -8,8 +8,8 @@ A **Qbank** is the product a student subscribes to. Each Qbank groups exams:
 
 | Qbank | Exams | Question bank |
 | --- | --- | --- |
-| MRCPWorld 1 Qbank | MRCP 1, IMM | IMM reads the MRCP 1 bank |
-| MRCPWorld 2 Qbank | MRCP 2, FCPS Part 2 | FCPS Part 2 reads the MRCP 2 bank |
+| MRCPWorld 1 Qbank | MRCP 1 | Its own bank |
+| MRCPWorld 2 Qbank | MRCP 2 | Its own bank |
 
 ## Subscriptions
 
@@ -19,13 +19,13 @@ Each Qbank is sold on its own: **3 months for £8** or **5 months for £12** (pl
 2. The request appears under **Users and billing → Subscriptions** with a badge. Check the payment, then **Activate** (180 days by default, editable). Activating while an earlier subscription is still running starts the new period when the old one ends, so no days are lost.
 3. **Deactivate** removes access at once. **Grant access** creates an active subscription directly, for example for a free trial.
 
-Without an active subscription a student sees a "free demo mode" banner and lock icons in the sidebar. They can practise only the questions marked **Free demo question** in the MCQ form. Past papers, mocks, search, reviews, notes, comments, the textbook and the Image Atlas send them to the subscription page; so does a session with non-demo questions after a subscription ends. Editors and admins always have access. One subscription to MRCPWorld 1 Qbank opens both MRCP 1 and IMM.
+Without an active subscription a student sees a "free demo mode" banner and lock icons in the sidebar. They can practise only the questions marked **Free demo question** in the MCQ form. Past papers, mocks, search, reviews, notes, comments, the textbook and the Image Atlas send them to the subscription page; so does a session with non-demo questions after a subscription ends. Editors and admins always have access. One subscription opens every exam in that Qbank.
 
 ## Extended textbook
 
-Open **Content → Textbook** and add chapters to an exam (the exam that owns the bank, never IMM or FCPS) and optionally a subject. The chapter body and key points are Markdown with tables and images (put flowcharts and diagrams in as images; files go to `storage/app/public/textbook-media`). Chapters are listed by subject and in **Order in subject**; students reach them from **Textbooks** with previous/next links. Only published chapters are shown, and only to subscribers.
+Open **Content → Textbook** and add chapters to an exam (the exam that owns the bank, never a shared-bank exam) and optionally a subject. The chapter body and key points are Markdown with tables and images (put flowcharts and diagrams in as images; files go to `storage/app/public/textbook-media`). Chapters are listed by subject and in **Order in subject**; students reach them from **Textbooks** with previous/next links. Only published chapters are shown, and only to subscribers.
 
-An exam either owns its subjects, papers and questions, or uses another exam's bank (**Exams → Uses the question bank of**). A shared-content exam cannot hold subjects, papers or imports of its own; the admin pickers list only exams that own content. When a student picks IMM in the sidebar, they see the MRCP 1 questions under the IMM name, and their sessions, reviews, bookmarks and performance are stored against the MRCP 1 bank, so switching between the two keeps one history. Subscriptions are tied to the Qbank, so they cover every exam in it.
+An exam either owns its subjects, papers and questions, or uses another exam's bank (**Exams → Uses the question bank of**). A shared-content exam cannot hold subjects, papers or imports of its own; the admin pickers list only exams that own content. No seeded exam does this now (IMM and FCPS Part 2 were removed). If an admin sets it, students who pick that exam see the owner's questions under its name, and their sessions, reviews, bookmarks and performance are stored against the owner's bank, so switching between the two keeps one history. Subscriptions are tied to the Qbank, so they cover every exam in it.
 
 ## Add your content
 
@@ -37,7 +37,7 @@ An exam either owns its subjects, papers and questions, or uses another exam's b
 6. Click **Upload MCQs**, choose the exam and optionally the past paper, select CSV/XLSX, and choose whether to publish imported questions. Submission returns immediately; the queue worker processes the private file.
 7. Watch status, accepted/rejected counts, and **Report**. The report retains the first 100 row errors. A completed import can still have rejected rows; fix and reupload those rows.
 
-Only published MCQs are visible to students. MCQs belonging to a paper also require that paper to be published. A paper is an organised set of MCQs; uploading a PDF does not automatically create questions.
+Only published MCQs are visible to students. MCQs belonging to a paper also require that paper to be published. A paper is an organised set of MCQs. To turn a PDF into MCQs, use **Bulk MCQ uploads → Upload PDF**: choose the exam (and the past paper, if it is one) and upload a text PDF written in the format shown in the form (numbered question, options A–E, "Answer: B", optional "Explanation:" and "Subject:"). No AI is used. Questions that cannot be read are listed in the upload report.
 
 ### File headers
 
@@ -113,7 +113,7 @@ Validation failures show a readable failed status. Transient infrastructure fail
 - **AI Study Plan** (`/study-plan`, subscribers). Built with fixed rules from the student's own answers, with no AI service: the three weakest subjects (lowest accuracy with at least 10 answers, each with its reason, e.g. "62% correct across 40 answers"), the subjects not practised yet, and a 7-day plan of 30 questions a day (three subjects of 10; two weak, one new). Each item starts a main bank session in one click. The numbers are in `config/student.php` under `study_plan` and `leaderboard`.
 - **Image Atlas** (`/image-atlas`) lists published images of every Qbank or of the student's Qbank, searchable by title or diagnosis and filtered by subject.
 
-Flashcards, activity heatmaps and PDF/Word extraction remain separate future work; they are not represented as completed features.
+Activity heatmaps and Word extraction remain separate future work; they are not represented as completed features.
 
 ## Image Atlas
 

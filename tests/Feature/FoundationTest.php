@@ -17,27 +17,28 @@ beforeEach(function () {
     $this->seed([ExamSeeder::class, RoleSeeder::class]);
 });
 
-it('seeds the two Qbanks and their four exams idempotently', function () {
+it('seeds the two Qbanks and their two exams idempotently', function () {
     $this->seed(ExamSeeder::class);
-    expect(Exam::orderBy('sort_order')->pluck('name')->all())->toBe(['MRCP 1', 'IMM', 'MRCP 2', 'FCPS Part 2'])
+    expect(Exam::orderBy('sort_order')->pluck('name')->all())->toBe(['MRCP 1', 'MRCP 2'])
         ->and(Qbank::orderBy('sort_order')->pluck('name')->all())->toBe(['MRCPWorld 1 Qbank', 'MRCPWorld 2 Qbank']);
-    $mrcp1 = Exam::where('slug', 'mrcp-part-1')->firstOrFail();
-    $mrcp2 = Exam::where('slug', 'mrcp-part-2-written')->firstOrFail();
-    expect(Exam::where('slug', 'imm')->value('content_exam_id'))->toBe($mrcp1->id)
-        ->and(Exam::where('slug', 'fcps-part-2')->value('content_exam_id'))->toBe($mrcp2->id)
-        ->and($mrcp1->content_exam_id)->toBeNull();
+    $qbank2 = Qbank::where('slug', 'qbank-2')->value('id');
+    expect(Exam::whereNotNull('content_exam_id')->count())->toBe(0)
+        ->and(Exam::where('slug', 'mrcp-part-2-written')->value('qbank_id'))->toBe($qbank2)
+        ->and(Exam::whereIn('slug', ['imm', 'fcps-part-2', 'mrcp-paces'])->exists())->toBeFalse();
 });
 
 it('shares database exams and persists the selected exam', function () {
-    $this->actingAs(User::factory()->create());
+    $student = User::factory()->create();
+    grantAccess($student, Qbank::where('slug', 'qbank-1')->firstOrFail());
+    $this->actingAs($student);
     $exams = Exam::whereNull('content_exam_id')->orderBy('id')->get();
-    $this->get('/dashboard')->assertInertia(fn (Assert $page) => $page->component('Dashboard')->has('exams', 4)->where('exams.1.qbank', 'MRCPWorld 1 Qbank')->where('currentExam.id', $exams[0]->id));
+    $this->get('/dashboard')->assertInertia(fn (Assert $page) => $page->component('Dashboard')->has('exams', 2)->where('exams.1.qbank', 'MRCPWorld 2 Qbank')->where('currentExam.id', $exams[0]->id));
     $this->post('/exam', ['exam_id' => $exams[1]->id])->assertSessionHas('exam_id', $exams[1]->id);
     $this->get('/dashboard')->assertInertia(fn (Assert $page) => $page->where('currentExam.id', $exams[1]->id));
     $exams[1]->update(['is_active' => false]);
     $this->post('/exam', ['exam_id' => $exams[1]->id])->assertSessionHasErrors('exam_id');
     $this->post('/exam', ['exam_id' => 99999])->assertSessionHasErrors('exam_id');
-    $this->get('/dashboard')->assertInertia(fn (Assert $page) => $page->has('exams', 3)->where('currentExam.id', $exams[0]->id));
+    $this->get('/dashboard')->assertInertia(fn (Assert $page) => $page->has('exams', 1)->where('currentExam.id', $exams[0]->id));
 });
 
 it('protects exam selection and opens every sidebar page to a subscriber', function () {
@@ -51,14 +52,29 @@ it('protects exam selection and opens every sidebar page to a subscriber', funct
     }
 });
 
-it('sends a student without a subscription from locked pages to the subscription page', function () {
+it('sends a student without a package to the subscription page before anything else', function () {
     $this->actingAs(User::factory()->create());
-    foreach (['/questions/past-papers', '/questions/search', '/questions/mocks', '/questions/review', '/revision/notes', '/image-atlas', '/textbooks', '/questions/comments'] as $href) {
+    foreach (['/dashboard', '/questions/bank', '/questions/sessions', '/questions/performance', '/feedback', '/questions/past-papers', '/questions/mocks', '/textbooks', '/tutor'] as $href) {
         $this->get($href)->assertRedirect('/subscription');
     }
-    foreach (['/dashboard', '/questions/bank', '/questions/sessions', '/questions/performance', '/subscription', '/feedback'] as $href) {
+    $this->getJson('/questions/mocks/data')->assertForbidden();
+    foreach (['/subscription', '/settings/profile'] as $href) {
         $this->get($href)->assertOk();
     }
+});
+
+it('keeps the pages of an unpaid Qbank locked for a student who paid for the other one', function () {
+    $student = User::factory()->create();
+    grantAccess($student, Qbank::where('slug', 'qbank-1')->firstOrFail());
+    $this->actingAs($student)->post('/exam', ['exam_id' => Exam::where('slug', 'mrcp-part-2-written')->value('id')]);
+    $this->get('/dashboard')->assertOk();
+    $this->get('/questions/mocks')->assertRedirect('/subscription');
+});
+
+it('lets staff into the student app without a package', function () {
+    $editor = User::factory()->create();
+    $editor->assignRole('editor');
+    $this->actingAs($editor)->get('/dashboard')->assertOk();
 });
 
 it('allows only verified editors and admins into every panel resource', function (string $role, bool $verified, int $status) {
@@ -103,12 +119,18 @@ it('routes staff logins to the panel and exposes management navigation only to s
     $user = User::factory()->create();
     $user->assignRole($role);
     $this->post('/login', ['email' => $user->email, 'password' => 'password'])->assertRedirect($destination);
-    $this->get('/dashboard')->assertInertia(fn (Assert $page) => $page->where('auth.canManageContent', $canManage));
+    $this->get($canManage ? '/dashboard' : '/subscription')->assertInertia(fn (Assert $page) => $page->where('auth.canManageContent', $canManage));
 })->with([
     ['admin', '/admin', true],
     ['editor', '/admin', true],
-    ['student', '/dashboard', false],
+    ['student', '/subscription', false],
 ]);
+
+it('sends a student with a package to the dashboard after logging in', function () {
+    $student = User::factory()->create();
+    grantAccess($student, Qbank::where('slug', 'qbank-1')->firstOrFail());
+    $this->post('/login', ['email' => $student->email, 'password' => 'password'])->assertRedirect('/dashboard');
+});
 
 it('makes an Inertia login into the admin panel a full browser visit', function () {
     $admin = User::factory()->create();

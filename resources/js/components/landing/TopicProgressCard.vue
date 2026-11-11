@@ -25,7 +25,7 @@ function width(attempted: number, total: number): string {
                     >
                 </div>
                 <div class="mt-2 h-2 overflow-hidden rounded-full" style="background-color: var(--track)">
-                    <div class="h-full rounded-full bg-teal" :style="{ width: width(topic.attempted, topic.total) }" />
+                    <div class="mw-logo-line h-full rounded-full" :style="{ width: width(topic.attempted, topic.total) }" />
                 </div>
             </li>
         </ul>

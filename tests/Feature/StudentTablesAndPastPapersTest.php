@@ -35,6 +35,7 @@ beforeEach(function () {
 });
 
 it('lists only the signed-in student sessions of the selected exam in the Yajra table', function () {
+    grantAccess($this->student, $this->mrcp1->qbank_id);
     $mine = tableSession($this->student, $this->mrcp1);
     $mock = tableSession($this->student, $this->mrcp1, ['mode' => PracticeSession::MODE_MOCK, 'completed_at' => now()]);
     tableSession($this->student, $this->mrcp2);
@@ -54,6 +55,7 @@ it('lists only the signed-in student sessions of the selected exam in the Yajra 
 });
 
 it('searches the sessions table by session number', function () {
+    grantAccess($this->student, $this->mrcp1->qbank_id);
     $wanted = tableSession($this->student, $this->mrcp1);
     tableSession($this->student, $this->mrcp1);
 

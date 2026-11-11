@@ -210,6 +210,27 @@
             font-size: 14pt;
         }
     }
+    /* Screenshot shield (useContentProtection): the page is blurred and covered while a screenshot is likely. */
+    html.content-protected.mw-shield body > * {
+        filter: blur(24px) !important;
+    }
+    html.content-protected.mw-shield body::before {
+        content: 'Protected content. Screenshots and screen recording are not allowed on this site.';
+        position: fixed;
+        inset: 0;
+        z-index: 2147483647;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+        text-align: center;
+        font:
+            600 16px/1.5 'Manrope',
+            system-ui,
+            sans-serif;
+        color: #fff;
+        background: rgba(11, 18, 36, 0.92);
+    }
 }
 
 @layer components {
@@ -347,4 +368,118 @@
 /* The thin logo line on top of cards. */
 .mw-logo-line {
     background: var(--logo-gradient);
+}
+
+/* ---- More of the logo's colour mix ---- */
+:root {
+    --logo-gradient-bright: linear-gradient(115deg, #f5a24a 0%, #f5c518 20%, #4ade80 42%, #22d3ee 64%, #60a5fa 84%, #a78bfa 100%);
+}
+/* Chart and histogram bars: the rainbow from bottom (blue) to top (orange). */
+.mw-logo-bar {
+    background: linear-gradient(0deg, #1e6fd9 0%, #1bb8d6 30%, #2dbe4e 60%, #f5c518 82%, #f28c28 100%);
+}
+/* A soft logo tint behind an icon. */
+.mw-logo-soft {
+    background: linear-gradient(135deg, rgba(242, 140, 40, 0.16), rgba(45, 190, 78, 0.14), rgba(27, 184, 214, 0.16), rgba(91, 63, 196, 0.16));
+}
+/* A rainbow line on the left of a box (key points, outlines). */
+.mw-logo-left {
+    position: relative;
+    overflow: hidden;
+    padding-left: 1.25rem;
+}
+.mw-logo-left::before {
+    content: '';
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 4px;
+    background: linear-gradient(180deg, #f28c28, #f5c518, #2dbe4e, #1bb8d6, #1e6fd9, #5b3fc4);
+}
+/* The active tab: a rainbow underline instead of a solid one. Drawn as its own
+   layer, so the tab's rainbow text (background-clip: text) stays visible. */
+.mw-logo-underline {
+    position: relative;
+    border-bottom-color: transparent !important;
+}
+.mw-logo-underline::after {
+    content: '';
+    position: absolute;
+    inset: auto 0 -2px 0;
+    height: 2px;
+    background: var(--logo-gradient);
+    border-radius: 9999px;
+}
+/* Coloured labels and links: rainbow text (elements with their own background keep solid text). */
+:is(p, span, a, strong, h1, h2, h3, dt, dd, label).text-primary:not([class*='bg-']) {
+    background-image: var(--logo-gradient-strong);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+    text-decoration-color: #1d4ed8;
+}
+.dark :is(p, span, a, strong, h1, h2, h3, dt, dd, label).text-primary:not([class*='bg-']) {
+    background-image: var(--logo-gradient-bright);
+    text-decoration-color: #60a5fa;
+}
+/* Icons inside those labels keep the logo stroke instead of the transparent text colour. */
+:is(p, span, a, strong, h1, h2, h3, dt, dd, label).text-primary:not([class*='bg-']) .lucide {
+    stroke: url(#mw-logo-stroke);
+    -webkit-text-fill-color: initial;
+}
+.dark :is(p, span, a, strong, h1, h2, h3, dt, dd, label).text-primary:not([class*='bg-']) .lucide {
+    stroke: url(#mw-logo-stroke-dark);
+}
+/* Row action icons of the student tables. */
+.yajra-action svg {
+    stroke: url(#mw-logo-stroke);
+}
+.dark .yajra-action svg {
+    stroke: url(#mw-logo-stroke-dark);
+}
+/* The current page of the student tables. */
+.yajra-table .dt-paging .dt-paging-button.current {
+    background-image: var(--logo-gradient-strong) !important;
+    color: #fff !important;
+    border-color: transparent !important;
+}
+
+/* ---- Login, register and the other account pages (layouts/auth/AuthSimpleLayout.vue) ---- */
+.mw-auth-glow {
+    position: absolute;
+    inset: -20%;
+    background:
+        radial-gradient(40% 35% at 15% 20%, rgba(242, 140, 40, 0.35), transparent 70%),
+        radial-gradient(35% 30% at 85% 30%, rgba(27, 184, 214, 0.3), transparent 70%),
+        radial-gradient(40% 35% at 30% 85%, rgba(45, 190, 78, 0.25), transparent 70%),
+        radial-gradient(35% 30% at 90% 85%, rgba(91, 63, 196, 0.35), transparent 70%);
+    filter: blur(20px);
+}
+.mw-auth-gradient-text {
+    background-image: var(--logo-gradient-bright);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+}
+.mw-auth-icon {
+    stroke: url(#mw-logo-stroke-dark);
+}
+.mw-auth-backdrop {
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(30% 25% at 90% 5%, rgba(27, 184, 214, 0.12), transparent 70%),
+        radial-gradient(30% 25% at 5% 95%, rgba(242, 140, 40, 0.1), transparent 70%);
+    pointer-events: none;
+}
+
+/* Required fields: a red asterisk after the label (resources/js/lib/required-labels.ts). */
+.mw-required-mark {
+    margin-left: 0.2rem;
+    color: #dc2626;
+    font-weight: 700;
+}
+.dark .mw-required-mark {
+    color: #f87171;
 }

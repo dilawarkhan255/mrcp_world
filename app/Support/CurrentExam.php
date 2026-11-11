@@ -10,7 +10,7 @@ use Illuminate\Http\Request;
 /**
  * The exam a student has chosen in the sidebar, and the exam whose content is
  * shown for it. They differ for an exam that shares another exam's question
- * bank (IMM reads MRCP 1). Sessions, bookmarks, reviews and
+ * bank (an exam with a content exam set in Exams → Uses the question bank of). Sessions, bookmarks, reviews and
  * performance are stored against the content exam, so switching between two
  * exams of one Qbank keeps the same history.
  *
@@ -70,7 +70,9 @@ final class CurrentExam
         if ($cached !== null) {
             return $cached;
         }
-        $selected = Exam::where('is_active', true)->find($request->session()->get('exam_id'))
+        // No exam chosen yet: go straight to the first active exam (no lookup of a null id).
+        $chosen = $request->session()->get('exam_id');
+        $selected = ($chosen ? Exam::where('is_active', true)->find($chosen) : null)
             ?? Exam::where('is_active', true)->orderBy('sort_order')->orderBy('id')->first();
         $content = $selected?->sharesContent() ? (Exam::find($selected->content_exam_id) ?? $selected) : $selected;
         $resolved = ['selected' => $selected, 'content' => $content];

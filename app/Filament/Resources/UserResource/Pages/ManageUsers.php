@@ -18,7 +18,7 @@ class ManageUsers extends ManageRecords
     protected function getHeaderActions(): array
     {
         return [
-            Actions\CreateAction::make()->label('Add user')->slideOver()
+            Actions\CreateAction::make()->label('Add user')
                 ->using(fn (array $data): User => UserResource::saveAccount(new User, $data))
                 // A user added by someone who may not give roles becomes a student.
                 ->after(fn (User $record) => $record->roles()->exists() ? null : $record->assignRole('student')),

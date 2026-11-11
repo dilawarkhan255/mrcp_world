@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AdminDelete from '@/components/AdminDelete.vue';
 import InputError from '@/components/InputError.vue';
 import AnswerReveal from '@/components/practice/AnswerReveal.vue';
 import AskAi from '@/components/practice/AskAi.vue';
@@ -118,15 +119,23 @@ function toggleBookmark() {
                         role="timer"
                         aria-live="off"
                         class="rounded-lg border px-4 py-2 text-lg font-semibold tabular-nums"
-                        :class="remaining <= 60 ? 'border-red-500 text-red-600' : 'bg-card'"
+                        :class="remaining <= 60 ? 'border-red-500 text-red-600' : 'mw-gradient-border'"
                     >
                         {{ clock }}
                     </div>
-                    <Button v-if="!isCompleted" variant="outline" @click="confirming = true">Finish mock</Button>
-                    <Button v-if="question.question_id" variant="outline" size="sm" :disabled="bookmark.processing" @click="toggleBookmark">{{
-                        question.is_bookmarked ? 'Bookmarked' : 'Bookmark'
-                    }}</Button>
-                    <Link href="/questions/mocks" class="rounded-lg border bg-card px-4 py-2 text-sm">Leave</Link>
+                    <Button v-if="!isCompleted" variant="outline" class="mw-gradient-border" @click="confirming = true">Finish mock</Button>
+                    <Button
+                        v-if="question.question_id"
+                        variant="outline"
+                        size="sm"
+                        class="mw-gradient-border"
+                        :disabled="bookmark.processing"
+                        @click="toggleBookmark"
+                        >{{ question.is_bookmarked ? 'Bookmarked' : 'Bookmark' }}</Button
+                    >
+                    <Link href="/questions/mocks" class="mw-gradient-border rounded-lg px-4 py-2 text-sm"
+                        ><span class="font-medium text-primary">Leave</span></Link
+                    >
                 </div>
             </div>
             <div
@@ -137,7 +146,7 @@ function toggleBookmark() {
                 <p class="text-sm">Close this mock now? Unanswered questions stay unanswered and your score is revealed.</p>
                 <div class="flex gap-2">
                     <Button size="sm" @click="finish">Close mock</Button>
-                    <Button size="sm" variant="outline" @click="confirming = false">Keep working</Button>
+                    <Button size="sm" variant="outline" class="mw-gradient-border" @click="confirming = false">Keep working</Button>
                 </div>
             </div>
             <div>
@@ -152,10 +161,10 @@ function toggleBookmark() {
                     aria-valuemin="0"
                     class="h-2 overflow-hidden rounded-full bg-muted"
                 >
-                    <div class="h-full bg-primary transition-all" :style="{ width: percentage + '%' }" />
+                    <div class="mw-logo-line h-full transition-all" :style="{ width: percentage + '%' }" />
                 </div>
             </div>
-            <section v-if="isCompleted" class="rounded-xl border bg-secondary p-5 text-secondary-foreground">
+            <section v-if="isCompleted" class="mw-logo-left mw-logo-soft rounded-xl border p-5">
                 <h2 class="font-semibold">Mock closed</h2>
                 <p class="mt-2 text-sm">
                     {{ session.correct_count }} of {{ session.total_questions }} correct ({{ scorePercentage }}%). You answered {{ answered }} of
@@ -166,7 +175,15 @@ function toggleBookmark() {
                 <form class="space-y-6 rounded-xl border bg-card p-6 md:p-8" @submit.prevent="save">
                     <div class="flex flex-wrap items-center justify-between gap-2">
                         <p class="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Question {{ question.position }}</p>
-                        <ReportMcqDialog v-if="question.question_id && isCompleted" :question-id="question.question_id" :code="question.code" />
+                        <span class="flex items-center gap-2">
+                            <ReportMcqDialog v-if="question.question_id && isCompleted" :question-id="question.question_id" :code="question.code" />
+                            <AdminDelete
+                                v-if="question.question_id"
+                                :url="'/staff/questions/' + question.question_id"
+                                label="Delete MCQ"
+                                confirm-text="Delete this MCQ? It is archived: hidden from students everywhere. Restore it or delete it for good in the admin panel (MCQs → Archived)."
+                            />
+                        </span>
                     </div>
                     <QuestionLabels :labels="question.labels" :code="isCompleted ? question.code : null" />
                     <RichText :html="question.body_html" :text="question.body" class="text-base" />
@@ -177,7 +194,7 @@ function toggleBookmark() {
                             :key="key"
                             class="flex cursor-pointer gap-3 rounded-lg border p-4"
                             :class="{
-                                'border-primary bg-secondary': form.option === key,
+                                'mw-gradient-border': form.option === key,
                                 'border-green-600': question.result?.correct_option === key,
                                 'border-red-500': question.result && !question.result.is_correct && question.selected_option === key,
                             }"
@@ -223,6 +240,14 @@ function toggleBookmark() {
                         :hide-correctness="!isCompleted"
                     />
                     <p class="text-xs text-muted-foreground">Saved answers are not scored until the mock is closed.</p>
+                    <!-- AI is shown on every mock question but stays off until the mock closes (it is an exam). -->
+                    <AskAi
+                        v-if="page.props.ai?.enabled && question.question_id"
+                        :session-id="session.id"
+                        :position="question.position"
+                        :answered="!!question.result"
+                        :locked="isCompleted ? null : 'AI help is off during the mock. It opens for every question as soon as the mock closes.'"
+                    />
                     <!-- No learning resources during an open mock: it is an exam. -->
                     <ResourcesPanel
                         v-if="isCompleted"
@@ -231,13 +256,6 @@ function toggleBookmark() {
                         locked-text="You did not answer this question in the mock."
                     />
                 </aside>
-                <AskAi
-                    v-if="isCompleted && page.props.ai?.enabled && question.question_id"
-                    :session-id="session.id"
-                    :position="question.position"
-                    :answered="!!question.result"
-                    class="lg:col-start-1"
-                />
                 <QuestionComments
                     v-if="comments && question.question_id"
                     :key="question.question_id"

@@ -57,22 +57,22 @@ const totals = computed(() =>
                     >
                         <span class="mw-logo-line absolute inset-x-0 top-0 h-1" aria-hidden="true" />
                         <span class="flex items-center gap-2">
-                            <span class="flex size-9 items-center justify-center rounded-lg bg-primary/10 text-primary"
+                            <span class="mw-logo-soft flex size-9 items-center justify-center rounded-lg"
                                 ><Layers class="size-5" aria-hidden="true"
                             /></span>
                             <span class="font-semibold group-hover:text-primary">{{ deck.subject }}</span>
                         </span>
                         <span class="mt-4 grid grid-cols-3 gap-2 text-center text-xs">
                             <span class="rounded-lg bg-muted/60 p-2"
-                                ><strong class="block text-lg tabular-nums" :class="deck.due ? 'text-[#e2761b]' : ''">{{ deck.due }}</strong
+                                ><strong class="block text-lg tabular-nums text-primary">{{ deck.due }}</strong
                                 >Due</span
                             >
                             <span class="rounded-lg bg-muted/60 p-2"
-                                ><strong class="block text-lg tabular-nums text-[#16a34a]">{{ deck.new }}</strong
+                                ><strong class="block text-lg tabular-nums text-primary">{{ deck.new }}</strong
                                 >New</span
                             >
                             <span class="rounded-lg bg-muted/60 p-2"
-                                ><strong class="block text-lg tabular-nums">{{ deck.total }}</strong
+                                ><strong class="block text-lg tabular-nums text-primary">{{ deck.total }}</strong
                                 >Cards</span
                             >
                         </span>

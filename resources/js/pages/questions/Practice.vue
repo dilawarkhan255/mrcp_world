@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AdminDelete from '@/components/AdminDelete.vue';
 import InputError from '@/components/InputError.vue';
 import AnswerReveal from '@/components/practice/AnswerReveal.vue';
 import AskAi from '@/components/practice/AskAi.vue';
@@ -105,6 +106,12 @@ function toggleBookmark() {
                         }}</Button
                     >
                     <ReportMcqDialog v-if="question.question_id" :question-id="question.question_id" :code="question.code" />
+                    <AdminDelete
+                        v-if="question.question_id"
+                        :url="'/staff/questions/' + question.question_id"
+                        label="Delete MCQ"
+                        confirm-text="Delete this MCQ? It is archived: hidden from students everywhere. Restore it or delete it for good in the admin panel (MCQs → Archived)."
+                    />
                     <Link href="/questions/sessions" class="px-2 text-sm font-semibold text-primary">Leave session</Link>
                 </div>
             </header>
@@ -121,11 +128,11 @@ function toggleBookmark() {
                     aria-valuemin="0"
                     class="h-2 overflow-hidden rounded-full bg-muted"
                 >
-                    <div class="h-full bg-primary transition-all" :style="{ width: percentage + '%' }" />
+                    <div class="mw-logo-line h-full transition-all" :style="{ width: percentage + '%' }" />
                 </div>
             </div>
 
-            <section v-if="session.completed_at" class="rounded-xl border bg-secondary p-5 text-secondary-foreground">
+            <section v-if="session.completed_at" class="mw-logo-left mw-logo-soft rounded-xl border p-5">
                 <h2 class="font-semibold">Session completed</h2>
                 <p class="mt-2 text-sm">
                     {{ session.correct_count }} of {{ session.total_questions }} correct ({{
@@ -147,7 +154,7 @@ function toggleBookmark() {
                                 :key="key"
                                 class="flex cursor-pointer gap-3 rounded-lg border p-4 transition-colors hover:border-primary/50"
                                 :class="{
-                                    'border-primary bg-secondary': form.option === key && !question.result,
+                                    'mw-gradient-border': form.option === key && !question.result,
                                     'border-green-600 bg-green-50 dark:bg-green-950/40': question.result?.correct_option === key,
                                     'border-red-500 bg-red-50 dark:bg-red-950/40':
                                         question.result && !question.result.is_correct && question.selected_option === key,
@@ -174,13 +181,6 @@ function toggleBookmark() {
                             :options="question.options"
                         />
                     </form>
-
-                    <AskAi
-                        v-if="page.props.ai?.enabled && question.question_id"
-                        :session-id="session.id"
-                        :position="question.position"
-                        :answered="!!question.result"
-                    />
 
                     <QuestionComments
                         v-if="comments && question.question_id"
@@ -211,6 +211,12 @@ function toggleBookmark() {
                 <!-- Scrolls on its own on desktop, below the 80px navbar. -->
                 <aside class="mw-sidebar-scroll space-y-4 lg:sticky lg:top-24 lg:max-h-[calc(100vh-7rem)] lg:self-start lg:overflow-y-auto lg:pr-1">
                     <QuestionGrid :items="navigator" :current="question.position" :base-url="baseUrl" />
+                    <AskAi
+                        v-if="page.props.ai?.enabled && question.question_id"
+                        :session-id="session.id"
+                        :position="question.position"
+                        :answered="!!question.result"
+                    />
                     <ResourcesPanel :key="question.position" :result="question.result" />
                     <PrivateNote
                         v-if="question.question_id"

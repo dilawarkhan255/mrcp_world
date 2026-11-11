@@ -11,7 +11,7 @@ use Inertia\Response;
 
 /**
  * The extended textbook of the selected exam: published chapters grouped by
- * subject. Chapters belong to the exam that owns the content, so IMM reads
+ * subject. Chapters belong to the exam that owns the content, so a shared-bank exam reads
  * the MRCP 1 textbook.
  */
 class TextbookController extends Controller
@@ -50,6 +50,7 @@ class TextbookController extends Controller
             'exam' => CurrentExam::props($request),
             'chapter' => [
                 'title' => $chapter->title,
+                'slug' => $chapter->slug,
                 'summary' => $chapter->summary,
                 'subject' => $chapter->category?->name,
                 'body_html' => QuestionContent::html($chapter->body),

@@ -47,14 +47,14 @@ function remove(bookmark: BookmarkItem) {
                     href="/revision/notes"
                     :aria-current="notesOnly ? 'page' : undefined"
                     class="-mb-px border-b-2 px-4 py-2 text-sm font-semibold"
-                    :class="notesOnly ? 'border-primary text-primary' : 'border-transparent text-muted-foreground'"
+                    :class="notesOnly ? 'mw-logo-underline text-primary' : 'border-transparent text-muted-foreground'"
                     >Notes ({{ stats.withNotes }})</Link
                 >
                 <Link
                     href="/revision/bookmarks"
                     :aria-current="!notesOnly ? 'page' : undefined"
                     class="-mb-px border-b-2 px-4 py-2 text-sm font-semibold"
-                    :class="!notesOnly ? 'border-primary text-primary' : 'border-transparent text-muted-foreground'"
+                    :class="!notesOnly ? 'mw-logo-underline text-primary' : 'border-transparent text-muted-foreground'"
                     >All bookmarks ({{ stats.total }})</Link
                 >
             </nav>

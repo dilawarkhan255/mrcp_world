@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Qbank;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -16,9 +17,10 @@ class DashboardTest extends TestCase
         $response->assertRedirect('/login');
     }
 
-    public function test_authenticated_users_can_visit_the_dashboard()
+    public function test_students_with_a_package_can_visit_the_dashboard()
     {
         $user = User::factory()->create();
+        grantAccess($user, Qbank::create(['name' => 'Qbank', 'slug' => 'qbank']));
         $this->actingAs($user);
 
         $response = $this->get('/dashboard');

@@ -28,7 +28,7 @@ it('lists each Qbank with its active plans', function () {
             ->component('Subscription')
             ->has('qbanks', 2)
             ->where('qbanks.0.name', 'MRCPWorld 1 Qbank')
-            ->where('qbanks.0.exams', ['MRCP 1', 'IMM'])
+            ->where('qbanks.0.exams', ['MRCP 1'])
             ->where('qbanks.0.is_selected', true)
             ->where('qbanks.0.has_access', false)
             ->has('qbanks.0.plans', 1)
@@ -37,6 +37,7 @@ it('lists each Qbank with its active plans', function () {
 });
 
 it('validates feedback type and message length', function () {
+    grantAccess($this->student, $this->exam->qbank_id);
     $this->actingAs($this->student)->withSession(['exam_id' => $this->exam->id])
         ->post('/feedback', ['type' => 'unknown', 'message' => 'short'])
         ->assertSessionHasErrors(['type', 'message']);
@@ -45,6 +46,7 @@ it('validates feedback type and message length', function () {
 });
 
 it('saves feedback against the selected exam and shows its status', function () {
+    grantAccess($this->student, $this->exam->qbank_id);
     $this->actingAs($this->student)->withSession(['exam_id' => $this->exam->id])
         ->post('/feedback', ['type' => 'content', 'message' => 'Option C of the renal question looks wrong.'])
         ->assertRedirect();
@@ -64,6 +66,7 @@ it('saves feedback against the selected exam and shows its status', function () 
 });
 
 it('shows a student only their own feedback', function () {
+    grantAccess($this->student, $this->exam->qbank_id);
     Feedback::create(['user_id' => $this->student->id, 'exam_id' => $this->exam->id, 'type' => 'bug', 'message' => 'Mine to see here.', 'status' => 'new']);
     Feedback::create(['user_id' => User::factory()->create()->id, 'exam_id' => $this->exam->id, 'type' => 'bug', 'message' => 'Somebody else.', 'status' => 'new']);
 

@@ -33,7 +33,7 @@ class PracticeController extends Controller
         return Inertia::render('questions/Bank', [
             'exam' => CurrentExam::props($request),
             'categories' => Category::where('exam_id', $exam->id)
-                ->withCount(['questions' => fn ($query) => $query->published()->whereNull('past_paper_id')->when($demoOnly, fn ($query) => $query->where('is_demo', true))])
+                ->withCount(['questions' => fn ($query) => $query->published()->when($demoOnly, fn ($query) => $query->where('is_demo', true))])
                 ->orderBy('name')->simplePaginate(20)->withQueryString(),
             'availableQuestions' => $practice->questions($exam->id, source: PracticeService::SOURCE_MAIN, demoOnly: $demoOnly)->count(),
             'demoOnly' => $demoOnly,
@@ -152,7 +152,7 @@ class PracticeController extends Controller
      */
     private function locked(Request $request, PracticeSession $session, PracticeService $practice): ?RedirectResponse
     {
-        $qbankId = Exam::whereKey($session->exam_id)->value('qbank_id');
+        $qbankId = Exam::qbankIdOf((int) $session->exam_id);
         if (app(SubscriptionService::class)->hasAccess($request->user(), $qbankId === null ? null : (int) $qbankId) || $practice->isDemoSession($session)) {
             return null;
         }

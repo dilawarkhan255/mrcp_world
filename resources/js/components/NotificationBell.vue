@@ -100,7 +100,7 @@ onBeforeUnmount(() => {
                             <span class="min-w-0 flex-1">
                                 <span class="flex items-start justify-between gap-2">
                                     <span class="text-sm font-medium">{{ item.title }}</span>
-                                    <span v-if="!item.read" class="mt-1.5 size-2 shrink-0 rounded-full bg-primary" aria-label="Unread" />
+                                    <span v-if="!item.read" class="mw-logo-line mt-1.5 size-2 shrink-0 rounded-full" aria-label="Unread" />
                                 </span>
                                 <span class="mt-0.5 line-clamp-2 block text-xs text-muted-foreground">{{ item.body }}</span>
                                 <span class="mt-1 block text-[11px] text-muted-foreground">{{ ago(item.created_at) }}</span>

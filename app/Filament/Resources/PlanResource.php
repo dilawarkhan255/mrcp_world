@@ -49,7 +49,8 @@ class PlanResource extends Resource
             CrudActions::view(),
             Tables\Actions\EditAction::make(),
             Tables\Actions\DeleteAction::make()->visible(self::deletable()),
-        ])->bulkActions([CrudActions::bulkDelete(self::deletable())])->defaultSort('sort_order');
+            CrudActions::deleteWithContents(self::deletable(), 'name'),
+        ])->bulkActions([CrudActions::bulkDelete(self::deletable()), CrudActions::bulkDeleteWithContents()])->defaultSort('sort_order');
     }
 
     /** @return \Closure(Model): bool A plan with subscriptions stays (switch it off instead). */

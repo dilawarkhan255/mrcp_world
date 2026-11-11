@@ -91,11 +91,12 @@ const tools = [
                     <Link href="/questions/performance" class="text-xs font-semibold text-primary">Full performance →</Link>
                 </div>
                 <div class="px-6 py-7">
-                    <div class="flex h-24 items-end gap-1.5">
+                    <!-- items-stretch: each column takes the full height, so the bars' percentage heights work. -->
+                    <div class="flex h-24 items-stretch gap-1.5">
                         <div v-for="point in trend" :key="point.day" class="flex flex-1 flex-col items-center gap-2">
                             <div class="flex w-full flex-1 items-end">
                                 <div
-                                    class="w-full rounded-t bg-primary/80"
+                                    class="mw-logo-bar w-full rounded-t"
                                     :style="{ height: barHeight(point.answered) }"
                                     :title="point.day + ': ' + point.answered + ' answers'"
                                 />
@@ -119,12 +120,13 @@ const tools = [
                         v-for="tool in tools"
                         :key="tool.title"
                         :href="tool.href"
-                        class="group flex flex-col rounded-xl border bg-card p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-md"
+                        class="group relative flex flex-col overflow-hidden rounded-xl border bg-card p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
                     >
+                        <span class="mw-logo-line absolute inset-x-0 top-0 h-1 opacity-70 transition group-hover:opacity-100" aria-hidden="true" />
                         <div class="mb-4 flex items-start justify-between">
-                            <span class="flex size-11 items-center justify-center rounded-xl bg-secondary text-primary"
-                                ><component :is="tool.icon" class="size-5" /></span
-                            ><ArrowUpRight class="size-4 text-muted-foreground transition group-hover:text-primary" />
+                            <span class="mw-logo-soft flex size-11 items-center justify-center rounded-xl"
+                                ><component :is="tool.icon" class="size-5 text-primary" aria-hidden="true" /></span
+                            ><ArrowUpRight class="size-4 text-primary opacity-60 transition group-hover:opacity-100" aria-hidden="true" />
                         </div>
                         <h3 class="font-semibold">{{ tool.title }}</h3>
                         <p class="mt-1.5 text-sm leading-relaxed text-muted-foreground">{{ tool.description }}</p>

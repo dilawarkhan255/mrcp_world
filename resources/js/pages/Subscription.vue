@@ -115,7 +115,7 @@ function date(value: string | null): string {
                     v-for="qbank in qbanks"
                     :key="qbank.id"
                     class="flex flex-col rounded-xl border bg-card p-6"
-                    :class="qbank.is_selected ? 'border-primary ring-1 ring-primary/30' : ''"
+                    :class="qbank.is_selected ? 'mw-gradient-border' : ''"
                 >
                     <div class="flex items-start justify-between gap-3">
                         <div>
@@ -187,6 +187,7 @@ function date(value: string | null): string {
                                 <label class="grid gap-1.5 text-sm font-medium"
                                     >Note for the team (optional)
                                     <textarea
+                                        placeholder="Anything the team should know (optional)"
                                         v-model="form.note"
                                         rows="2"
                                         maxlength="1000"

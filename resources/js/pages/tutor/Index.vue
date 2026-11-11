@@ -145,8 +145,8 @@ async function scroll() {
                 </form>
                 <p v-if="error" role="alert" class="text-sm text-destructive">{{ error }}</p>
                 <p class="text-[11px] text-muted-foreground">
-                    Written by AI (Claude). It can be wrong: check important facts against the textbook and current NICE guidance. Do not enter
-                    patient details. {{ remaining }} AI requests left today.
+                    It can be wrong: check important facts against the textbook and current NICE guidance. Do not enter patient details.
+                    {{ remaining }} AI requests left today.
                 </p>
             </template>
         </div>

@@ -18,16 +18,18 @@ defineProps<{
                 <p class="mt-2 text-sm text-muted-foreground">Chapters by subject, with tables, images and key points.</p>
             </div>
             <div v-if="!subjects.length" class="flex flex-col items-center gap-3 rounded-xl border border-dashed p-12 text-center">
-                <BookOpen class="size-8 text-muted-foreground" aria-hidden="true" />
+                <BookOpen class="size-8 text-primary" aria-hidden="true" />
                 <p class="text-sm text-muted-foreground">No chapters have been published for this exam yet.</p>
             </div>
             <section v-for="subject in subjects" :key="subject.name" class="space-y-3">
-                <h2 class="text-lg font-semibold">{{ subject.name }}</h2>
+                <h2 class="flex items-center gap-2 text-lg font-semibold">
+                    <span class="mw-logo-bar h-5 w-1 rounded-full" aria-hidden="true" />{{ subject.name }}
+                </h2>
                 <ul class="grid gap-3 sm:grid-cols-2">
                     <li v-for="chapter in subject.chapters" :key="chapter.id">
                         <Link
                             :href="'/textbooks/' + chapter.slug"
-                            class="group flex h-full items-start justify-between gap-3 rounded-xl border bg-card p-4 transition hover:border-primary/60 hover:shadow-sm"
+                            class="mw-logo-left group flex h-full items-start justify-between gap-3 rounded-xl border bg-card p-4 transition hover:-translate-y-0.5 hover:shadow-md"
                         >
                             <span>
                                 <span class="block font-medium">{{ chapter.title }}</span>
@@ -35,7 +37,10 @@ defineProps<{
                                     chapter.summary
                                 }}</span>
                             </span>
-                            <ChevronRight class="mt-0.5 size-4 shrink-0 text-muted-foreground group-hover:text-primary" aria-hidden="true" />
+                            <ChevronRight
+                                class="mt-0.5 size-4 shrink-0 text-primary opacity-60 transition group-hover:opacity-100"
+                                aria-hidden="true"
+                            />
                         </Link>
                     </li>
                 </ul>

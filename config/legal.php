@@ -17,6 +17,8 @@ return [
     'owner' => env('LEGAL_OWNER_NAME') ?: '[OWNER OR COMPANY NAME]',
     'address' => env('LEGAL_ADDRESS') ?: '[POSTAL ADDRESS]',
     'email' => env('LEGAL_CONTACT_EMAIL') ?: '[CONTACT EMAIL]',
+    // Shown on the Contact page for direct contact (empty: the phone card is hidden).
+    'phone' => env('LEGAL_PHONE', ''),
     'governing_law' => env('LEGAL_GOVERNING_LAW') ?: '[COUNTRY WHOSE LAW APPLIES]',
     'updated' => env('LEGAL_UPDATED_AT', '10 November 2026'),
 ];

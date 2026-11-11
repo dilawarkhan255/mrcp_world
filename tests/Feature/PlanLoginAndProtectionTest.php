@@ -49,6 +49,7 @@ it('points the landing pricing at sign-up with the plan, and members at the subs
 
 it('protects content for students with their own email as the watermark', function () {
     $student = User::factory()->create(['email' => 'student@example.test']);
+    grantAccess($student, $this->plan->qbank_id);
     $this->actingAs($student)->get('/dashboard')->assertInertia(fn (Assert $page) => $page
         ->where('protection.enabled', true)
         ->where('protection.watermark', 'student@example.test · '.now()->toDateString()));
@@ -61,7 +62,9 @@ it('does not protect content staff and can be switched off', function () {
         ->where('protection.enabled', false)->where('protection.watermark', null));
 
     config(['student.protection.enabled' => false]);
-    $this->actingAs(User::factory()->create())->get('/dashboard')->assertInertia(fn (Assert $page) => $page->where('protection.enabled', false));
+    $student = User::factory()->create();
+    grantAccess($student, $this->plan->qbank_id);
+    $this->actingAs($student)->get('/dashboard')->assertInertia(fn (Assert $page) => $page->where('protection.enabled', false));
 });
 
 it('protects the public demo without a watermark', function () {
@@ -77,7 +80,10 @@ it('protects every public page and mounts the protection once for the whole app'
     expect(file_get_contents(resource_path('js/app.ts')))->toContain('h(ContentProtection)')
         ->and(file_get_contents(resource_path('js/layouts/app/AppSidebarLayout.vue')))->not->toContain('ContentProtection');
     $composable = file_get_contents(resource_path('js/composables/useContentProtection.ts'));
-    expect($composable)->toContain('blockClipboard')->toContain('Insert')->toContain('dragstart')->toContain('contextmenu');
+    expect($composable)->toContain('blockClipboard')->toContain('Insert')->toContain('dragstart')->toContain('contextmenu')
+        // The screenshot shield: Print Screen, the Windows/Command key and a window that loses focus hide the page.
+        ->toContain('PrintScreen')->toContain('mw-shield')->toContain("addEventListener('blur'");
+    expect(file_get_contents(resource_path('css/app.css')))->toContain('html.content-protected.mw-shield body::before');
 });
 
 it('has a login link per exam that opens that exam after logging in', function () {
@@ -86,6 +92,7 @@ it('has a login link per exam that opens that exam after logging in', function (
         ->component('auth/Login')->where('exam', ['name' => 'MRCP 2', 'slug' => 'mrcp-part-2-written']));
 
     $student = User::factory()->create();
+    grantAccess($student, $mrcp2->qbank_id);
     $this->post('/login', ['email' => $student->email, 'password' => 'password', 'exam' => 'mrcp-part-2-written'])
         ->assertRedirect('/dashboard')->assertSessionHas('exam_id', $mrcp2->id);
     $this->get('/dashboard')->assertInertia(fn (Assert $page) => $page->where('currentExam.name', 'MRCP 2'));

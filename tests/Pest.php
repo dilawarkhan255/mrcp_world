@@ -1,10 +1,12 @@
 <?php
 
+use App\Models\Exam;
 use App\Models\Qbank;
 use App\Models\Subscription;
 use App\Models\User;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
 use Livewire\Component;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -56,6 +58,15 @@ function grantAccess(User $user, Qbank|int $qbank, int $days = 180): Subscriptio
     return Subscription::create([
         'user_id' => $user->id, 'qbank_id' => $qbank instanceof Qbank ? $qbank->id : $qbank,
         'status' => Subscription::STATUS_ACTIVE, 'starts_at' => now()->subMinute(), 'ends_at' => now()->addDays($days),
+    ]);
+}
+
+/** An exam in the owner's Qbank that reads the owner's question bank (content_exam_id). */
+function linkedExam(Exam $owner, string $name = 'Linked exam', int $sortOrder = 2): Exam
+{
+    return Exam::create([
+        'name' => $name, 'slug' => Str::slug($name), 'qbank_id' => $owner->qbank_id, 'content_exam_id' => $owner->id,
+        'sort_order' => $sortOrder, 'is_active' => true,
     ]);
 }
 

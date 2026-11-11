@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import AiAnswer from '@/components/practice/AiAnswer.vue';
+import StudyPlanAi from '@/components/practice/StudyPlanAi.vue';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { SharedData } from '@/types';
@@ -68,7 +68,7 @@ function dayLabel(date: string): string {
                     Your weakest subjects and the ones you have not practised yet, spread over the next 7 days.
                 </p>
                 <p class="mt-2 flex items-start gap-1.5 text-xs text-muted-foreground">
-                    <Info class="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
+                    <Info class="mt-0.5 size-3.5 shrink-0 text-primary" aria-hidden="true" />
                     <template v-if="aiEnabled"
                         >The plan is worked out from your own saved answers in this exam. The AI advice below is written by Claude from your subjects
                         and scores only; your name and email are never sent.</template
@@ -77,19 +77,20 @@ function dayLabel(date: string): string {
                 </p>
             </div>
 
-            <p v-if="!plan.has_data" class="flex items-start gap-2 rounded-xl border bg-secondary p-4 text-sm text-secondary-foreground">
-                <Info class="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+            <p v-if="!plan.has_data" class="mw-logo-left mw-logo-soft flex items-start gap-2 rounded-xl border p-4 text-sm">
+                <Info class="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
                 Answer at least {{ plan.min_answers }} questions in a subject to see your weak areas. Until then, the plan starts with subjects you
                 have not practised.
             </p>
 
             <div class="grid gap-5 md:grid-cols-2">
-                <section class="space-y-3 rounded-xl border bg-card p-5">
+                <section class="relative space-y-3 overflow-hidden rounded-xl border bg-card p-5">
+                    <span class="mw-logo-line absolute inset-x-0 top-0 h-1" aria-hidden="true" />
                     <h2 class="flex items-center gap-2 font-semibold">
                         <TrendingDown class="size-4 text-destructive" aria-hidden="true" />Weakest subjects
                     </h2>
                     <ol v-if="plan.weak.length" class="space-y-2">
-                        <li v-for="subject in plan.weak" :key="subject.id" class="rounded-lg border p-3">
+                        <li v-for="subject in plan.weak" :key="subject.id" class="mw-logo-left rounded-lg border p-3">
                             <div class="flex items-center justify-between gap-2">
                                 <span class="flex items-center gap-2 font-medium"
                                     ><TrendingDown class="size-4 shrink-0 text-destructive" aria-hidden="true" />{{ subject.name }}</span
@@ -101,10 +102,11 @@ function dayLabel(date: string): string {
                     </ol>
                     <p v-else class="text-sm text-muted-foreground">No subject has {{ plan.min_answers }} answers yet.</p>
                 </section>
-                <section class="space-y-3 rounded-xl border bg-card p-5">
+                <section class="relative space-y-3 overflow-hidden rounded-xl border bg-card p-5">
+                    <span class="mw-logo-line absolute inset-x-0 top-0 h-1" aria-hidden="true" />
                     <h2 class="flex items-center gap-2 font-semibold"><Target class="size-4 text-primary" aria-hidden="true" />Not practised yet</h2>
                     <ul v-if="plan.unpractised.length" class="space-y-2">
-                        <li v-for="subject in plan.unpractised.slice(0, 6)" :key="subject.id" class="rounded-lg border p-3">
+                        <li v-for="subject in plan.unpractised.slice(0, 6)" :key="subject.id" class="mw-logo-left rounded-lg border p-3">
                             <span class="flex items-center gap-2 font-medium"
                                 ><Compass class="size-4 shrink-0 text-primary" aria-hidden="true" />{{ subject.name }}</span
                             >
@@ -115,7 +117,7 @@ function dayLabel(date: string): string {
                 </section>
             </div>
 
-            <AiAnswer v-if="aiEnabled" url="/study-plan/ai" label="Get AI advice" title="AI advice on your plan" />
+            <StudyPlanAi v-if="aiEnabled" />
 
             <section class="space-y-3">
                 <h2 class="flex items-center gap-2 text-lg font-semibold">
@@ -132,10 +134,11 @@ function dayLabel(date: string): string {
                     There is nothing to plan yet: keep practising and your plan will appear here.
                 </p>
                 <ol v-else class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                    <li v-for="day in plan.days" :key="day.day" class="rounded-xl border bg-card p-4">
+                    <li v-for="day in plan.days" :key="day.day" class="relative overflow-hidden rounded-xl border bg-card p-4">
+                        <span class="mw-logo-line absolute inset-x-0 top-0 h-1" aria-hidden="true" />
                         <div class="flex items-baseline justify-between">
                             <h3 class="flex items-center gap-1.5 font-semibold">
-                                <CalendarDays class="size-4 text-muted-foreground" aria-hidden="true" />Day {{ day.day }}
+                                <CalendarDays class="size-4 text-primary" aria-hidden="true" />Day {{ day.day }}
                             </h3>
                             <span class="text-xs text-muted-foreground">{{ dayLabel(day.date) }} · {{ day.total }} questions</span>
                         </div>
@@ -155,8 +158,13 @@ function dayLabel(date: string): string {
                                         >
                                     </span>
                                 </span>
-                                <Button size="sm" variant="outline" :disabled="starting !== null" @click="start(day.day, item)"
-                                    ><Play class="size-3.5" aria-hidden="true" />{{
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    class="mw-gradient-border"
+                                    :disabled="starting !== null"
+                                    @click="start(day.day, item)"
+                                    ><Play class="size-3.5 text-primary" aria-hidden="true" />{{
                                         starting === day.day + ':' + item.category_id ? 'Starting…' : 'Start'
                                     }}</Button
                                 >

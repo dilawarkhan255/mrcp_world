@@ -11,11 +11,12 @@ return [
     | appended to "Question Bank" by App\Support\StudentNavigation.
     */
     'navigation' => [
-        ['title' => 'Dashboard', 'icon' => 'LayoutGrid', 'href' => '/dashboard', 'match' => ['/questions/sessions']],
+        ['title' => 'Dashboard', 'icon' => 'LayoutGrid', 'href' => '/dashboard'],
         ['title' => 'My Notes', 'icon' => 'Bookmark', 'href' => '/revision/notes', 'match' => ['/revision/bookmarks'], 'subscription' => true],
         ['title' => 'Search MCQs', 'icon' => 'Search', 'href' => '/questions/search', 'subscription' => true],
         ['title' => 'Question Bank', 'icon' => 'ListChecks', 'href' => null, 'subjects' => true, 'children' => [
-            ['title' => 'Main MCQ Bank', 'icon' => 'Library', 'href' => '/questions/bank'],
+            // A practice session (and the sessions list) belongs to the question bank, not the dashboard.
+            ['title' => 'Main MCQ Bank', 'icon' => 'Library', 'href' => '/questions/bank', 'match' => ['/questions/sessions']],
         ]],
         ['title' => 'Past Papers', 'icon' => 'FileClock', 'href' => '/questions/past-papers', 'subscription' => true],
         ['title' => 'Extended Textbook', 'icon' => 'BookOpen', 'href' => '/textbooks', 'match' => ['/textbooks/'], 'subscription' => true],

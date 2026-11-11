@@ -11,13 +11,7 @@ const topics = [
         <p class="text-xs font-semibold uppercase tracking-widest text-teal">Sample topic outline</p>
         <h3 class="mt-2 font-heading text-xl font-semibold text-ink">Acute coronary syndrome</h3>
         <ul class="mt-5 space-y-3">
-            <li
-                v-for="(topic, index) in topics"
-                :key="topic.title"
-                class="border-l-2 pl-4"
-                :class="index === 2 ? 'ml-6' : ''"
-                style="border-color: var(--teal)"
-            >
+            <li v-for="(topic, index) in topics" :key="topic.title" class="mw-logo-left pl-4" :class="index === 2 ? 'ml-6' : ''">
                 <p class="text-sm font-semibold text-ink">{{ topic.title }}</p>
                 <p class="mt-1 text-sm text-muted-soft">{{ topic.detail }}</p>
             </li>

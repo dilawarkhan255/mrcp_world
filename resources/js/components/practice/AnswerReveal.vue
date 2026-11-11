@@ -67,7 +67,7 @@ function seconds(value: number | null | undefined): string {
                     <span class="h-2 flex-1 overflow-hidden rounded-full bg-muted">
                         <span
                             class="block h-full rounded-full"
-                            :class="key === result.correct_option ? 'bg-green-600' : 'bg-primary/40'"
+                            :class="key === result.correct_option ? 'bg-green-600' : 'mw-logo-line opacity-50'"
                             :style="{ width: (candidates.options[key] ?? 0) + '%' }"
                         />
                     </span>
@@ -84,7 +84,7 @@ function seconds(value: number | null | undefined): string {
             <RichText :html="result.explanation_html" :text="result.explanation" class="text-sm" />
         </div>
 
-        <div v-if="result.key_points_html" class="rounded-xl border-l-4 border-primary bg-secondary/60 p-4">
+        <div v-if="result.key_points_html" class="mw-logo-left rounded-xl bg-secondary/60 p-4">
             <h3 class="mb-2 flex items-center gap-2 text-sm font-semibold"><Lightbulb class="size-4 text-primary" aria-hidden="true" />Key points</h3>
             <RichText :html="result.key_points_html" class="text-sm" />
         </div>

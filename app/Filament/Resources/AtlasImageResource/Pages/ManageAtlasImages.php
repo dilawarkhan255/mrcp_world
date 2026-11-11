@@ -22,7 +22,7 @@ class ManageAtlasImages extends ManageRecords
     protected function getHeaderActions(): array
     {
         return [
-            Actions\CreateAction::make()->label('Add image')->slideOver(),
+            Actions\CreateAction::make()->label('Add image'),
             Actions\Action::make('bulkUpload')
                 ->label('Bulk upload')
                 ->icon('heroicon-m-arrow-up-tray')

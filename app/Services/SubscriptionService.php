@@ -32,6 +32,16 @@ class SubscriptionService
             || Subscription::where('user_id', $user->id)->where('qbank_id', $qbankId)->current()->exists();
     }
 
+    /** Whether the user may use the student app at all: staff, or a running subscription to any Qbank. */
+    public function hasAnyAccess(?User $user): bool
+    {
+        if ($user === null) {
+            return false;
+        }
+
+        return $user->isStaff() || Subscription::where('user_id', $user->id)->current()->exists();
+    }
+
     /** The subscription that gives access now, if any. */
     public function current(User $user, int $qbankId): ?Subscription
     {

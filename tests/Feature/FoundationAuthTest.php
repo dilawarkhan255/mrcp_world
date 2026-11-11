@@ -32,6 +32,6 @@ it('blocks login after five failed attempts for the same email and IP', function
     $this->post('/login', ['email' => $user->email, 'password' => 'password'])->assertSessionHasErrors('email');
     $this->assertGuest();
     RateLimiter::clear($key);
-    $this->post('/login', ['email' => $user->email, 'password' => 'password'])->assertRedirect('/dashboard');
+    $this->post('/login', ['email' => $user->email, 'password' => 'password'])->assertRedirect('/subscription');
     $this->assertAuthenticatedAs($user);
 });

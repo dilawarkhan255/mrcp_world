@@ -83,7 +83,8 @@ class CategoryResource extends Resource
             CrudActions::view(),
             Tables\Actions\EditAction::make(),
             Tables\Actions\DeleteAction::make()->visible(self::deletable()),
-        ])->bulkActions([CrudActions::bulkDelete(self::deletable())]);
+            CrudActions::deleteWithContents(self::deletable(), 'name'),
+        ])->bulkActions([CrudActions::bulkDelete(self::deletable()), CrudActions::bulkDeleteWithContents()]);
     }
 
     /** @return \Closure(Model): bool A subject that still has MCQs stays. */

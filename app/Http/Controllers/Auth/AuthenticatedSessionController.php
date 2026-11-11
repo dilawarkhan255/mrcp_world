@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Models\Exam;
+use App\Services\SubscriptionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -46,7 +47,12 @@ class AuthenticatedSessionController extends Controller
             $request->session()->put('exam_id', (int) $examId);
         }
 
-        $default = $request->user()?->isStaff() ? '/admin' : route('dashboard', absolute: false);
+        // Staff go to the panel; a student without a package buys one first.
+        $default = match (true) {
+            (bool) $request->user()?->isStaff() => '/admin',
+            app(SubscriptionService::class)->hasAnyAccess($request->user()) => route('dashboard', absolute: false),
+            default => route('subscription.index', absolute: false),
+        };
         $destination = $request->session()->pull('url.intended', $default);
 
         // The admin panel is a plain HTML page, not an Inertia page. An Inertia request must make a full

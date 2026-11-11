@@ -8,10 +8,15 @@ use Anthropic\Core\Exceptions\APIStatusException;
 use Anthropic\Core\Exceptions\AuthenticationException;
 use Anthropic\Core\Exceptions\BadRequestException;
 use Anthropic\Core\Exceptions\RateLimitException;
+use App\Models\AtlasImage;
+use App\Models\Flashcard;
+use App\Models\TextbookChapter;
 use App\Models\User;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
 use RuntimeException;
 
 /**
@@ -37,12 +42,15 @@ class AiTutor
 
     /** The Knowledge Tutor: a conversation about any topic of the syllabus, not tied to one MCQ. */
     private const TUTOR_SYSTEM = <<<'TXT'
-        You are the MRCPWorld Knowledge Tutor for doctors preparing for MRCP Part 1, MRCP Part 2, IMM and FCPS Part 2 (internal medicine).
+        You are the MRCPWorld Knowledge Tutor for doctors preparing for MRCP Part 1 and MRCP Part 2 (internal medicine).
         Teach the topic the student asks about: explain mechanisms, key features, investigations and management at exam level, and point out what examiners like to test. Use short paragraphs and bullet points in Markdown. Do not use HTML or tables.
         Be accurate. Never invent a guideline title, year, number or URL. If you mention guidance, say "check the current NICE (or WHO) guidance on …" unless you are certain of the exact title; say plainly when you are not sure.
         This is exam teaching, not medical advice: do not advise about a real patient, and if the student shares patient details, ask them not to.
         Stay on medicine and exam preparation; for anything else, say briefly that you can only help with exam topics.
         TXT;
+
+    /** Characters of a textbook chapter sent with a question about it. */
+    private const MATERIAL_LIMIT = 12000;
 
     /** Turns of an earlier conversation sent with a new question (oldest are dropped). */
     public const TUTOR_HISTORY = 10;
@@ -93,15 +101,30 @@ class AiTutor
      *
      * @param  array{weak: list<array<string, mixed>>, unpractised: list<array<string, mixed>>, days: list<array<string, mixed>>, has_data: bool}  $plan
      */
-    public function studyPlanAdvice(User $user, string $examName, array $plan): string
+    public function studyPlanAdvice(User $user, string $examName, array $plan, ?string $question = null, ?string $examDate = null, ?float $hours = null): string
     {
         $weak = array_map(fn (array $subject): string => '- '.$subject['name'].': '.$subject['reason'], $plan['weak']);
         $new = array_map(fn (array $subject): string => '- '.$subject['name'].' ('.$subject['available'].' questions)', array_slice($plan['unpractised'], 0, 6));
         $days = array_map(fn (array $day): string => 'Day '.$day['day'].': '.implode(', ', array_map(fn (array $item): string => $item['name'].' ('.$item['count'].')', $day['items'])), $plan['days']);
         $prompt = "Exam: {$examName}\n\nWeakest subjects:\n".($weak ? implode("\n", $weak) : '- none yet (fewer than 10 answers per subject)')
             ."\n\nSubjects not practised yet:\n".($new ? implode("\n", $new) : '- none')
-            ."\n\nThe 7-day plan already chosen:\n".implode("\n", $days)
-            ."\n\nWrite a short, encouraging study plan (at most 180 words): what to focus on first and why, how to use each day, and one exam technique tip. Refer to the subjects by name. Do not change the plan's numbers.";
+            ."\n\nThe 7-day plan already chosen:\n".implode("\n", $days);
+        if ($examDate !== null) {
+            $daysLeft = (int) now()->startOfDay()->diffInDays(Carbon::parse($examDate)->startOfDay());
+            $prompt .= "\n\nExam date: {$examDate} ({$daysLeft} days from today).";
+        }
+        if ($hours !== null) {
+            $prompt .= "\nStudy time available: about {$hours} hours a day.";
+        }
+        if ($question !== null && $question !== '') {
+            $prompt .= "\n\nThe student asks about their revision: \"{$question}\"\n"
+                .'Answer that question for this student (at most 220 words), using their subjects, the days left and their study time where useful. '
+                .'Stay on exam revision and study planning; if the question is about something else, say briefly that you can only help with revision.';
+        } else {
+            $prompt .= "\n\nWrite a short, encouraging study plan (at most 180 words): what to focus on first and why, how to use each day"
+                .($examDate !== null ? ', how to pace the days left until the exam' : '')
+                .", and one exam technique tip. Refer to the subjects by name. Do not change the plan's numbers.";
+        }
 
         return $this->ask($user, 'plan:'.$user->id.':'.now()->toDateString().':'.md5($prompt), $prompt);
     }
@@ -151,6 +174,48 @@ The student asks: '.$normalised.'
 Answer in at most 200 words.';
 
         return $this->ask($user, $cacheKey, $prompt, now()->addDays(30));
+    }
+
+    /** The student's question about a textbook chapter, answered from the chapter itself. */
+    public function askAboutChapter(User $user, TextbookChapter $chapter, string $question): string
+    {
+        $prompt = 'Textbook chapter: '.$chapter->title
+            .($chapter->summary ? "\nSummary: ".$chapter->summary : '')
+            ."\n\nChapter text:\n".Str::limit((string) $chapter->body, self::MATERIAL_LIMIT, '…')
+            .($chapter->key_points ? "\n\nKey points:\n".Str::limit((string) $chapter->key_points, 2000, '…') : '')
+            ."\n\nThe student asks: \"{$question}\"\n"
+            .'Answer from this chapter first; add exam-relevant context only where it helps. Answer in at most 200 words.';
+
+        return $this->ask($user, 'chapter:'.$chapter->id.':'.md5((string) $chapter->updated_at.$question), $prompt, now()->addDays(30));
+    }
+
+    /**
+     * The student's question about a flashcard. Before the card is turned,
+     * Claude sees only the front, so it does not give the answer away.
+     */
+    public function askAboutFlashcard(User $user, Flashcard $card, bool $revealed, string $question): string
+    {
+        $prompt = "Flashcard front:\n".$card->front;
+        $prompt .= $revealed
+            ? "\n\nFlashcard back (the answer):\n".$card->back."\n\nThe student has seen the answer."
+            : "\n\nThe student has not turned the card yet. Do not give the answer away: help them recall it with hints, mechanisms or a memory aid.";
+        $prompt .= "\n\nThe student asks: \"{$question}\"\nAnswer in at most 150 words.";
+
+        return $this->ask($user, 'card:'.$card->id.':'.($revealed ? 'back' : 'front').':'.md5((string) $card->updated_at.$question), $prompt, now()->addDays(30));
+    }
+
+    /** The student's question about an Image Atlas picture, from its title, diagnosis and description (the picture itself is not sent). */
+    public function askAboutAtlasImage(User $user, AtlasImage $image, string $question): string
+    {
+        $prompt = 'Image Atlas picture: '.$image->title
+            .($image->diagnosis ? "\nDiagnosis: ".$image->diagnosis : '')
+            .($image->subject ? "\nSubject: ".$image->subject : '')
+            .($image->system ? "\nSystem: ".$image->system : '')
+            .($image->description ? "\nDescription: ".Str::limit((string) $image->description, 3000, '…') : '')
+            ."\n\nYou cannot see the picture; use the details above. The student asks: \"{$question}\"\n"
+            .'Explain the typical appearance, key differentials and what examiners test. Answer in at most 180 words.';
+
+        return $this->ask($user, 'atlas:'.$image->id.':'.md5((string) $image->updated_at.$question), $prompt, now()->addDays(30));
     }
 
     /** Requests left today for the student. */

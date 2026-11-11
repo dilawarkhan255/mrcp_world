@@ -35,7 +35,7 @@ function submit() {
             <form class="space-y-4 rounded-xl border bg-card p-6" @submit.prevent="submit">
                 <label class="grid gap-2 text-sm font-medium"
                     >Type
-                    <select v-model="form.type" class="rounded-md border bg-background px-3 py-2 text-sm">
+                    <select required v-model="form.type" class="rounded-md border bg-background px-3 py-2 text-sm">
                         <option v-for="type in types" :key="type.value" :value="type.value">{{ type.label }}</option>
                     </select>
                     <InputError :message="form.errors.type" />
@@ -43,6 +43,7 @@ function submit() {
                 <label class="grid gap-2 text-sm font-medium"
                     >Message
                     <textarea
+                        required
                         v-model="form.message"
                         rows="6"
                         minlength="10"

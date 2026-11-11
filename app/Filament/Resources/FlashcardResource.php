@@ -67,8 +67,8 @@ class FlashcardResource extends Resource
             Tables\Filters\SelectFilter::make('category')->label('Subject')->relationship('category', 'name')->searchable(),
             Tables\Filters\TernaryFilter::make('is_published')->label('Published'),
         ])->actions([
-            CrudActions::view(slideOver: true)->modalWidth(MaxWidth::ThreeExtraLarge),
-            Tables\Actions\EditAction::make()->slideOver()->modalWidth(MaxWidth::ThreeExtraLarge),
+            CrudActions::view()->modalWidth(MaxWidth::ThreeExtraLarge),
+            Tables\Actions\EditAction::make()->modalWidth(MaxWidth::ThreeExtraLarge),
             Tables\Actions\DeleteAction::make(),
         ])->bulkActions([
             Tables\Actions\BulkAction::make('publish')->label('Publish')->icon('heroicon-o-eye')->color('success')

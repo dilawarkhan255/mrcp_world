@@ -18,7 +18,7 @@ class ManageQuestions extends ManageRecords
     protected function getHeaderActions(): array
     {
         return [
-            Actions\CreateAction::make()->label('New MCQ')->slideOver()->modalWidth(MaxWidth::FiveExtraLarge),
+            Actions\CreateAction::make()->label('New MCQ')->modalWidth(MaxWidth::FiveExtraLarge),
             Actions\Action::make('bulkImport')->label('Bulk upload MCQs')->icon('heroicon-m-arrow-up-tray')->color('gray')->url('/admin/question-imports'),
         ];
     }

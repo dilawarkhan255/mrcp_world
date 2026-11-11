@@ -2,6 +2,8 @@ import type { LucideIcon } from 'lucide-vue-next';
 
 export interface Auth {
     canManageContent: boolean;
+    /** Admin role: small Delete buttons in the student app. */
+    isAdmin?: boolean;
     user: User;
 }
 

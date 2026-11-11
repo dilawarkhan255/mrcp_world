@@ -55,7 +55,7 @@ class AtlasImageResource extends Resource
     {
         $field = Forms\Components\FileUpload::make($name)
             ->disk(AtlasImage::DISK)->directory(AtlasImage::DIRECTORY)->visibility('public')
-            ->image()->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp', 'image/gif'])->maxSize(5120)
+            ->image()->imagePreviewHeight('160')->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp', 'image/gif'])->maxSize(5120)
             ->getUploadedFileNameForStorageUsing(fn (TemporaryUploadedFile $file): string => Str::uuid().'.'.strtolower($file->getClientOriginalExtension()));
 
         return $multiple ? $field->multiple()->maxFiles(50)->panelLayout('grid')->storeFileNamesIn('original_names') : $field;
@@ -133,7 +133,7 @@ class AtlasImageResource extends Resource
     public static function table(Table $table): Table
     {
         return $table->columns([
-            Tables\Columns\ImageColumn::make('image_path')->label('')->disk(AtlasImage::DISK)->height(48)->width(64)->extraImgAttributes(['loading' => 'lazy', 'class' => 'rounded-md object-cover']),
+            Tables\Columns\ImageColumn::make('image_path')->label('')->disk(AtlasImage::DISK)->height(48)->width(64)->extraImgAttributes(['loading' => 'lazy', 'class' => 'mw-thumb']),
             Tables\Columns\TextColumn::make('title')->searchable(query: fn (Builder $query, string $search) => $query->where(fn (Builder $query) => $query->where('title', 'like', '%'.$search.'%')->orWhere('diagnosis', 'like', '%'.$search.'%')))->weight('bold')->description(fn (AtlasImage $record): ?string => $record->diagnosis),
             Tables\Columns\TextColumn::make('subject')->badge()->color('gray')->sortable(),
             Tables\Columns\TextColumn::make('license')->formatStateUsing(fn (string $state): string => AtlasImage::LICENSES[$state] ?? $state)->color(fn (string $state): string => $state === 'unknown' ? 'danger' : 'gray'),
@@ -145,8 +145,8 @@ class AtlasImageResource extends Resource
             Tables\Filters\TernaryFilter::make('copyright_confirmed')->label('Copyright confirmed'),
             Tables\Filters\TernaryFilter::make('is_published')->label('Published'),
         ])->actions([
-            CrudActions::view(slideOver: true),
-            Tables\Actions\EditAction::make()->slideOver(),
+            CrudActions::view(),
+            Tables\Actions\EditAction::make(),
             Tables\Actions\DeleteAction::make(),
         ])->bulkActions([
             Tables\Actions\BulkAction::make('publish')->label('Publish')->icon('heroicon-o-eye')->requiresConfirmation()

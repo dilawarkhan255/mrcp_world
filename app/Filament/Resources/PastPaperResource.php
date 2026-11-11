@@ -49,7 +49,7 @@ class PastPaperResource extends Resource
             Forms\Components\Section::make('Cover image')->icon('heroicon-o-photo')->description('Shown on the student Past papers page. JPEG, PNG or WebP, up to 3 MB.')->schema([
                 Forms\Components\FileUpload::make('image_path')->label('')
                     ->disk(PastPaper::IMAGE_DISK)->directory(PastPaper::IMAGE_DIRECTORY)->visibility('public')
-                    ->image()->imageEditor()->imageEditorAspectRatios(['16:9', '4:3', '1:1'])
+                    ->image()->imagePreviewHeight('140')->imageEditor()->imageEditorAspectRatios(['16:9', '4:3', '1:1'])
                     ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])->maxSize(3072)
                     ->getUploadedFileNameForStorageUsing(fn (TemporaryUploadedFile $file): string => Str::uuid().'.'.strtolower($file->getClientOriginalExtension())),
             ]),
@@ -63,8 +63,8 @@ class PastPaperResource extends Resource
     public static function table(Table $table): Table
     {
         return $table->columns([
-            Tables\Columns\ImageColumn::make('image_path')->label('')->disk(PastPaper::IMAGE_DISK)->height(44)->width(64)
-                ->defaultImageUrl(asset('brand/mrcp-world-mark.trim.png'))->extraImgAttributes(['loading' => 'lazy', 'class' => 'rounded-md object-cover']),
+            Tables\Columns\ImageColumn::make('image_path')->label('')->disk(PastPaper::IMAGE_DISK)->height(40)->width(56)
+                ->defaultImageUrl(asset('brand/mrcp-world-mark.trim.png'))->extraImgAttributes(['loading' => 'lazy', 'class' => 'mw-thumb']),
             Tables\Columns\TextColumn::make('title')->searchable()->sortable()->weight('bold')
                 ->description(fn (PastPaper $record): ?string => trim(($record->sitting ? $record->sitting.' ' : '').$record->year) ?: null),
             Tables\Columns\TextColumn::make('exam.name')->badge()->color('gray'),
@@ -82,10 +82,11 @@ class PastPaperResource extends Resource
                 ->url(fn (PastPaper $record): string => QuestionResource::getUrl('index', ['tableFilters' => ['past_paper' => ['value' => $record->id]]])),
             Tables\Actions\Action::make('upload')->label('Add MCQs (bulk upload)')->iconButton()->icon('heroicon-o-arrow-up-tray')->color('gray')
                 ->url('/admin/question-imports'),
-            CrudActions::view(slideOver: true),
-            Tables\Actions\EditAction::make()->slideOver(),
+            CrudActions::view(),
+            Tables\Actions\EditAction::make(),
             Tables\Actions\DeleteAction::make()->visible(self::deletable()),
-        ])->bulkActions([CrudActions::bulkDelete(self::deletable())])->modifyQueryUsing(fn (Builder $query) => $query->with('exam:id,name')
+            CrudActions::deleteWithContents(self::deletable(), 'title'),
+        ])->bulkActions([CrudActions::bulkDelete(self::deletable()), CrudActions::bulkDeleteWithContents()])->modifyQueryUsing(fn (Builder $query) => $query->with('exam:id,name')
             ->withCount(['questions as published_questions_count' => fn (Builder $query) => $query->where('is_published', true)]))
             ->defaultSort('year', 'desc')->paginationPageOptions([25, 50, 100]);
     }

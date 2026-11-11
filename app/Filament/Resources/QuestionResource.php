@@ -21,6 +21,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Validation\Rules\Unique;
 
 class QuestionResource extends Resource
@@ -191,10 +192,12 @@ class QuestionResource extends Resource
             Tables\Filters\SelectFilter::make('past_paper')->label('Past paper')->relationship('pastPaper', 'title')->searchable()->optionsLimit(50),
             Tables\Filters\TernaryFilter::make('is_published')->label('Published'),
             Tables\Filters\TernaryFilter::make('needs_review')->label('Flagged for review'),
+            // Archived MCQs: show them to restore or delete them for good.
+            Tables\Filters\TrashedFilter::make()->label('Archived'),
         ])->actions([
-            CrudActions::view(slideOver: true)->modalWidth(MaxWidth::FiveExtraLarge)
+            CrudActions::view()->modalWidth(MaxWidth::FiveExtraLarge)
                 ->mutateRecordDataUsing(fn (array $data, Question $record): array => [...$data, ...$record->only(['correct_option', 'explanation', 'key_points', 'mnemonics', 'references', 'youtube_url', 'image_links', 'image_search', 'image_search_sites', 'review_note'])]),
-            Tables\Actions\EditAction::make()->slideOver()->modalWidth(MaxWidth::FiveExtraLarge)
+            Tables\Actions\EditAction::make()->modalWidth(MaxWidth::FiveExtraLarge)
                 ->mutateRecordDataUsing(fn (array $data, Question $record): array => [...$data, ...$record->only(['correct_option', 'explanation', 'key_points', 'mnemonics', 'references', 'youtube_url', 'image_links', 'image_search', 'image_search_sites', 'review_note'])]),
             Tables\Actions\Action::make('resolveReview')->iconButton()->label('Mark reviewed')->icon('heroicon-o-check')->color('success')
                 ->visible(fn (Question $record): bool => $record->needs_review)
@@ -202,6 +205,8 @@ class QuestionResource extends Resource
                 ->requiresConfirmation()->modalDescription('Confirm that the citations and facts of this MCQ were checked by a person.')
                 ->action(fn (Question $record) => $record->update(['needs_review' => false, 'review_note' => null])),
             Tables\Actions\DeleteAction::make()->label('Archive')->icon('heroicon-o-archive-box'),
+            Tables\Actions\RestoreAction::make()->iconButton()->label('Restore'),
+            CrudActions::deleteWithContents(fn (): bool => false, 'code', label: 'Delete permanently'),
         ])->bulkActions([
             // A flashcard from each selected MCQ: stem on the front, answer and key points on the back.
             Tables\Actions\BulkAction::make('makeFlashcards')->label('Make flashcards')->icon('heroicon-o-rectangle-stack')->color('warning')
@@ -216,7 +221,15 @@ class QuestionResource extends Resource
                     Notification::make()->success()->title($created.' flashcards made'.($records->count() > $created ? ', '.($records->count() - $created).' already had one' : ''))->send();
                 }),
             CrudActions::bulkDelete(label: 'Archive selected', done: 'archived'),
+            Tables\Actions\RestoreBulkAction::make()->label('Restore selected'),
+            CrudActions::bulkDeleteWithContents(label: 'Delete selected permanently'),
         ])->defaultSort('id', 'desc')->paginationPageOptions([25, 50, 100]);
+    }
+
+    /** @return Builder<Question> Archived MCQs too (the Archived filter decides what is listed). */
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()->withoutGlobalScopes([SoftDeletingScope::class]);
     }
 
     /** @return array<string, PageRegistration> */

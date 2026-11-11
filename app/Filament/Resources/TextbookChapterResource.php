@@ -102,8 +102,8 @@ class TextbookChapterResource extends Resource
             Tables\Filters\SelectFilter::make('category')->label('Subject')->relationship('category', 'name')->searchable(),
             Tables\Filters\TernaryFilter::make('is_published')->label('Published'),
         ])->actions([
-            CrudActions::view(slideOver: true)->modalWidth(MaxWidth::FiveExtraLarge),
-            Tables\Actions\EditAction::make()->slideOver()->modalWidth(MaxWidth::FiveExtraLarge),
+            CrudActions::view()->modalWidth(MaxWidth::FiveExtraLarge),
+            Tables\Actions\EditAction::make()->modalWidth(MaxWidth::FiveExtraLarge),
             Tables\Actions\DeleteAction::make(),
         ])->bulkActions([CrudActions::bulkDelete()])->modifyQueryUsing(fn (Builder $query) => $query->with(['exam:id,name', 'category:id,name']))
             ->defaultSort('sort_order')->paginationPageOptions([25, 50, 100]);

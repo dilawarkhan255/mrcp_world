@@ -17,6 +17,7 @@ import LogoGradientDefs from './components/LogoGradientDefs.vue';
 import { initializeTheme } from './composables/useAppearance';
 
 import { APP_NAME } from './lib/brand';
+import { watchRequiredLabels } from './lib/required-labels';
 
 createInertiaApp({
     title: (title) => `${title} - ${APP_NAME}`,
@@ -27,6 +28,8 @@ createInertiaApp({
             .use(plugin)
             .use(ZiggyVue)
             .mount(el);
+        // A red asterisk on the label of every required field (lib/required-labels.ts).
+        watchRequiredLabels();
     },
     progress: {
         color: '#4B5563',

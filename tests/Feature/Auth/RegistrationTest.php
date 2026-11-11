@@ -37,7 +37,7 @@ class RegistrationTest extends TestCase
             ->where('selectedPlan', $plan->id));
         // ?exam= preselects the 3-month plan of that exam's Qbank.
         $qbank2 = Qbank::where('slug', 'qbank-2')->value('id');
-        $this->get('/register?exam=fcps-part-2')->assertInertia(fn (Assert $page) => $page
+        $this->get('/register?exam=mrcp-part-2-written')->assertInertia(fn (Assert $page) => $page
             ->where('selectedPlan', Plan::where('qbank_id', $qbank2)->where('duration_days', 90)->value('id')));
     }
 

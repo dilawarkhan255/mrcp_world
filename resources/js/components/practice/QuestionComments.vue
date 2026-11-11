@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AdminDelete from '@/components/AdminDelete.vue';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
 import type { CommentThread } from '@/types/practice';
@@ -95,6 +96,12 @@ function when(value: string | null): string {
                         {{ thread.is_pinned ? 'Unpin' : 'Pin' }}
                     </button>
                 </template>
+                <AdminDelete
+                    :url="'/staff/comments/' + thread.id"
+                    icon-only
+                    label="Delete comment"
+                    confirm-text="Delete this comment and its replies for good?"
+                />
             </div>
             <form v-if="replyingTo === thread.id" class="mt-3 space-y-2" @submit.prevent="submitReply(thread.id)">
                 <textarea
@@ -125,6 +132,13 @@ function when(value: string | null): string {
                         >
                     </div>
                     <p class="mt-1 whitespace-pre-wrap text-sm leading-relaxed">{{ reply.body }}</p>
+                    <AdminDelete
+                        class="mt-1"
+                        :url="'/staff/comments/' + reply.id"
+                        icon-only
+                        label="Delete reply"
+                        confirm-text="Delete this reply for good?"
+                    />
                 </li>
             </ul>
         </article>

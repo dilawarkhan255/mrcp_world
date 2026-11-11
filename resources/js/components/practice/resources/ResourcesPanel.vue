@@ -16,9 +16,6 @@ import { computed } from 'vue';
  */
 const props = defineProps<{ result?: QuestionResult | null; lockedText?: string }>();
 
-/** Colours from the logo, one per section. */
-const ACCENTS = { textbook: '#15803d', atlas: '#f28c28', references: '#0b2a6f', images: '#1bb8d6', video: '#dc2626' };
-
 const resources = computed(() => props.result?.resources ?? null);
 const locked = computed(() => !props.result);
 const lockMessage = computed(() => props.lockedText ?? 'Answer the question to see these resources.');
@@ -43,7 +40,7 @@ const videoSearch = computed(() => resources.value?.web.youtube ?? null);
 
 <template>
     <div class="space-y-4" aria-label="Learning resources for this question" role="region">
-        <ResourceCard title="Extended Textbook" :icon="BookOpen" :accent="ACCENTS.textbook" :count="textbook.length || undefined">
+        <ResourceCard title="Extended Textbook" :icon="BookOpen" :count="textbook.length || undefined">
             <p v-if="locked" class="flex items-center gap-2 text-xs text-muted-foreground">
                 <Lock class="size-3.5" aria-hidden="true" />{{ lockMessage }}
             </p>
@@ -64,7 +61,7 @@ const videoSearch = computed(() => resources.value?.web.youtube ?? null);
             <Link href="/textbooks" class="mt-3 inline-flex text-xs font-semibold text-primary hover:underline">Open the Extended Textbook →</Link>
         </ResourceCard>
 
-        <ResourceCard title="Image Atlas" :icon="ImageIcon" :accent="ACCENTS.atlas" :count="atlas.length || undefined">
+        <ResourceCard title="Image Atlas" :icon="ImageIcon" :count="atlas.length || undefined">
             <p v-if="locked" class="flex items-center gap-2 text-xs text-muted-foreground">
                 <Lock class="size-3.5" aria-hidden="true" />{{ lockMessage }}
             </p>
@@ -89,7 +86,7 @@ const videoSearch = computed(() => resources.value?.web.youtube ?? null);
             <Link href="/image-atlas" class="mt-3 inline-flex text-xs font-semibold text-primary hover:underline">Open the Image Atlas →</Link>
         </ResourceCard>
 
-        <ResourceCard title="References & guidelines" :icon="FileText" :accent="ACCENTS.references" :count="references.length || undefined">
+        <ResourceCard title="References & guidelines" :icon="FileText" :count="references.length || undefined">
             <p v-if="locked" class="flex items-center gap-2 text-xs text-muted-foreground">
                 <Lock class="size-3.5" aria-hidden="true" />{{ lockMessage }}
             </p>
@@ -122,7 +119,7 @@ const videoSearch = computed(() => resources.value?.web.youtube ?? null);
             <p v-else class="text-xs text-muted-foreground">No reference has been added to this question yet.</p>
         </ResourceCard>
 
-        <ResourceCard title="Image links" :icon="Search" :accent="ACCENTS.images" :count="imageLinks.length || undefined">
+        <ResourceCard title="Image links" :icon="Search" :count="imageLinks.length || undefined">
             <p v-if="locked" class="flex items-center gap-2 text-xs text-muted-foreground">
                 <Lock class="size-3.5" aria-hidden="true" />{{ lockMessage }}
             </p>
@@ -132,7 +129,7 @@ const videoSearch = computed(() => resources.value?.web.youtube ?? null);
             <p v-else class="text-xs text-muted-foreground">No image links for this question yet.</p>
         </ResourceCard>
 
-        <ResourceCard title="YouTube videos" :icon="Youtube" :accent="ACCENTS.video" :count="(videoUrl ? 1 : 0) + (videoSearch ? 1 : 0) || undefined">
+        <ResourceCard title="YouTube videos" :icon="Youtube" :count="(videoUrl ? 1 : 0) + (videoSearch ? 1 : 0) || undefined">
             <p v-if="locked" class="flex items-center gap-2 text-xs text-muted-foreground">
                 <Lock class="size-3.5" aria-hidden="true" />{{ lockMessage }}
             </p>

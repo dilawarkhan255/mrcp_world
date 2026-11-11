@@ -25,7 +25,7 @@ const columns = [
                     <img src="/brand/mrcp-world-logo.trim.png" :alt="props.appName" class="h-14 w-auto object-contain" height="56" loading="lazy" />
                 </a>
                 <p class="max-w-xs text-sm text-muted-soft">
-                    MCQ banks, past paper MCQs and timed mock exams for MRCP Part 1, MRCP Part 2, IMM and FCPS Part 2.
+                    MCQ banks, past paper MCQs and timed mock exams for MRCP Part 1 and MRCP Part 2.
                 </p>
                 <div v-if="links.whatsapp || links.play_store" class="flex flex-wrap gap-3">
                     <a

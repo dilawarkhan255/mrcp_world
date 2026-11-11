@@ -24,7 +24,7 @@ class PracticeService
 
     public const MAX_DURATION_SECONDS = 10800;
 
-    /** Main MCQ bank: questions that do not belong to a past paper. */
+    /** Main MCQ bank: every published MCQ of the exam, past paper MCQs included (owner's choice, 2026-11-11). */
     public const SOURCE_MAIN = 'main';
 
     /** Past paper MCQs: questions that belong to a past paper. */
@@ -37,7 +37,6 @@ class PracticeService
             ->when($demoOnly, fn (Builder $query) => $query->where('is_demo', true))
             ->when($categoryId, fn (Builder $query) => $query->where('category_id', $categoryId))
             ->when($paperId, fn (Builder $query) => $query->where('past_paper_id', $paperId))
-            ->when($source === self::SOURCE_MAIN, fn (Builder $query) => $query->whereNull('past_paper_id'))
             ->when($source === self::SOURCE_PAST, fn (Builder $query) => $query->whereNotNull('past_paper_id'));
     }
 

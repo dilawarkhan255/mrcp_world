@@ -27,7 +27,7 @@ function toggle(value: boolean) {
 <template>
     <Dialog :open="open" @update:open="toggle">
         <DialogTrigger as-child>
-            <Button variant="ghost" size="sm" class="text-muted-foreground"><Flag class="size-4" aria-hidden="true" />Report MCQ</Button>
+            <Button variant="ghost" size="sm" class="text-muted-foreground"><Flag class="size-4 text-primary" aria-hidden="true" />Report MCQ</Button>
         </DialogTrigger>
         <DialogContent class="sm:max-w-lg">
             <DialogHeader>

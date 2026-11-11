@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
- * A product students subscribe to, for example "Qbank 1 = MRCP 1 + IMM".
+ * A product students subscribe to, for example "MRCPWorld 2 Qbank = MRCP 2".
  * Exams in a Qbank may share one question bank through Exam::content_exam_id.
  */
 class Qbank extends Model

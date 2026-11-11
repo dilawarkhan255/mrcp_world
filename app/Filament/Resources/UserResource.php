@@ -174,8 +174,8 @@ class UserResource extends Resource
             Tables\Filters\Filter::make('subscribed')->label('Has an active subscription')
                 ->query(fn (Builder $query) => $query->whereIn('id', Subscription::query()->current()->select('user_id'))),
         ])->actions([
-            CrudActions::view(slideOver: true),
-            Tables\Actions\EditAction::make()->slideOver()
+            CrudActions::view(),
+            Tables\Actions\EditAction::make()
                 ->using(fn (User $record, array $data): User => self::saveAccount($record, $data)),
             Tables\Actions\Action::make('removeFromLeaderboard')->iconButton()->label('Remove from leaderboard')->icon('heroicon-o-trophy')->color('gray')
                 ->visible(fn (User $record): bool => $record->leaderboard_opt_in)
@@ -187,7 +187,8 @@ class UserResource extends Resource
                     Notification::make()->success()->title('Removed from the leaderboard')->send();
                 }),
             Tables\Actions\DeleteAction::make()->visible(self::deletable()),
-        ])->bulkActions([CrudActions::bulkDelete(self::deletable())])
+            CrudActions::deleteWithContents(self::deletable(), 'email', fn (Model $record): bool => $record->getKey() !== auth()->id()),
+        ])->bulkActions([CrudActions::bulkDelete(self::deletable()), CrudActions::bulkDeleteWithContents(fn (Model $record): bool => $record->getKey() !== auth()->id())])
             ->modifyQueryUsing(fn (Builder $query) => $query->with('roles:id,name')
                 ->withCount(['subscriptions as active_subscriptions' => fn (Builder $query) => $query->whereIn('id', Subscription::query()->current()->select('id'))]))
             ->defaultSort('id', 'desc')->paginationPageOptions([25, 50, 100]);

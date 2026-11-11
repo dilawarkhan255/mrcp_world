@@ -29,6 +29,6 @@ class QuestionImportPolicy
 
     public function delete(User $user, QuestionImport $record): bool
     {
-        return false;
+        return $user->hasRole('admin');
     }
 }

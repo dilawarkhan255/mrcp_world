@@ -56,15 +56,17 @@ function barHeight(answered: number): string {
                     :icon="Flame"
                 />
             </div>
-            <section class="rounded-xl border bg-card p-5">
+            <section class="relative overflow-hidden rounded-xl border bg-card p-5">
+                <span class="mw-logo-line absolute inset-x-0 top-0 h-1" aria-hidden="true" />
                 <h2 class="font-semibold">Last 14 days</h2>
                 <p class="mt-1 text-xs text-muted-foreground">Answers submitted per day.</p>
-                <div class="mt-6 flex h-40 items-end gap-1.5">
+                <!-- items-stretch: each column takes the full height, so the bars' percentage heights work. -->
+                <div class="mt-6 flex h-40 items-stretch gap-1.5">
                     <div v-for="point in trend" :key="point.day" class="flex flex-1 flex-col items-center gap-2">
                         <span class="text-[10px] tabular-nums text-muted-foreground">{{ point.answered }}</span>
                         <div class="flex w-full flex-1 items-end">
                             <div
-                                class="w-full rounded-t bg-primary/80"
+                                class="mw-logo-bar w-full rounded-t"
                                 :style="{ height: barHeight(point.answered) }"
                                 :title="point.day + ': ' + point.answered + ' answers'"
                             />
@@ -73,7 +75,8 @@ function barHeight(answered: number): string {
                     </div>
                 </div>
             </section>
-            <section class="rounded-xl border bg-card p-5">
+            <section class="relative overflow-hidden rounded-xl border bg-card p-5">
+                <span class="mw-logo-line absolute inset-x-0 top-0 h-1" aria-hidden="true" />
                 <h2 class="font-semibold">Accuracy by category</h2>
                 <p class="mt-1 text-xs text-muted-foreground">Where your answers are weakest.</p>
                 <div v-if="!categories.length" class="mt-6 rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
@@ -88,16 +91,13 @@ function barHeight(answered: number): string {
                             >
                         </div>
                         <div class="mt-2 h-2 overflow-hidden rounded-full bg-muted">
-                            <div
-                                class="h-full rounded-full"
-                                :class="category.accuracy >= 70 ? 'bg-green-600' : category.accuracy >= 50 ? 'bg-amber' : 'bg-destructive'"
-                                :style="{ width: category.accuracy + '%' }"
-                            />
+                            <div class="mw-logo-line h-full rounded-full" :style="{ width: category.accuracy + '%' }" />
                         </div>
                     </li>
                 </ul>
             </section>
-            <section class="rounded-xl border bg-card p-5">
+            <section class="relative overflow-hidden rounded-xl border bg-card p-5">
+                <span class="mw-logo-line absolute inset-x-0 top-0 h-1" aria-hidden="true" />
                 <div class="flex flex-wrap items-center justify-between gap-3">
                     <h2 class="font-semibold">Most missed questions</h2>
                     <Link href="/questions/review" class="text-sm font-semibold text-primary">Open the review queue →</Link>
@@ -106,7 +106,7 @@ function barHeight(answered: number): string {
                     No wrong answers yet. Keep practising.
                 </div>
                 <ol v-else class="mt-5 space-y-3">
-                    <li v-for="question in weakest" :key="question.id" class="rounded-lg border p-4 text-sm">
+                    <li v-for="question in weakest" :key="question.id" class="mw-logo-left rounded-lg border p-4 text-sm">
                         <p class="line-clamp-2 leading-relaxed">{{ question.body }}</p>
                         <p class="mt-2 text-xs text-muted-foreground">
                             Answered wrongly {{ question.wrong_count }} time{{ question.wrong_count === 1 ? '' : 's' }}
@@ -115,7 +115,7 @@ function barHeight(answered: number): string {
                 </ol>
             </section>
             <p class="flex items-center gap-2 text-xs text-muted-foreground">
-                <CalendarDays class="size-4" /> Answers are counted for the exam selected in the sidebar.
+                <CalendarDays class="size-4 text-primary" aria-hidden="true" /> Answers are counted for the exam selected in the sidebar.
             </p>
         </div>
     </AppLayout>

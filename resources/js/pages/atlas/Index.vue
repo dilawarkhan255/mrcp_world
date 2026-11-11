@@ -1,11 +1,14 @@
 <script setup lang="ts">
+import AdminDelete from '@/components/AdminDelete.vue';
 import SimplePagination from '@/components/SimplePagination.vue';
+import AiQuickAsk from '@/components/practice/AiQuickAsk.vue';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { Head, router } from '@inertiajs/vue3';
+import type { SharedData } from '@/types';
+import { Head, router, usePage } from '@inertiajs/vue3';
 import { ExternalLink, ImageOff, Search } from 'lucide-vue-next';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 
 interface AtlasImage {
     id: number;
@@ -30,6 +33,7 @@ const props = defineProps<{
 const term = ref(props.filters.q);
 const subject = ref(props.filters.subject);
 const selected = ref<AtlasImage | null>(null);
+const aiEnabled = computed(() => !!usePage<SharedData>().props.ai?.enabled);
 
 function apply() {
     router.get(
@@ -57,7 +61,7 @@ function pick(value: string) {
                 <label class="grid min-w-[14rem] flex-1 gap-1.5 text-sm font-medium"
                     >Search
                     <span class="relative">
-                        <Search class="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+                        <Search class="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-primary" aria-hidden="true" />
                         <input
                             v-model="term"
                             type="search"
@@ -94,7 +98,7 @@ function pick(value: string) {
             </div>
 
             <div v-if="!images.data.length" class="flex flex-col items-center gap-3 rounded-xl border border-dashed p-12 text-center">
-                <ImageOff class="size-8 text-muted-foreground" aria-hidden="true" />
+                <ImageOff class="size-8 text-primary" aria-hidden="true" />
                 <p class="text-sm text-muted-foreground">
                     {{ filters.q || filters.subject ? 'No images match these filters.' : 'No images have been published yet.' }}
                 </p>
@@ -103,9 +107,10 @@ function pick(value: string) {
                 <li v-for="image in images.data" :key="image.id">
                     <button
                         type="button"
-                        class="group block w-full overflow-hidden rounded-xl border bg-card text-left transition hover:border-primary/60 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        class="group relative block w-full overflow-hidden rounded-xl border bg-card text-left transition hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                         @click="selected = image"
                     >
+                        <span class="mw-logo-line absolute inset-x-0 top-0 z-10 h-1" aria-hidden="true" />
                         <span class="block aspect-[4/3] overflow-hidden bg-muted">
                             <img
                                 :src="image.url"
@@ -117,11 +122,9 @@ function pick(value: string) {
                         <span class="block space-y-1 p-3">
                             <span class="line-clamp-1 text-sm font-semibold">{{ image.title }}</span>
                             <span v-if="image.diagnosis" class="line-clamp-1 block text-xs text-muted-foreground">{{ image.diagnosis }}</span>
-                            <span
-                                v-if="image.subject"
-                                class="inline-block rounded-full bg-secondary px-2 py-0.5 text-[10px] font-medium text-secondary-foreground"
-                                >{{ image.subject }}</span
-                            >
+                            <span v-if="image.subject" class="mw-logo-soft inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold">{{
+                                image.subject
+                            }}</span>
                         </span>
                     </button>
                 </li>
@@ -131,24 +134,44 @@ function pick(value: string) {
         </div>
 
         <Dialog :open="selected !== null" @update:open="(open: boolean) => !open && (selected = null)">
-            <DialogContent v-if="selected" class="max-h-[90vh] overflow-y-auto sm:max-w-3xl">
+            <DialogContent v-if="selected" class="max-h-[90vh] overflow-y-auto sm:max-w-3xl" :class="aiEnabled ? 'lg:max-w-5xl' : ''">
                 <DialogHeader>
                     <DialogTitle>{{ selected.title }}</DialogTitle>
                     <DialogDescription>{{ [selected.diagnosis, selected.subject, selected.system].filter(Boolean).join(' · ') }}</DialogDescription>
                 </DialogHeader>
-                <img :src="selected.url" :alt="selected.title" class="max-h-[60vh] w-full rounded-lg border bg-muted object-contain" />
-                <p v-if="selected.description" class="whitespace-pre-wrap text-sm leading-relaxed">{{ selected.description }}</p>
-                <p class="text-xs text-muted-foreground">
-                    <span v-if="selected.credit">Image: {{ selected.credit }} · </span>{{ selected.license }}
-                    <a
-                        v-if="selected.source_url"
-                        :href="selected.source_url"
-                        target="_blank"
-                        rel="noopener noreferrer nofollow"
-                        class="ml-1 inline-flex items-center gap-0.5 text-primary hover:underline"
-                        >Source<ExternalLink class="size-3" aria-hidden="true"
-                    /></a>
-                </p>
+                <div class="-mt-2 flex justify-end">
+                    <AdminDelete
+                        :url="'/staff/image-atlas/' + selected.id"
+                        @deleted="selected = null"
+                        label="Delete image"
+                        confirm-text="Delete this image and its file for good? This cannot be undone."
+                    />
+                </div>
+                <div class="grid gap-4" :class="aiEnabled ? 'lg:grid-cols-[minmax(0,1fr)_18rem]' : ''">
+                    <div class="min-w-0 space-y-4">
+                        <img :src="selected.url" :alt="selected.title" class="max-h-[60vh] w-full rounded-lg border bg-muted object-contain" />
+                        <p v-if="selected.description" class="whitespace-pre-wrap text-sm leading-relaxed">{{ selected.description }}</p>
+                        <p class="text-xs text-muted-foreground">
+                            <span v-if="selected.credit">Image: {{ selected.credit }} · </span>{{ selected.license }}
+                            <a
+                                v-if="selected.source_url"
+                                :href="selected.source_url"
+                                target="_blank"
+                                rel="noopener noreferrer nofollow"
+                                class="ml-1 inline-flex items-center gap-0.5 text-primary hover:underline"
+                                >Source<ExternalLink class="size-3" aria-hidden="true"
+                            /></a>
+                        </p>
+                    </div>
+                    <AiQuickAsk
+                        v-if="aiEnabled"
+                        class="lg:self-start"
+                        title="Ask AI about this image"
+                        :url="'/image-atlas/' + selected.id + '/ask'"
+                        :suggestions="['What are the key features?', 'What are the differentials?', 'What do examiners ask?']"
+                        :reset-key="selected.id"
+                    />
+                </div>
             </DialogContent>
         </Dialog>
     </AppLayout>

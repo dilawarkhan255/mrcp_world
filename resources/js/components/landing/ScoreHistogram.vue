@@ -37,10 +37,7 @@ function height(count: number): string {
                 <div v-for="(bucket, index) in histogram.buckets" :key="bucket.start" class="flex h-full flex-1 items-end">
                     <div
                         class="w-full rounded-t-[4px]"
-                        :class="[
-                            bucket.end <= 50 ? 'bg-amber-soft' : 'bg-teal',
-                            index === highlightedIndex ? 'outline outline-[3px] outline-ink' : '',
-                        ]"
+                        :class="['mw-logo-bar', index === highlightedIndex ? 'outline outline-[3px] outline-ink' : '']"
                         :style="{ height: height(bucket.count) }"
                     />
                 </div>

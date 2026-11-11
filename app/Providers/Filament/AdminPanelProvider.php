@@ -3,6 +3,10 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Pages\Dashboard;
+use App\Filament\Support\CrudModal;
+use App\Filament\Support\FieldPlaceholder;
+use Filament\Actions;
+use Filament\Forms;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -35,13 +39,24 @@ class AdminPanelProvider extends PanelProvider
      */
     public function boot(): void
     {
-        Tables\Actions\EditAction::configureUsing(fn (Tables\Actions\EditAction $action) => $action
-            ->iconButton()->color('primary'));
+        Tables\Actions\EditAction::configureUsing(fn (Tables\Actions\EditAction $action) => CrudModal::style($action
+            ->iconButton()->color('primary'), 'edit'));
         Tables\Actions\DeleteAction::configureUsing(fn (Tables\Actions\DeleteAction $action) => $action
             ->iconButton());
         // View: an eye icon in the logo's cyan, before Edit.
-        Tables\Actions\ViewAction::configureUsing(fn (Tables\Actions\ViewAction $action) => $action
-            ->iconButton()->color('info'));
+        Tables\Actions\ViewAction::configureUsing(fn (Tables\Actions\ViewAction $action) => CrudModal::style($action
+            ->iconButton()->color('info'), 'view'));
+        // Create, Edit and View windows: centred modals with one look (App\Filament\Support\CrudModal).
+        Actions\CreateAction::configureUsing(fn (Actions\CreateAction $action) => CrudModal::style($action, 'create'));
+        Actions\EditAction::configureUsing(fn (Actions\EditAction $action) => CrudModal::style($action, 'edit'));
+        Actions\ViewAction::configureUsing(fn (Actions\ViewAction $action) => CrudModal::style($action, 'view'));
+        Tables\Actions\CreateAction::configureUsing(fn (Tables\Actions\CreateAction $action) => CrudModal::style($action, 'create'));
+        // Every form field gets a placeholder made from its label, unless it sets its own (FieldPlaceholder).
+        // (Selects keep Filament's own "Select an option", which they set after this.)
+        foreach ([Forms\Components\TextInput::class, Forms\Components\Textarea::class, Forms\Components\MarkdownEditor::class, Forms\Components\RichEditor::class] as $field) {
+            $field::configureUsing(fn (Forms\Components\TextInput|Forms\Components\Textarea|Forms\Components\MarkdownEditor|Forms\Components\RichEditor $component) => $component
+                ->placeholder(fn (Forms\Components\Field $component): string => FieldPlaceholder::for($component)));
+        }
         Tables\Actions\Action::configureUsing(fn (Tables\Actions\Action $action) => $action
             ->tooltip(fn (): ?string => $action->isIconButton() ? $action->getLabel() : null));
     }
@@ -53,6 +68,10 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
+            // "Forgot password?" on the admin login: a reset link by email (Filament's own pages).
+            ->passwordReset()
+            // "Profile" in the user menu: change your name, email and password inside the panel.
+            ->profile(isSimple: false)
             ->brandName(fn (): string => (string) config('app.name'))
             ->brandLogo(asset('brand/mrcp-world-logo.trim.png'))
             ->darkModeBrandLogo(asset('brand/mrcp-world-logo.dark.png'))

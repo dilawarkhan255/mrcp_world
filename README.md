@@ -1,4 +1,4 @@
-# MRCPWorld — MCQ Qbank for MRCP Part 1, MRCP Part 2, IMM and FCPS Part 2
+# MRCPWorld — MCQ Qbank for MRCP Part 1 and MRCP Part 2
 
 Laravel 12 with the official Laravel Vue starter kit (Inertia 2, Vue 3, TypeScript, Tailwind CSS, shadcn-vue) and a Filament v3 admin panel. See [Content workflow](docs/CONTENT_WORKFLOW.md) for the full admin-to-student workflow.
 
@@ -85,7 +85,7 @@ These accounts are created only when APP_ENV=local. They are preverified. Existi
 | Editor | editor@example.test | LocalOnly!2026 |
 | Student | student@example.test | LocalOnly!2026 |
 
-Seeded exams: MRCP 1 and IMM (MRCPWorld 1 Qbank), MRCP 2 and FCPS Part 2 (MRCPWorld 2 Qbank). IMM and FCPS Part 2 read the MRCP 1 and MRCP 2 banks. Locally, `DemoContentSeeder` adds sample MCQs (codes `SAMPLE-…`), textbook chapters, flashcards made from the sample MCQs and demo student activity, so the app is not empty; remove them before going live.
+Seeded exams: MRCP 1 (MRCPWorld 1 Qbank) and MRCP 2 (MRCPWorld 2 Qbank), each with its own subjects and questions. Locally, `DemoContentSeeder` adds sample MCQs (codes `SAMPLE-…`), textbook chapters, flashcards made from the sample MCQs and demo student activity, so the app is not empty; remove them before going live.
 
 New registrations get the student role on the server and must verify their email before using the student app. Login locks out an email/IP after five failed attempts for 60 seconds. Panel access is any user with at least one permission; model policies enforce resource access.
 

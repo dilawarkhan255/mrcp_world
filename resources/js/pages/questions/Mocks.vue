@@ -62,7 +62,12 @@ const attemptActions = [openAction(() => '/questions/mocks/')];
                 </p>
             </div>
             <section class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                <article v-for="preset in presets" :key="preset.title" class="flex flex-col rounded-xl border bg-card p-5">
+                <article
+                    v-for="preset in presets"
+                    :key="preset.title"
+                    class="relative flex flex-col overflow-hidden rounded-xl border bg-card p-5 transition hover:-translate-y-0.5 hover:shadow-md"
+                >
+                    <span class="mw-logo-line absolute inset-x-0 top-0 h-1" aria-hidden="true" />
                     <h2 class="font-semibold">{{ preset.title }}</h2>
                     <p class="mt-2 text-sm text-muted-foreground">{{ preset.questions }} questions · {{ preset.minutes }} minutes</p>
                     <Button class="mt-4 w-full" :disabled="form.processing || !availableQuestions" @click="start(preset.questions, preset.minutes)"
@@ -70,11 +75,13 @@ const attemptActions = [openAction(() => '/questions/mocks/')];
                     >
                 </article>
             </section>
-            <section class="rounded-xl border bg-card p-5">
+            <section class="mw-logo-left rounded-xl border bg-card p-5">
                 <h2 class="font-semibold">Custom mock</h2>
                 <div class="mt-4 flex flex-wrap items-end gap-4">
                     <label class="grid gap-2 text-sm font-medium"
                         >Questions<input
+                            placeholder="e.g. 40"
+                            required
                             v-model.number="form.count"
                             type="number"
                             :min="1"
@@ -83,6 +90,8 @@ const attemptActions = [openAction(() => '/questions/mocks/')];
                     /></label>
                     <label class="grid gap-2 text-sm font-medium"
                         >Minutes<input
+                            placeholder="e.g. 90"
+                            required
                             v-model.number="form.minutes"
                             type="number"
                             :min="1"
@@ -98,7 +107,9 @@ const attemptActions = [openAction(() => '/questions/mocks/')];
                 <InputError class="mt-2" :message="form.errors.count || form.errors.minutes" />
             </section>
             <section class="space-y-3">
-                <h2 class="text-lg font-semibold">Recent attempts</h2>
+                <h2 class="flex items-center gap-2 text-lg font-semibold">
+                    <span class="mw-logo-bar h-5 w-1 rounded-full" aria-hidden="true" />Recent attempts
+                </h2>
                 <YajraTable
                     url="/questions/mocks/data"
                     :columns="attemptColumns"

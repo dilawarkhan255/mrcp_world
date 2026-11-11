@@ -17,6 +17,6 @@ class ManageTextbookChapters extends ManageRecords
     /** @return array<Actions\Action> */
     protected function getHeaderActions(): array
     {
-        return [Actions\CreateAction::make()->label('New chapter')->slideOver()->modalWidth(MaxWidth::FiveExtraLarge)];
+        return [Actions\CreateAction::make()->label('New chapter')->modalWidth(MaxWidth::FiveExtraLarge)];
     }
 }

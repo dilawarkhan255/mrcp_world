@@ -73,9 +73,57 @@
     .fi-sidebar-item-active .fi-sidebar-item-label, .fi-sidebar-item-active .fi-sidebar-item-icon,
     .dark .fi-sidebar-item-active .fi-sidebar-item-label, .dark .fi-sidebar-item-active .fi-sidebar-item-icon,
     .fi-btn.fi-btn-color-primary:not(.fi-btn-outlined), .fi-btn.fi-btn-color-primary:not(.fi-btn-outlined) * { color: #fff !important; }
+    /* Toggles that are on, primary links and the current page of a table: the logo mix too. */
+    button[role="switch"][aria-checked="true"] { background-image: var(--logo-gradient-strong) !important; }
+    .fi-link.fi-color-primary > span { background-image: var(--logo-gradient-strong); -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent; }
+    .dark .fi-link.fi-color-primary > span { background-image: linear-gradient(115deg, #f5a24a, #f5c518, #4ade80, #22d3ee, #60a5fa, #a78bfa); }
+    .fi-link.fi-color-primary svg[stroke="currentColor"] { stroke: url(#mw-logo-stroke); }
+    .fi-link.fi-color-primary svg[fill="currentColor"] { fill: url(#mw-logo-stroke); }
+    .mw-yajra .dt-paging .dt-paging-button.current { background-image: var(--logo-gradient-strong) !important; color: #fff !important; border-color: transparent !important; }
+
     /* Stat cards of the dashboard: the logo line on top, like the student cards. */
     .fi-wi-stats-overview-stat { position: relative; overflow: hidden; }
     .fi-wi-stats-overview-stat::before { content: ''; position: absolute; inset: 0 0 auto 0; height: 3px; background: var(--logo-gradient); }
+    /* Dashboard widgets: the logo line on top of every card, rainbow section and empty-state icons. */
+    .fi-wi-widget .fi-section, .fi-wi-table .fi-ta-ctn { position: relative; overflow: hidden; }
+    .fi-wi-widget .fi-section::before, .fi-wi-table .fi-ta-ctn::before { content: ''; position: absolute; inset: 0 0 auto 0; height: 3px; background: var(--logo-gradient); z-index: 1; }
+    .fi-section-header-icon, .fi-ta-empty-state-icon { stroke: url(#mw-logo-stroke); }
+    .dark .fi-section-header-icon, .dark .fi-ta-empty-state-icon { stroke: url(#mw-logo-stroke-dark); }
+    .fi-ta-empty-state-icon-ctn { background: linear-gradient(135deg, rgba(242, 140, 40, 0.16), rgba(45, 190, 78, 0.14), rgba(27, 184, 214, 0.16), rgba(91, 63, 196, 0.16)) !important; }
+    /* Publishing workflow: gradient badges, icons and borders. */
+    .mw-workflow__step { border: 1px solid transparent !important; background: linear-gradient(#fff, #fff) padding-box, var(--logo-gradient) border-box !important; }
+    .dark .mw-workflow__step { background: linear-gradient(rgb(var(--gray-900)), rgb(var(--gray-900))) padding-box, var(--logo-gradient) border-box !important; }
+    .mw-workflow__badge { background: var(--logo-gradient-strong) !important; }
+    .mw-workflow__icon, .dark .mw-workflow__icon { stroke: url(#mw-logo-stroke); }
+    .dark .mw-workflow__icon { stroke: url(#mw-logo-stroke-dark); }
+
+    /* Table thumbnails (past paper covers, atlas images): the whole picture fits, on a soft tile. */
+    .mw-thumb { object-fit: contain !important; border-radius: 0.5rem; padding: 3px; background: rgba(148, 163, 184, 0.12); border: 1px solid rgba(148, 163, 184, 0.25); }
+    .mw-yajra .fi-ta-image img { max-width: 56px; max-height: 40px; }
+    .fi-fo-file-upload .filepond--root { max-width: 32rem; }
+
+    /* Create / Edit / View windows (App\Filament\Support\CrudModal): a centred card with the logo line on top,
+       a tinted icon, a header and a button bar that stay put while the form scrolls. */
+    /* No overflow: hidden here: it would stop the sticky header and footer from sticking. */
+    .fi-modal-window { border-radius: 1rem !important; box-shadow: 0 25px 60px -20px rgba(11, 18, 36, 0.45) !important; }
+    .fi-modal-window::before { content: ''; position: absolute; inset: 0 0 auto 0; height: 4px; background: var(--logo-gradient); border-radius: 1rem 1rem 0 0; z-index: 30; }
+    .fi-modal-window .fi-modal-header.fi-sticky { border-radius: 1rem 1rem 0 0; }
+    .fi-modal-window .fi-modal-footer.fi-sticky { border-radius: 0 0 1rem 1rem; }
+    .fi-modal-window .fi-modal-header.fi-sticky { padding-top: 1.5rem; background: linear-gradient(180deg, rgba(27, 184, 214, 0.06), transparent 70%), #fff; }
+    .dark .fi-modal-window .fi-modal-header.fi-sticky { background: linear-gradient(180deg, rgba(27, 184, 214, 0.08), transparent 70%), rgb(var(--gray-900)); }
+    .fi-modal-window .fi-modal-heading { font-family: 'Sora', 'Manrope', sans-serif; font-size: 1.15rem; letter-spacing: -0.01em; }
+    .fi-modal-header .fi-modal-icon { stroke: url(#mw-logo-stroke); }
+    .dark .fi-modal-header .fi-modal-icon { stroke: url(#mw-logo-stroke-dark); }
+    .fi-modal-header .fi-modal-icon { color: inherit; }
+    .fi-modal-header :has(> .fi-modal-icon) { background: linear-gradient(135deg, rgba(242, 140, 40, 0.16), rgba(45, 190, 78, 0.14), rgba(27, 184, 214, 0.16), rgba(91, 63, 196, 0.16)) !important; }
+    .fi-modal-window .fi-modal-content { padding-top: 1.25rem; padding-bottom: 1.25rem; }
+    .fi-modal-window .fi-modal-footer.fi-sticky { background: rgba(248, 250, 252, 0.96); backdrop-filter: blur(6px); }
+    .dark .fi-modal-window .fi-modal-footer.fi-sticky { background: rgba(14, 23, 48, 0.96); }
+    .fi-modal-close-btn { border-radius: 0.5rem; }
+    .fi-modal-close-btn:hover { background: rgba(30, 111, 217, 0.08); }
+    /* Form sections inside a modal: soft cards. */
+    .fi-modal-window .fi-section { box-shadow: none; border: 1px solid rgba(148, 163, 184, 0.25); }
+
     .mw-workflow { display: grid; gap: 1rem; grid-template-columns: repeat(1, minmax(0, 1fr)); counter-reset: none; }
     @media (min-width: 768px) { .mw-workflow { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
     @media (min-width: 1280px) { .mw-workflow { grid-template-columns: repeat(4, minmax(0, 1fr)); } }

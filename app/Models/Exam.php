@@ -40,6 +40,12 @@ class Exam extends Model
         });
     }
 
+    /** The Qbank of an exam, read from the database once per request (several services ask for it). */
+    public static function qbankIdOf(int $examId): ?int
+    {
+        return once(fn (): ?int => ($id = self::whereKey($examId)->value('qbank_id')) === null ? null : (int) $id);
+    }
+
     /** True when the exam reads the subjects and questions of another exam. */
     public function sharesContent(): bool
     {

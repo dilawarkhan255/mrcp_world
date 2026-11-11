@@ -66,7 +66,10 @@ it('finds MCQs, subjects, chapters and pages from the top bar for a subscriber',
 });
 
 it('does not search locked content for a student without a subscription', function () {
-    $response = $this->actingAs($this->student)->getJson('/search/quick?q=atrial')->assertOk();
+    $this->actingAs($this->student)->getJson('/search/quick?q=atrial')->assertForbidden();
+    // Paid for the other Qbank only: the selected exam's content stays locked.
+    grantAccess($this->student, Qbank::where('slug', 'qbank-2')->firstOrFail());
+    $response = $this->getJson('/search/quick?q=atrial')->assertOk();
 
     expect($response->json('locked'))->toBeTrue()
         ->and(collect($response->json('groups'))->pluck('label')->all())->not->toContain('Questions')->not->toContain('Textbook');

@@ -30,7 +30,7 @@ beforeEach(function () {
     $this->user = User::factory()->create();
 });
 
-it('counts only main bank questions on the question bank', function () {
+it('counts every MCQ, past paper ones included, on the question bank', function () {
     subjectQuestion($this->exam, $this->category);
     subjectQuestion($this->exam, $this->category, $this->paper);
 
@@ -38,9 +38,9 @@ it('counts only main bank questions on the question bank', function () {
         ->get('/questions/bank')
         ->assertInertia(fn (Assert $page) => $page
             ->component('questions/Bank')
-            ->where('availableQuestions', 1)
+            ->where('availableQuestions', 2)
             ->where('categories.data.0.slug', 'cardiology')
-            ->where('categories.data.0.questions_count', 1)
+            ->where('categories.data.0.questions_count', 2)
         );
 });
 
@@ -59,15 +59,15 @@ it('counts past paper questions per subject on the past papers page', function (
         );
 });
 
-it('practises only main bank questions when the source is main', function () {
+it('practises the whole bank, past paper MCQs included, when the source is main', function () {
     $main = subjectQuestion($this->exam, $this->category);
-    subjectQuestion($this->exam, $this->category, $this->paper);
+    $past = subjectQuestion($this->exam, $this->category, $this->paper);
 
     $this->actingAs($this->user)->withSession(['exam_id' => $this->exam->id])
         ->post('/questions/sessions', ['count' => 10, 'source' => 'main'])
         ->assertRedirect();
 
-    expect(sessionQuestionIds(PracticeSession::latest('id')->firstOrFail()))->toBe([$main->id]);
+    expect(collect(sessionQuestionIds(PracticeSession::latest('id')->firstOrFail()))->sort()->values()->all())->toBe([$main->id, $past->id]);
 });
 
 it('practises only past paper questions when the source is past', function () {
@@ -101,7 +101,7 @@ it('shows the main bank of a subject with both counts', function () {
             ->where('subject.slug', 'cardiology')
             ->where('subject.name', 'Cardiology')
             ->where('source', 'main')
-            ->where('counts.main', 1)
+            ->where('counts.main', 2)
             ->where('counts.past', 1)
         );
 });
@@ -154,4 +154,35 @@ it('returns 404 for an unknown subject or a slug outside the allowed pattern', f
     $this->get('/questions/subjects/does-not-exist/past-papers')->assertNotFound();
     $this->get('/questions/subjects/Cardiology')->assertNotFound();
     $this->get('/questions/subjects/bad_slug')->assertNotFound();
+});
+
+it('lists the MCQs of a subject with the case and the question, but never the answer or the topic', function () {
+    subjectQuestion($this->exam, $this->category, $this->paper, [
+        'code' => 'LIST-1', 'image_search' => 'Hypertrophic cardiomyopathy',
+        'body' => "A 24-year-old man faints while running.\n\n**Investigations**\n\n| Investigation | Result |\n| --- | --- |\n| ECG | Normal |\n\nWhich of the following is the most appropriate intervention?",
+    ]);
+
+    $this->actingAs($this->user)->withSession(['exam_id' => $this->exam->id])
+        ->get('/questions/subjects/cardiology')
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('questions.data.0.code', 'LIST-1')
+            ->where('questions.data.0.excerpt', 'A 24-year-old man faints while running.')
+            ->where('questions.data.0.prompt', 'Which of the following is the most appropriate intervention?')
+            ->where('questions.data.0.paper', 'Paper 1')
+            ->missing('questions.data.0.topic')
+            ->missing('questions.data.0.correct_option')
+            ->missing('questions.data.0.explanation')
+            ->missing('questions.data.0.options'));
+});
+
+it('practises one MCQ from the subject list, and only one of this subject', function () {
+    $question = subjectQuestion($this->exam, $this->category);
+    $other = subjectQuestion($this->exam, Category::factory()->create(['exam_id' => $this->exam->id, 'slug' => 'neurology']));
+
+    $this->actingAs($this->user)->withSession(['exam_id' => $this->exam->id])
+        ->post('/questions/subjects/cardiology/practise-one', ['question_id' => $question->id])
+        ->assertRedirect();
+    expect(sessionQuestionIds(PracticeSession::latest('id')->firstOrFail()))->toBe([$question->id]);
+
+    $this->post('/questions/subjects/cardiology/practise-one', ['question_id' => $other->id])->assertNotFound();
 });

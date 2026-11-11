@@ -78,7 +78,7 @@ class QuestionResources
     /** @return array{items: list<array{id: int, title: string, diagnosis: string|null, image_url: string, url: string, credit: string|null}>, linked: bool} */
     private function atlas(Question $question, ?string $term): array
     {
-        $qbankId = Exam::whereKey($question->exam_id)->value('qbank_id');
+        $qbankId = Exam::qbankIdOf((int) $question->exam_id);
         // The same images the Image Atlas shows: shared ones and those of this Qbank.
         $visible = fn (Builder $query) => $query->whereNull('atlas_images.qbank_id')
             ->when($qbankId !== null, fn (Builder $query) => $query->orWhere('atlas_images.qbank_id', $qbankId));

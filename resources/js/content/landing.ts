@@ -6,7 +6,7 @@
  */
 export const landingCopy = {
     hero: {
-        badge: 'For MRCP Part 1, MRCP Part 2, IMM and FCPS Part 2',
+        badge: 'For MRCP Part 1 and MRCP Part 2',
         title: 'Revise smarter. Walk into the exam knowing your score.',
         body: 'Practise exam-style MCQs by subject or past paper, with detailed explanations that cite NICE and WHO guidance where it applies. Sit timed mock exams and see exactly which subjects still need work.',
         primary: 'Find your exam',
@@ -14,7 +14,7 @@ export const landingCopy = {
     },
     exams: {
         heading: 'Choose your exam',
-        intro: 'Pick the exam you are sitting. MRCP 1 and IMM share the MRCPWorld 1 Qbank; MRCP 2 and FCPS Part 2 share the MRCPWorld 2 Qbank.',
+        intro: 'Pick the exam you are sitting. MRCP 1 is in the MRCPWorld 1 Qbank and MRCP 2 in the MRCPWorld 2 Qbank.',
         demo: 'Take a demo',
         signUp: 'Sign up',
         logIn: 'Log in',
@@ -72,8 +72,8 @@ export const landingCopy = {
 export const landingSeo = {
     title: 'Revise smarter. Walk into the exam knowing your score.',
     description:
-        'MCQ question bank, past paper MCQs, timed mock exams and an extended textbook for MRCP Part 1, MRCP Part 2, IMM and FCPS Part 2. Detailed explanations with NICE and WHO references where relevant.',
+        'MCQ question bank, past paper MCQs, timed mock exams and an extended textbook for MRCP Part 1 and MRCP Part 2. Detailed explanations with NICE and WHO references where relevant.',
     ogTitle: 'MRCP World — MRCP question bank and mock exams',
-    ogDescription: 'MCQ banks, past paper MCQs and timed mock exams for MRCP Part 1, MRCP Part 2, IMM and FCPS Part 2.',
+    ogDescription: 'MCQ banks, past paper MCQs and timed mock exams for MRCP Part 1 and MRCP Part 2.',
     ogType: 'website',
 };

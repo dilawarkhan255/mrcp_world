@@ -21,7 +21,7 @@ return [
         ],
         [
             'title' => 'What the service is',
-            'body' => ':service is a revision tool for MRCP Part 1, MRCP Part 2, IMM and FCPS Part 2. It offers multiple-choice questions with explanations, past paper MCQs, timed mock exams, an extended textbook, an image atlas, performance statistics and an AI tutor. It is not affiliated with or endorsed by the Royal Colleges of Physicians, the College of Physicians and Surgeons Pakistan or any exam board.',
+            'body' => ':service is a revision tool for MRCP Part 1 and MRCP Part 2. It offers multiple-choice questions with explanations, past paper MCQs, timed mock exams, an extended textbook, an image atlas, performance statistics and an AI tutor. It is not affiliated with or endorsed by the Royal Colleges of Physicians or any exam board.',
         ],
         [
             'title' => 'Educational use only, not medical advice',
@@ -33,7 +33,7 @@ return [
         ],
         [
             'title' => 'Subscriptions and payment',
-            'body' => 'Each Qbank is sold separately: MRCPWorld 1 Qbank (MRCP 1 and IMM) and MRCPWorld 2 Qbank (MRCP 2 and FCPS Part 2). The price and the length of access are shown on the pricing page when you subscribe. You can pay by card on the secure payment page of our payment provider, Stripe, or another way we offer. Access starts when your payment is confirmed and your subscription is activated, and ends at the end of the period shown in your account. A subscription does not renew on its own; to keep access, buy a new period before it ends, and the new period is added to the time you have left. Without a subscription you can use the free demo questions only.',
+            'body' => 'Each Qbank is sold separately: MRCPWorld 1 Qbank (MRCP 1) and MRCPWorld 2 Qbank (MRCP 2). The price and the length of access are shown on the pricing page when you subscribe. You can pay by card on the secure payment page of our payment provider, Stripe, or another way we offer. Access starts when your payment is confirmed and your subscription is activated, and ends at the end of the period shown in your account. A subscription does not renew on its own; to keep access, buy a new period before it ends, and the new period is added to the time you have left. Without a subscription you can use the free demo questions only.',
         ],
         [
             'title' => 'Refunds',

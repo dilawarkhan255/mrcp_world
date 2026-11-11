@@ -49,6 +49,8 @@ function startSubject(categoryId: number) {
             </div>
             <label class="flex items-center gap-3 text-sm"
                 >Questions per session<input
+                    placeholder="e.g. 50"
+                    required
                     v-model.number="form.count"
                     type="number"
                     min="1"

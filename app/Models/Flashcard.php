@@ -10,7 +10,7 @@ use Illuminate\Validation\ValidationException;
 /**
  * A flashcard: a short prompt on the front and the answer on the back
  * (Markdown, rendered with raw HTML stripped). It belongs to the exam that
- * owns the content, so IMM students study the MRCP 1 cards.
+ * owns the content, so students of a shared-bank exam study the owner's cards.
  */
 class Flashcard extends Model
 {

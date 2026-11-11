@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AdminDelete from '@/components/AdminDelete.vue';
 import InputError from '@/components/InputError.vue';
 import SimplePagination from '@/components/SimplePagination.vue';
 import { Button } from '@/components/ui/button';
@@ -6,21 +7,22 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import type { CommentQuestion, CommentThread } from '@/types/practice';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
-defineProps<{
+const props = defineProps<{
     exam: { id: number; name: string };
     threads: { data: CommentThread[]; current_page: number; prev_page_url: string | null; next_page_url: string | null };
     questions: CommentQuestion[];
     search: string;
     canModerate: boolean;
 }>();
-const search = ref('');
+// The search box starts from the search the page was opened with.
+const searchTerm = ref(props.search ?? '');
 const commentingOn = ref<number | null>(null);
 const replyingTo = ref<number | null>(null);
 const commentForm = useForm<{ question_id: number; body: string }>({ question_id: 0, body: '' });
 const replyForm = useForm<{ body: string }>({ body: '' });
 const moderateForm = useForm<{ action: string }>({ action: '' });
 function findQuestions() {
-    router.get('/questions/comments', { q: search.value }, { preserveState: true });
+    router.get('/questions/comments', { q: searchTerm.value }, { preserveState: true });
 }
 function startComment(questionId: number) {
     commentingOn.value = commentingOn.value === questionId ? null : questionId;
@@ -70,12 +72,12 @@ function moderate(commentId: number, action: string) {
                     <label class="grid flex-1 gap-2 text-sm font-medium"
                         >Question
                         <input
-                            v-model="search"
+                            v-model="searchTerm"
                             type="search"
                             placeholder="e.g. CARD-014 or hypoxia"
                             class="rounded-md border bg-background px-3 py-2"
                     /></label>
-                    <Button type="submit" :disabled="!search.trim()">Search</Button>
+                    <Button type="submit" :disabled="!searchTerm.trim()">Search</Button>
                 </form>
                 <ul v-if="questions.length" class="mt-4 space-y-3">
                     <li v-for="question in questions" :key="question.id" class="rounded-lg border p-4">
@@ -101,7 +103,7 @@ function moderate(commentId: number, action: string) {
                         </form>
                     </li>
                 </ul>
-                <p v-else-if="search" class="mt-4 rounded-lg border border-dashed p-5 text-center text-sm text-muted-foreground">
+                <p v-else-if="props.search" class="mt-4 rounded-lg border border-dashed p-5 text-center text-sm text-muted-foreground">
                     No published question matched that search in this exam.
                 </p>
             </section>
@@ -142,6 +144,12 @@ function moderate(commentId: number, action: string) {
                                 {{ thread.is_pinned ? 'Unpin' : 'Pin' }}
                             </button>
                         </template>
+                        <AdminDelete
+                            :url="'/staff/comments/' + thread.id"
+                            icon-only
+                            label="Delete comment"
+                            confirm-text="Delete this comment and its replies for good?"
+                        />
                     </div>
                     <form v-if="replyingTo === thread.id" class="mt-3 space-y-2" @submit.prevent="submitReply(thread.id)">
                         <textarea

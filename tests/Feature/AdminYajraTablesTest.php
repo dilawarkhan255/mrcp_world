@@ -95,11 +95,12 @@ it('applies the Filament filters to the rows', function () {
 });
 
 it('only shows the row actions a record allows', function () {
+    $this->emptyExam = Exam::create(['name' => 'Empty exam', 'slug' => 'empty-exam', 'qbank_id' => $this->exam->qbank_id, 'is_active' => true]);
     $this->actingAs($this->admin);
     $rows = collect(Livewire::test(ManageExams::class)->instance()->yajraRows(yajraRequest(['length' => 50]))['data']);
 
     $withSubjects = $rows->firstWhere('_key', (string) $this->exam->id);
-    $empty = $rows->firstWhere('_key', (string) Exam::where('slug', 'imm')->value('id'));
+    $empty = $rows->firstWhere('_key', (string) $this->emptyExam->id);
     expect($withSubjects['_actions'])->not->toContain('mountTableAction(&#039;delete&#039;')
         ->and($empty['_actions'])->toContain('mountTableAction(&#039;delete&#039;');
 });

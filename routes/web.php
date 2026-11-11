@@ -1,9 +1,11 @@
 <?php
 
+use App\Http\Controllers\AdminContentDeleteController;
 use App\Http\Controllers\AiTutorController;
 use App\Http\Controllers\AtlasController;
 use App\Http\Controllers\BookmarkController;
 use App\Http\Controllers\CommentController;
+use App\Http\Controllers\ContactMessageController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExamDemoController;
 use App\Http\Controllers\FeedbackController;
@@ -41,7 +43,10 @@ Route::get('/contact', fn () => Inertia::render('Legal/Contact', [
     'email' => (string) config('legal.email'),
     'address' => (string) config('legal.address'),
     'whatsapp' => config('services.community.whatsapp_url') ?: null,
+    'phone' => (string) config('legal.phone'),
 ]))->name('contact');
+// The Contact page form (public; a few messages a minute per visitor).
+Route::post('/contact', [ContactMessageController::class, 'store'])->middleware('throttle:5,1')->name('contact.store');
 Route::get('/cookie-settings', fn () => Inertia::render('Legal/Cookies', ['appName' => (string) config('app.name'), ...LegalText::document('cookies')]))->name('cookie-settings');
 Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
 // Subscribing and paying (manual or by card on Stripe Checkout). Logged in, but
@@ -51,6 +56,10 @@ Route::middleware('auth')->group(function () {
     Route::post('/subscription', [SubscriptionController::class, 'store'])->middleware('throttle:5,1')->name('subscription.store');
     Route::post('/subscription/checkout', [SubscriptionCheckoutController::class, 'store'])->middleware('throttle:10,1')->name('subscription.checkout');
     Route::get('/subscription/checkout/success', [SubscriptionCheckoutController::class, 'success'])->name('subscription.checkout.success');
+    // The bell works before a package is bought too (it says when the subscription is active).
+    Route::get('/notifications', [NotificationController::class, 'index'])->middleware('throttle:60,1')->name('notifications.index');
+    Route::post('/notifications/read-all', [NotificationController::class, 'readAll'])->name('notifications.read-all');
+    Route::post('/notifications/{id}/read', [NotificationController::class, 'read'])->whereUuid('id')->name('notifications.read');
 });
 // Opened in a browser: say what this address is instead of a "method not allowed" error.
 Route::get('/stripe/webhook', fn () => response(
@@ -63,12 +72,14 @@ Route::get('/stripe/webhook', fn () => response(
 ))->name('stripe.webhook.info');
 // Signed by Stripe (checked in the controller); exempt from CSRF in bootstrap/app.php.
 Route::post('/stripe/webhook', StripeWebhookController::class)->middleware('throttle:120,1')->name('stripe.webhook');
-Route::middleware(['auth', 'verified'])->group(function () {
+// The student app: logged in, email verified and a package bought (staff always get in).
+Route::middleware(['auth', 'verified', 'subscribed'])->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
     Route::post('/exam', SelectExamController::class)->name('exam.select');
     Route::get('/questions/bank', [PracticeController::class, 'bank'])->name('questions.bank');
     Route::get('/questions/past-papers', [PracticeController::class, 'papers'])->middleware('qbank')->name('questions.papers');
     Route::get('/questions/subjects/{slug}', [SubjectController::class, 'main'])->where('slug', '[a-z0-9-]+')->name('subjects.main');
+    Route::post('/questions/subjects/{slug}/practise-one', [SubjectController::class, 'practiseOne'])->where('slug', '[a-z0-9-]+')->middleware('throttle:30,1')->name('subjects.practise-one');
     Route::get('/questions/subjects/{slug}/past-papers', [SubjectController::class, 'past'])->where('slug', '[a-z0-9-]+')->middleware('qbank')->name('subjects.past');
     Route::get('/questions/sessions', [PracticeController::class, 'index'])->name('practice.index');
     Route::post('/questions/sessions', [PracticeController::class, 'store'])->middleware('throttle:10,1')->name('practice.store');
@@ -104,9 +115,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/revision/bookmarks/practice', [BookmarkController::class, 'practice'])->middleware('throttle:10,1')->middleware('qbank')->name('bookmarks.practice');
     Route::get('/image-atlas', [AtlasController::class, 'index'])->middleware('throttle:60,1')->middleware('qbank')->name('atlas.index');
     Route::get('/search/quick', QuickSearchController::class)->middleware('throttle:90,1')->name('search.quick');
-    Route::get('/notifications', [NotificationController::class, 'index'])->middleware('throttle:60,1')->name('notifications.index');
-    Route::post('/notifications/read-all', [NotificationController::class, 'readAll'])->name('notifications.read-all');
-    Route::post('/notifications/{id}/read', [NotificationController::class, 'read'])->whereUuid('id')->name('notifications.read');
     Route::get('/textbooks', [TextbookController::class, 'index'])->middleware('qbank')->name('textbooks.index');
     Route::get('/textbooks/{slug}', [TextbookController::class, 'show'])->where('slug', '[a-z0-9-]+')->middleware('qbank')->name('textbooks.show');
     // Flashcards with spaced repetition, and the Knowledge Tutor (AI conversation).
@@ -114,6 +122,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/flashcards/study', [FlashcardController::class, 'study'])->middleware('qbank')->name('flashcards.study');
     Route::post('/flashcards/{flashcard}/review', [FlashcardController::class, 'review'])->middleware(['qbank', 'throttle:120,1'])->name('flashcards.review');
     Route::get('/tutor', [AiTutorController::class, 'tutor'])->middleware('qbank')->name('tutor.index');
+    // Admin-only Delete buttons in the student app.
+    Route::delete('/staff/questions/{question}', [AdminContentDeleteController::class, 'question'])->name('admin-delete.question');
+    Route::delete('/staff/comments/{comment}', [AdminContentDeleteController::class, 'comment'])->name('admin-delete.comment');
+    Route::delete('/staff/textbooks/{slug}', [AdminContentDeleteController::class, 'chapter'])->where('slug', '[a-z0-9-]+')->name('admin-delete.chapter');
+    Route::delete('/staff/flashcards/{flashcard}', [AdminContentDeleteController::class, 'flashcard'])->name('admin-delete.flashcard');
+    Route::delete('/staff/image-atlas/{image}', [AdminContentDeleteController::class, 'atlas'])->whereNumber('image')->name('admin-delete.atlas');
+    // Ask AI next to every kind of material (textbook chapter, flashcard, atlas picture).
+    Route::post('/textbooks/{slug}/ask', [AiTutorController::class, 'chapter'])->where('slug', '[a-z0-9-]+')->middleware(['qbank', 'throttle:10,1'])->name('ai.chapter');
+    Route::post('/flashcards/{flashcard}/ask', [AiTutorController::class, 'flashcard'])->middleware(['qbank', 'throttle:10,1'])->name('ai.flashcard');
+    Route::post('/image-atlas/{image}/ask', [AiTutorController::class, 'atlas'])->whereNumber('image')->middleware(['qbank', 'throttle:10,1'])->name('ai.atlas');
     Route::post('/tutor/chat', [AiTutorController::class, 'tutorChat'])->middleware(['qbank', 'throttle:10,1'])->name('tutor.chat');
     Route::get('/feedback', [FeedbackController::class, 'index'])->name('feedback.index');
     Route::post('/feedback', [FeedbackController::class, 'store'])->middleware('throttle:5,1')->name('feedback.store');

@@ -123,4 +123,10 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /*
+    | Demo MCQs, textbook and students (DemoContentSeeder): only when asked for
+    | locally with SEED_DEMO_CONTENT=true (always in tests).
+    */
+    'seed_demo_content' => (bool) env('SEED_DEMO_CONTENT', false),
+
 ];

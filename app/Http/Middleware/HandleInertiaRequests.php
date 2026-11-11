@@ -41,6 +41,8 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $request->user(),
                 'canManageContent' => $request->user()?->isStaff() ?? false,
+                // Admins see small Delete buttons in the student app.
+                'isAdmin' => (bool) $request->user()?->hasRole('admin'),
             ],
             'exams' => $exams,
             'currentExam' => $current?->only(['id', 'name', 'slug']),

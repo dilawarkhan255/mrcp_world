@@ -131,3 +131,12 @@ it('has every sidebar icon registered in the front end, so no item shows without
 
     expect(array_values(array_diff($used, $registered)))->toBe([]);
 });
+
+it('highlights the question bank, not the dashboard, during a practice session', function () {
+    $items = collect(StudentNavigation::for(null));
+    $dashboard = $items->firstWhere('title', 'Dashboard');
+    $bank = collect($items->firstWhere('title', 'Question Bank')['children'] ?? [])->firstWhere('title', 'Main MCQ Bank');
+
+    expect($dashboard['match'] ?? [])->not->toContain('/questions/sessions')
+        ->and($bank['match'] ?? [])->toContain('/questions/sessions');
+});

@@ -41,6 +41,8 @@ function start(category: number | null) {
             <div class="flex flex-wrap items-end gap-4 rounded-xl border bg-card p-5">
                 <label class="grid gap-2 text-sm font-medium"
                     >Questions per session<input
+                        placeholder="e.g. 20"
+                        required
                         v-model.number="form.count"
                         type="number"
                         min="1"

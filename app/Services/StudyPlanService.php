@@ -33,7 +33,7 @@ class StudyPlanService
         $breakdown = collect($this->performance->categoryBreakdown($userId, $examId))->keyBy('id');
         // Main bank questions per subject: the plan starts main bank sessions.
         $available = Category::where('exam_id', $examId)
-            ->withCount(['questions' => fn ($query) => $query->published()->whereNull('past_paper_id')])
+            ->withCount(['questions' => fn ($query) => $query->published()])
             ->orderBy('name')
             ->get(['id', 'name']);
         $counts = $available->pluck('questions_count', 'id');

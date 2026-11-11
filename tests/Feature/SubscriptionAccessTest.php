@@ -49,11 +49,11 @@ it('sells every Qbank for 3 months at £8 and 5 months at £12', function () {
     $this->get('/')->assertInertia(fn (Assert $page) => $page
         ->has('plans', 2)
         ->where('plans.0.qbank', 'MRCPWorld 1 Qbank')
-        ->where('plans.0.exams', ['MRCP 1', 'IMM'])
+        ->where('plans.0.exams', ['MRCP 1'])
         ->where('plans.0.plans.0.duration', '3 months')->where('plans.0.plans.0.price', '£8')
         ->where('plans.0.plans.1.duration', '5 months')->where('plans.0.plans.1.price', '£12')
         ->where('plans.1.qbank', 'MRCPWorld 2 Qbank')
-        ->where('plans.1.exams', ['MRCP 2', 'FCPS Part 2']));
+        ->where('plans.1.exams', ['MRCP 2']));
     $this->actingAs($this->student)->get('/subscription')->assertInertia(fn (Assert $page) => $page
         ->where('qbanks.0.plans.0.duration', '3 months')->where('qbanks.0.plans.1.duration', '5 months')
         ->where('qbanks.0.plans.1.price', '£12'));
@@ -68,7 +68,8 @@ it('gives 5 months of access for the £12 plan', function () {
     expect($active->ends_at->diffInDays($active->starts_at, true))->toEqualWithDelta(150, 0.01);
 });
 
-it('lets a student without a subscription practise only the demo questions', function () {
+it('lets a student who paid for the other Qbank practise only the demo questions of this one', function () {
+    grantAccess($this->student, $this->qbank2);
     $this->actingAs($this->student);
     $this->get('/questions/bank')->assertInertia(fn (Assert $page) => $page
         ->where('demoOnly', true)->where('availableQuestions', 2)->where('categories.data.0.questions_count', 2)
@@ -116,18 +117,18 @@ it('extends a running subscription instead of losing the remaining days', functi
         ->and($renewed->ends_at->equalTo($running->ends_at->copy()->addDays(90)))->toBeTrue();
 });
 
-it('keeps each Qbank separate and maps IMM to the Qbank 1 subscription', function () {
+it('keeps each Qbank separate and maps a linked exam to its Qbank subscription', function () {
     grantAccess($this->student, $this->qbank2);
     $service = app(SubscriptionService::class);
     expect($service->hasAccess($this->student, $this->qbank1->id))->toBeFalse()
         ->and($service->hasAccess($this->student, $this->qbank2->id))->toBeTrue();
 
-    $imm = Exam::where('slug', 'imm')->firstOrFail();
+    $imm = linkedExam($this->mrcp1);
     $other = User::factory()->create();
     grantAccess($other, $this->qbank1);
     $this->actingAs($other)->post('/exam', ['exam_id' => $imm->id]);
     $this->get('/questions/mocks')->assertOk();
-    $this->get('/questions/bank')->assertInertia(fn (Assert $page) => $page->where('availableQuestions', 5)->where('exam.name', 'IMM'));
+    $this->get('/questions/bank')->assertInertia(fn (Assert $page) => $page->where('availableQuestions', 5)->where('exam.name', 'Linked exam'));
 });
 
 it('ignores cancelled and future subscriptions, and always lets content staff in', function () {
@@ -147,6 +148,7 @@ it('rejects a request for a plan of another Qbank or a plan that is off sale', f
 });
 
 it('marks locked sidebar items and hides the discussion of demo questions from non-subscribers', function () {
+    grantAccess($this->student, $this->qbank2);
     $this->actingAs($this->student)->get('/dashboard')->assertInertia(fn (Assert $page) => $page
         ->where('navigation', fn ($items) => collect($items)->firstWhere('title', 'Mock Tests')['locked'] === true));
     $this->post('/questions/sessions', ['count' => 1]);
@@ -179,7 +181,7 @@ it('lets an admin activate, extend and deactivate from the panel, and hides bill
     $this->get('/admin/plans')->assertForbidden();
 });
 
-it('shows published textbook chapters by subject to subscribers, with IMM reading the MRCP 1 textbook', function () {
+it('shows published textbook chapters by subject to subscribers, with a linked exam reading the MRCP 1 textbook', function () {
     TextbookChapter::create(['exam_id' => $this->mrcp1->id, 'category_id' => $this->category->id, 'title' => 'Heart failure', 'body' => "## Diagnosis\n\n| Test | Use |\n| --- | --- |\n| NT-proBNP | First line |", 'key_points' => '- Start ACE inhibitor', 'sort_order' => 1, 'is_published' => true]);
     TextbookChapter::create(['exam_id' => $this->mrcp1->id, 'category_id' => $this->category->id, 'title' => 'Atrial fibrillation', 'body' => 'Rate control', 'sort_order' => 2, 'is_published' => true]);
     TextbookChapter::create(['exam_id' => $this->mrcp1->id, 'title' => 'Draft chapter', 'body' => 'Not yet', 'is_published' => false]);
@@ -187,7 +189,7 @@ it('shows published textbook chapters by subject to subscribers, with IMM readin
 
     $this->actingAs($this->student)->get('/textbooks')->assertRedirect('/subscription');
     grantAccess($this->student, $this->qbank1);
-    $this->post('/exam', ['exam_id' => Exam::where('slug', 'imm')->value('id')]);
+    $this->post('/exam', ['exam_id' => linkedExam($this->mrcp1)->id]);
     $this->get('/textbooks')->assertInertia(fn (Assert $page) => $page
         ->component('textbooks/Index')
         ->has('subjects', 1)
@@ -213,7 +215,7 @@ it('lets editors write textbook chapters but not on a shared-content exam', func
     ])->assertHasNoActionErrors();
     expect(TextbookChapter::where('slug', 'hypertension')->exists())->toBeTrue();
 
-    expect(fn () => TextbookChapter::create(['exam_id' => Exam::where('slug', 'imm')->value('id'), 'title' => 'X', 'body' => 'Y']))->toThrow(ValidationException::class);
+    expect(fn () => TextbookChapter::create(['exam_id' => linkedExam($this->mrcp1)->id, 'title' => 'X', 'body' => 'Y']))->toThrow(ValidationException::class);
 });
 
 it('switches the old 6-month plans off and keeps them for requests that wait for activation', function () {

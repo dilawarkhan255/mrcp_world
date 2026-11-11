@@ -36,10 +36,17 @@ class QuestionsByExamChart extends ChartWidget
             $drafts[] = (int) ($row->total ?? 0) - (int) ($row->published ?? 0);
         }
 
+        // One colour of the logo's "M" per exam, in turn.
+        $logo = ['#F28C28', '#2DBE4E', '#1BB8D6', '#1E6FD9', '#5B3FC4', '#F5C518'];
+        $colours = [];
+        foreach (array_keys($published) as $index) {
+            $colours[] = $logo[$index % count($logo)];
+        }
+
         return [
             'datasets' => [
-                ['label' => 'Published', 'data' => $published, 'backgroundColor' => '#0B2A6F', 'borderRadius' => 6],
-                ['label' => 'Drafts', 'data' => $drafts, 'backgroundColor' => '#F28C28', 'borderRadius' => 6],
+                ['label' => 'Published', 'data' => $published, 'backgroundColor' => $colours, 'borderRadius' => 6],
+                ['label' => 'Drafts', 'data' => $drafts, 'backgroundColor' => 'rgba(148, 163, 184, 0.55)', 'borderRadius' => 6],
             ],
             'labels' => $exams->values()->all(),
         ];

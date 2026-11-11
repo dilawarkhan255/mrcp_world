@@ -18,7 +18,7 @@ use Livewire\Livewire;
 beforeEach(function () {
     $this->seed([ExamSeeder::class, RoleSeeder::class]);
     $this->mrcp1 = Exam::where('slug', 'mrcp-part-1')->firstOrFail();
-    $this->imm = Exam::where('slug', 'imm')->firstOrFail();
+    $this->imm = linkedExam($this->mrcp1);
     $this->category = Category::create(['exam_id' => $this->mrcp1->id, 'name' => 'Cardiology', 'slug' => 'cardiology']);
     foreach (range(1, 3) as $index) {
         Question::create([
@@ -28,7 +28,7 @@ beforeEach(function () {
     }
 });
 
-it('shows the MRCP 1 bank to a student who selects IMM, under the IMM name', function () {
+it('shows the MRCP 1 bank to a student who selects a linked exam, under its own name', function () {
     $student = User::factory()->create();
     grantAccess($student, $this->imm->qbank_id);
     $this->actingAs($student);
@@ -36,14 +36,14 @@ it('shows the MRCP 1 bank to a student who selects IMM, under the IMM name', fun
 
     $this->get('/questions/bank')->assertInertia(fn (Assert $page) => $page
         ->component('questions/Bank')
-        ->where('exam.name', 'IMM')
+        ->where('exam.name', 'Linked exam')
         ->where('exam.id', $this->mrcp1->id)
         ->where('availableQuestions', 3)
         ->where('currentExam.id', $this->imm->id));
     $this->get('/questions/subjects/cardiology')->assertOk();
 });
 
-it('stores a session started from IMM against the shared MRCP 1 bank', function () {
+it('stores a session started from a linked exam against the shared MRCP 1 bank', function () {
     $user = User::factory()->create();
     grantAccess($user, $this->imm->qbank_id);
     $this->actingAs($user)->post('/exam', ['exam_id' => $this->imm->id]);
@@ -55,7 +55,7 @@ it('stores a session started from IMM against the shared MRCP 1 bank', function 
 it('counts the shared bank on the landing page for an exam without its own content', function () {
     $this->get('/')->assertInertia(fn (Assert $page) => $page
         ->where('exams.0.name', 'MRCP 1')->where('exams.0.question_count', 3)
-        ->where('exams.1.name', 'IMM')->where('exams.1.question_count', 3));
+        ->where('exams.1.name', 'Linked exam')->where('exams.1.question_count', 3));
 });
 
 it('refuses subjects and papers on an exam that shares another bank', function () {
@@ -86,7 +86,7 @@ it('lets content staff manage Qbanks and exams from the admin panel', function (
     $this->get('/admin/qbanks')->assertOk();
     $this->get('/admin/exams')->assertOk();
     expect(yajraHtml(ManageQbanks::class))->toContain('MRCPWorld 1 Qbank')
-        ->and(yajraHtml(ManageExams::class))->toContain('FCPS Part 2');
+        ->and(yajraHtml(ManageExams::class))->toContain('MRCP 2');
     Livewire::test(ManageQbanks::class)
         ->callAction('create', data: ['name' => 'PACES', 'slug' => 'paces', 'sort_order' => 3, 'is_active' => false])
         ->assertHasNoActionErrors();

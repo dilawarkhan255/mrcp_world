@@ -16,6 +16,6 @@ class ManageFlashcards extends ManageRecords
 
     protected function getHeaderActions(): array
     {
-        return [Actions\CreateAction::make()->label('New flashcard')->icon('heroicon-o-plus')->slideOver()->modalWidth(MaxWidth::ThreeExtraLarge)];
+        return [Actions\CreateAction::make()->label('New flashcard')->icon('heroicon-o-plus')->modalWidth(MaxWidth::ThreeExtraLarge)];
     }
 }

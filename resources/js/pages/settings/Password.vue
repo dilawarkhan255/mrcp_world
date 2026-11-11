@@ -69,6 +69,7 @@ const updatePassword = () => {
                     <div class="grid gap-2">
                         <Label for="current_password">Current Password</Label>
                         <Input
+                            required
                             id="current_password"
                             ref="currentPasswordInput"
                             v-model="form.current_password"
@@ -83,6 +84,7 @@ const updatePassword = () => {
                     <div class="grid gap-2">
                         <Label for="password">New password</Label>
                         <Input
+                            required
                             id="password"
                             ref="passwordInput"
                             v-model="form.password"
@@ -97,6 +99,7 @@ const updatePassword = () => {
                     <div class="grid gap-2">
                         <Label for="password_confirmation">Confirm password</Label>
                         <Input
+                            required
                             id="password_confirmation"
                             v-model="form.password_confirmation"
                             type="password"

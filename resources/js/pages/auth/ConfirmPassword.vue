@@ -29,6 +29,7 @@ const submit = () => {
                 <div class="grid gap-2">
                     <Label htmlFor="password">Password</Label>
                     <Input
+                        placeholder="Your password"
                         id="password"
                         type="password"
                         class="mt-1 block w-full"
