@@ -25,8 +25,8 @@ function topLevelTitles(array $navigation): array
 
 it('lists the sidebar items in the agreed order', function () {
     expect(topLevelTitles(StudentNavigation::for(null)))->toBe([
-        'Dashboard', 'My Notes', 'Search MCQs', 'Question Bank', 'Past Papers', 'Extended Textbook', 'Image Atlas', 'Flashcards', 'Review Questions',
-        'More', 'Mock Tests', 'Performance', 'Leaderboard', 'AI Study Plan', 'Knowledge Tutor', 'Subscription', 'Feedback',
+        'Dashboard', 'My Notes', 'Search MCQs', 'Question Bank', 'Past Papers', 'Extended Textbook', 'Image Atlas', 'Knowledge Tutor', 'Review Questions',
+        'More', 'Mock Tests', 'Performance', 'Leaderboard', 'AI Study Plan', 'Subscription', 'Feedback',
     ]);
     expect(collect(StudentNavigation::for(null))->firstWhere('title', 'More'))->toMatchArray(['section' => 'More']);
 });
@@ -70,7 +70,7 @@ it('shares the navigation with signed-in students', function () {
     $this->actingAs(User::factory()->create());
     $exam = Exam::factory()->create(['is_active' => true]);
     $this->withSession(['exam_id' => $exam->id])->get('/dashboard')
-        ->assertInertia(fn (Assert $page) => $page->has('navigation', 17)->where('navigation.0.title', 'Dashboard'));
+        ->assertInertia(fn (Assert $page) => $page->has('navigation', 16)->where('navigation.0.title', 'Dashboard'));
 });
 
 it('shares no navigation with guests', function () {

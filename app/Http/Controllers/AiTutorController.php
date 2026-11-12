@@ -15,8 +15,6 @@ use App\Support\QuestionContent;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
-use Inertia\Response;
 
 /**
  * JSON endpoints of the AI tutor. Both need a subscription (route middleware)
@@ -111,44 +109,6 @@ class AiTutorController extends Controller
     private function question(Request $request): string
     {
         return trim((string) $request->validate(['question' => ['required', 'string', 'min:3', 'max:400']])['question']);
-    }
-
-    /** The Knowledge Tutor page: a conversation about any syllabus topic. */
-    public function tutor(Request $request, AiTutor $tutor): Response
-    {
-        /** @var User $user */
-        $user = $request->user();
-
-        return Inertia::render('tutor/Index', [
-            'exam' => CurrentExam::props($request),
-            'enabled' => $tutor->enabled(),
-            'remaining' => $tutor->enabled() ? $tutor->remaining($user) : 0,
-            'historyLimit' => AiTutor::TUTOR_HISTORY,
-        ]);
-    }
-
-    public function tutorChat(Request $request, AiTutor $tutor): JsonResponse
-    {
-        abort_unless($tutor->enabled(), 404);
-        $data = $request->validate([
-            'message' => ['required', 'string', 'min:2', 'max:2000'],
-            'history' => ['nullable', 'array', 'max:'.(AiTutor::TUTOR_HISTORY * 2)],
-            'history.*.role' => ['required', 'string', 'in:user,assistant'],
-            'history.*.content' => ['required', 'string', 'max:6000'],
-        ]);
-        /** @var User $user */
-        $user = $request->user();
-        /** @var list<array{role: string, content: string}> $history */
-        $history = array_values($data['history'] ?? []);
-
-        try {
-            $text = $tutor->tutorChat($user, CurrentExam::selected($request)->name, $history, (string) $data['message']);
-        } catch (AiTutorException $exception) {
-            return response()->json(['error' => $exception->getMessage(), 'remaining' => $tutor->remaining($user)], 422);
-        }
-
-        // The Markdown goes back too: the browser sends it as history with the next question.
-        return response()->json(['text' => $text, 'html' => QuestionContent::html($text), 'remaining' => $tutor->remaining($user)]);
     }
 
     /** @param callable(): string $ask */

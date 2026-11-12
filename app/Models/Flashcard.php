@@ -15,12 +15,26 @@ use Illuminate\Validation\ValidationException;
 class Flashcard extends Model
 {
     /** @var list<string> */
-    protected $fillable = ['exam_id', 'category_id', 'question_id', 'front', 'back', 'sort_order', 'is_published'];
+    protected $fillable = ['exam_id', 'category_id', 'question_id', 'front', 'back', 'high_yield', 'sort_order', 'is_published'];
+
+    /**
+     * How important a fact is for the exam, most important first. The Knowledge
+     * Tutor asks the higher ones first and its progress counts A++ to A.
+     *
+     * @var array<string, string>
+     */
+    public const HIGH_YIELD = [
+        'A++' => 'A++ · comes up again and again',
+        'A+' => 'A+ · very often tested',
+        'A' => 'A · often tested',
+        'B' => 'B · sometimes tested',
+        'C' => 'C · good to know',
+    ];
 
     /** @return array<string, string> */
     protected function casts(): array
     {
-        return ['is_published' => 'boolean', 'sort_order' => 'integer'];
+        return ['is_published' => 'boolean', 'sort_order' => 'integer', 'difficulty' => 'integer'];
     }
 
     protected static function booted(): void
@@ -28,6 +42,9 @@ class Flashcard extends Model
         static::saving(function (Flashcard $card) {
             if (Exam::whereKey($card->exam_id)->whereNotNull('content_exam_id')->exists()) {
                 throw ValidationException::withMessages(['exam_id' => 'This exam shares another exam\'s question bank. Add the card to that exam instead.']);
+            }
+            if (! array_key_exists((string) $card->high_yield, self::HIGH_YIELD)) {
+                $card->high_yield = 'A';
             }
             if ($card->category_id !== null && ! Category::whereKey($card->category_id)->where('exam_id', $card->exam_id)->exists()) {
                 throw ValidationException::withMessages(['category_id' => 'The subject must belong to this exam.']);

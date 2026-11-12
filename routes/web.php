@@ -10,6 +10,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExamDemoController;
 use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\FlashcardController;
+use App\Http\Controllers\KnowledgeTutorController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\LeaderboardController;
 use App\Http\Controllers\MockExamController;
@@ -29,6 +30,7 @@ use App\Http\Controllers\SubjectController;
 use App\Http\Controllers\SubscriptionCheckoutController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\TextbookController;
+use App\Http\Controllers\TutorChatController;
 use App\Support\LegalText;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -117,11 +119,24 @@ Route::middleware(['auth', 'verified', 'subscribed'])->group(function () {
     Route::get('/search/quick', QuickSearchController::class)->middleware('throttle:90,1')->name('search.quick');
     Route::get('/textbooks', [TextbookController::class, 'index'])->middleware('qbank')->name('textbooks.index');
     Route::get('/textbooks/{slug}', [TextbookController::class, 'show'])->where('slug', '[a-z0-9-]+')->middleware('qbank')->name('textbooks.show');
-    // Flashcards with spaced repetition, and the Knowledge Tutor (AI conversation).
-    Route::get('/flashcards', [FlashcardController::class, 'index'])->middleware('qbank')->name('flashcards.index');
-    Route::get('/flashcards/study', [FlashcardController::class, 'study'])->middleware('qbank')->name('flashcards.study');
+    // The Knowledge Tutor: facts (the flashcards) with spaced repetition, Review facts, and the AI tutor with saved history.
+    Route::redirect('/flashcards', '/tutor');
+    Route::redirect('/flashcards/study', '/tutor');
     Route::post('/flashcards/{flashcard}/review', [FlashcardController::class, 'review'])->middleware(['qbank', 'throttle:120,1'])->name('flashcards.review');
-    Route::get('/tutor', [AiTutorController::class, 'tutor'])->middleware('qbank')->name('tutor.index');
+    Route::middleware('qbank')->group(function () {
+        Route::get('/tutor', [KnowledgeTutorController::class, 'index'])->name('tutor.index');
+        Route::get('/tutor/count', [KnowledgeTutorController::class, 'count'])->middleware('throttle:120,1')->name('tutor.count');
+        Route::post('/tutor/start', [KnowledgeTutorController::class, 'start'])->middleware('throttle:30,1')->name('tutor.start');
+        Route::get('/tutor/study/{run}', [KnowledgeTutorController::class, 'study'])->whereNumber('run')->name('tutor.study');
+        Route::post('/tutor/study/{run}/{flashcard}', [KnowledgeTutorController::class, 'answer'])->whereNumber(['run', 'flashcard'])->middleware('throttle:120,1')->name('tutor.answer');
+        Route::get('/tutor/facts', [KnowledgeTutorController::class, 'facts'])->name('tutor.facts');
+        Route::delete('/tutor/facts/{flashcard}', [KnowledgeTutorController::class, 'reset'])->whereNumber('flashcard')->name('tutor.facts.reset');
+        Route::get('/tutor/ai', [TutorChatController::class, 'index'])->name('tutor.ai');
+        Route::get('/tutor/ai/{conversation}', [TutorChatController::class, 'index'])->whereNumber('conversation')->name('tutor.ai.show');
+        Route::post('/tutor/ai/send', [TutorChatController::class, 'send'])->middleware('throttle:10,1')->name('tutor.ai.send');
+        Route::patch('/tutor/ai/{conversation}', [TutorChatController::class, 'rename'])->whereNumber('conversation')->name('tutor.ai.rename');
+        Route::delete('/tutor/ai/{conversation}', [TutorChatController::class, 'destroy'])->whereNumber('conversation')->name('tutor.ai.destroy');
+    });
     // Admin-only Delete buttons in the student app.
     Route::delete('/staff/questions/{question}', [AdminContentDeleteController::class, 'question'])->name('admin-delete.question');
     Route::delete('/staff/comments/{comment}', [AdminContentDeleteController::class, 'comment'])->name('admin-delete.comment');
@@ -132,7 +147,6 @@ Route::middleware(['auth', 'verified', 'subscribed'])->group(function () {
     Route::post('/textbooks/{slug}/ask', [AiTutorController::class, 'chapter'])->where('slug', '[a-z0-9-]+')->middleware(['qbank', 'throttle:10,1'])->name('ai.chapter');
     Route::post('/flashcards/{flashcard}/ask', [AiTutorController::class, 'flashcard'])->middleware(['qbank', 'throttle:10,1'])->name('ai.flashcard');
     Route::post('/image-atlas/{image}/ask', [AiTutorController::class, 'atlas'])->whereNumber('image')->middleware(['qbank', 'throttle:10,1'])->name('ai.atlas');
-    Route::post('/tutor/chat', [AiTutorController::class, 'tutorChat'])->middleware(['qbank', 'throttle:10,1'])->name('tutor.chat');
     Route::get('/feedback', [FeedbackController::class, 'index'])->name('feedback.index');
     Route::post('/feedback', [FeedbackController::class, 'store'])->middleware('throttle:5,1')->name('feedback.store');
     Route::get('/admin/mcq-template', QuestionTemplateController::class)->name('imports.template');

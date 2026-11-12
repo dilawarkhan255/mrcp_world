@@ -4,8 +4,10 @@ namespace App\Filament\Support;
 
 use App\Services\AdminDeleter;
 use Closure;
+use Filament\Actions\Action as PageAction;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
+use Filament\Resources\Resource;
 use Filament\Tables\Actions\Action;
 use Filament\Tables\Actions\BulkAction;
 use Filament\Tables\Actions\ViewAction;
@@ -26,6 +28,28 @@ final class CrudActions
     public static function view(): ViewAction
     {
         return ViewAction::make();
+    }
+
+    /**
+     * View for a record with a lot to show (MCQs, chapters, papers, users, atlas
+     * images): opens the record's own page instead of a modal.
+     *
+     * @param  class-string<resource>  $resource
+     */
+    public static function viewPage(string $resource): ViewAction
+    {
+        return ViewAction::make()->url(fn (Model $record): string => $resource::getUrl('view', ['record' => $record]));
+    }
+
+    /**
+     * "Back to the list" at the top of a view page.
+     *
+     * @param  class-string<resource>  $resource
+     */
+    public static function backToList(string $resource): PageAction
+    {
+        return PageAction::make('back')->label('Back to the list')->icon('heroicon-o-arrow-left')->color('gray')
+            ->url(fn (): string => $resource::getUrl('index'));
     }
 
     /** Only the admin role may delete a record together with everything inside it. */

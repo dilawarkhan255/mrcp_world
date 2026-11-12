@@ -1,6 +1,7 @@
 <?php
 
 use App\Services\CandidateStatsService;
+use App\Services\KnowledgeTutorService;
 use App\Services\SubscriptionService;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
@@ -13,7 +14,9 @@ Artisan::command('inspire', function () {
 Artisan::command('stats:refresh {--full : Recompute every question instead of those answered since the last run}', function (CandidateStatsService $stats) {
     $count = $stats->refresh((bool) $this->option('full'));
     $this->info("Candidate statistics refreshed for {$count} questions.");
-})->purpose('Refresh the candidate correct %, average time and subject averages');
+    $facts = app(KnowledgeTutorService::class)->refreshDifficulty();
+    $this->info("Knowledge Tutor difficulty updated for {$facts} facts.");
+})->purpose('Refresh the candidate correct %, average time, subject averages and fact difficulty');
 
 Schedule::command('stats:refresh')->everyTenMinutes()->withoutOverlapping(30);
 

@@ -98,8 +98,8 @@ trait UsesYajraTable
             $this->tableSortDirection = null;
         }
 
-        $length = (int) data_get($params, 'length', 25);
-        $length = $length < 1 ? 25 : min($length, max(self::YAJRA_PAGE_LENGTHS));
+        $length = (int) data_get($params, 'length', 10);
+        $length = $length < 1 ? 10 : min($length, max(self::YAJRA_PAGE_LENGTHS));
         // Yajra reads paging from the request; search and ordering were applied
         // above through Filament, so Yajra gets none of its own.
         request()->merge([

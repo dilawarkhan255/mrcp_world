@@ -10,7 +10,8 @@
         'rowActions' => $this->hasYajraRowActions(),
         'searchable' => $table->isSearchable(),
         'pageLengths' => $this::YAJRA_PAGE_LENGTHS,
-        'pageLength' => in_array($table->getDefaultPaginationPageOption(), $this::YAJRA_PAGE_LENGTHS, true) ? $table->getDefaultPaginationPageOption() : 25,
+        // 10 rows first: every row renders its action buttons, so a short first page shows up quickly (25/50/100 stay available).
+        'pageLength' => 10,
         'emptyText' => (string) ($table->getEmptyStateHeading() ?? 'No records found.'),
         'searchPlaceholder' => (string) $table->getSearchPlaceholder(),
     ];

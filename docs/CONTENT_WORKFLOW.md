@@ -199,16 +199,20 @@ With `STRIPE_SECRET` and `STRIPE_WEBHOOK_SECRET` in `.env`, students pay by card
 4. In **Subscriptions**, the "Paid by" column shows Card (Stripe) or Manual. "Card payment not completed" rows are abandoned checkouts; they close when Stripe expires the session.
 5. Refunds are made in the Stripe dashboard. A full refund closes the access automatically (the subscription is deactivated with a note, and the student and the staff are told). A partial refund keeps the access and leaves a note on the subscription, so an admin can decide. Every refund is recorded (`stripe_refunds`), so a refund that Stripe reports before the payment itself is still applied: the access is then never opened.
 
-## Flashcards
+## Knowledge Tutor facts
 
-Admin → **Content → Flashcards** (permission "Manage flashcards", given to editors). A card has a front (question or prompt) and a back (the answer), in Markdown, a subject and an order; only published cards reach students.
+Admin → **Content → Knowledge Tutor facts** (permission "Manage flashcards", given to editors). A fact has a front (the short question the student sees) and a back (the fact to remember), in Markdown, a subject, a **high-yield rating** (A++ comes up again and again … C good to know) and an order; only published facts reach students. **Difficulty** is not typed in: `stats:refresh` works it out as the share of all students' answers that were "Again" (after 5 answers).
 
-- **From MCQs:** in **MCQs**, select questions and choose **Make flashcards**. Each MCQ gets one card: the stem on the front, the correct answer and the key points (or the start of the explanation) on the back. An MCQ that already has a card is skipped. Edit the cards afterwards to make them shorter.
-- **Students:** **Flashcards** in the sidebar lists a deck per subject with its due and new cards. On the study screen, Space shows the answer and 1–4 rate it (Again / Hard / Good / Easy); each rating schedules the next review (spaced repetition).
+- **Make facts from MCQs** (button at the top): choose the exam and, if you like, one subject. Each published MCQ becomes one fact (stem on the front, answer and key points on the back). MCQs that already have a fact are skipped, so run it again after every new upload. MCQs repeated in exams (repeat count 3+) become A++, repeat count 2 or past paper MCQs A+, others A. Selected MCQs can also be turned into facts from **MCQs → Make flashcards**.
+- **Set high-yield rating** (bulk action) changes the rating of the selected facts. Edit facts afterwards to make them short.
 
-## Knowledge Tutor
+## Knowledge Tutor (students)
 
-**Knowledge Tutor** in the sidebar is a conversation with Claude about any topic of the syllabus (for one MCQ, students use Ask AI under the question). It needs `ANTHROPIC_API_KEY`; each message counts towards the daily AI limit. The conversation stays in the student's browser and is not stored.
+**Knowledge Tutor** in the sidebar has three pages:
+
+- **Knowledge Tutor** (`/tutor`): progress ("tested on X% of the A++ to A facts", acceptable recall = remembered twice in a row, due, answered today, weak, mastered), subjects with a recall bar, high-yield rating, a difficulty range, and fact selection (spaced repetition, new only, due only, my weak facts). **Start** opens a session; **Last activity** lists the last sessions to continue. Facts are asked most high-yield first; Space shows the fact and 1–4 rate it (Again / Hard / Good / Easy), which schedules the next review (SM-2). Old `/flashcards` links lead here.
+- **Review Facts** (`/tutor/facts`): every fact the student answered, by status (due, weak, learning, recalled, mastered), subject or search; a fact can be reset to be asked as new.
+- **AI Tutor** (`/tutor/ai`): a conversation with Claude about any topic. Conversations are saved (`tutor_conversations`, `tutor_messages`) and listed on the left to open, rename or delete; only their owner can see them. The last turns are read from the database and sent with each question. It needs `ANTHROPIC_API_KEY`; each message counts towards the daily AI limit.
 
 ## Admin lists
 

@@ -3,11 +3,15 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\TextbookChapterResource\Pages\ManageTextbookChapters;
+use App\Filament\Resources\TextbookChapterResource\Pages\ViewTextbookChapter;
 use App\Filament\Support\CrudActions;
 use App\Models\TextbookChapter;
+use App\Support\QuestionContent;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Forms\Get;
+use Filament\Infolists;
+use Filament\Infolists\Infolist;
 use Filament\Resources\Pages\PageRegistration;
 use Filament\Resources\Resource;
 use Filament\Support\Enums\MaxWidth;
@@ -15,6 +19,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\HtmlString;
 use Illuminate\Validation\Rules\Unique;
 
 class TextbookChapterResource extends Resource
@@ -88,6 +93,30 @@ class TextbookChapterResource extends Resource
         ])->columns(2);
     }
 
+    /** The chapter's own page (View): rendered as students read it. */
+    public static function infolist(Infolist $infolist): Infolist
+    {
+        $markdown = fn (string $field): \Closure => fn (TextbookChapter $record): ?HtmlString => filled($record->getAttribute($field))
+            ? new HtmlString((string) QuestionContent::html((string) $record->getAttribute($field))) : null;
+
+        return $infolist->schema([
+            Infolists\Components\Section::make('Chapter')->icon('heroicon-o-book-open')->columns(4)->schema([
+                Infolists\Components\TextEntry::make('title')->weight('bold')->columnSpan(2),
+                Infolists\Components\TextEntry::make('exam.name')->label('Exam')->badge()->color('gray'),
+                Infolists\Components\TextEntry::make('category.name')->label('Subject')->badge()->color('info')->placeholder('General'),
+                Infolists\Components\TextEntry::make('slug')->copyable(),
+                Infolists\Components\TextEntry::make('sort_order')->label('Order in subject'),
+                Infolists\Components\IconEntry::make('is_published')->label('Published')->boolean(),
+                Infolists\Components\TextEntry::make('updated_at')->label('Last edited')->since(),
+                Infolists\Components\TextEntry::make('summary')->columnSpanFull()->placeholder('No summary.'),
+            ]),
+            Infolists\Components\Section::make('Key points')->icon('heroicon-o-light-bulb')->visible(fn (TextbookChapter $record): bool => filled($record->key_points))
+                ->schema([Infolists\Components\TextEntry::make('key_points')->hiddenLabel()->state($markdown('key_points'))->prose()]),
+            Infolists\Components\Section::make('Text')->icon('heroicon-o-document-text')
+                ->schema([Infolists\Components\TextEntry::make('body')->hiddenLabel()->state($markdown('body'))->prose()]),
+        ]);
+    }
+
     public static function table(Table $table): Table
     {
         return $table->columns([
@@ -102,7 +131,7 @@ class TextbookChapterResource extends Resource
             Tables\Filters\SelectFilter::make('category')->label('Subject')->relationship('category', 'name')->searchable(),
             Tables\Filters\TernaryFilter::make('is_published')->label('Published'),
         ])->actions([
-            CrudActions::view()->modalWidth(MaxWidth::FiveExtraLarge),
+            CrudActions::viewPage(self::class),
             Tables\Actions\EditAction::make()->modalWidth(MaxWidth::FiveExtraLarge),
             Tables\Actions\DeleteAction::make(),
         ])->bulkActions([CrudActions::bulkDelete()])->modifyQueryUsing(fn (Builder $query) => $query->with(['exam:id,name', 'category:id,name']))
@@ -112,6 +141,6 @@ class TextbookChapterResource extends Resource
     /** @return array<string, PageRegistration> */
     public static function getPages(): array
     {
-        return ['index' => ManageTextbookChapters::route('/')];
+        return ['index' => ManageTextbookChapters::route('/'), 'view' => ViewTextbookChapter::route('/{record}')];
     }
 }

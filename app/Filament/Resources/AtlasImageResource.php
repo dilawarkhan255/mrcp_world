@@ -3,11 +3,14 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\AtlasImageResource\Pages\ManageAtlasImages;
+use App\Filament\Resources\AtlasImageResource\Pages\ViewAtlasImage;
 use App\Filament\Support\CrudActions;
 use App\Models\AtlasImage;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Forms\Get;
+use Filament\Infolists;
+use Filament\Infolists\Infolist;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\PageRegistration;
 use Filament\Resources\Resource;
@@ -16,6 +19,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 
@@ -130,6 +134,41 @@ class AtlasImageResource extends Resource
         ]);
     }
 
+    /** The picture's own page (View). */
+    public static function infolist(Infolist $infolist): Infolist
+    {
+        return $infolist->schema([
+            Infolists\Components\Grid::make(5)->schema([
+                Infolists\Components\Section::make('Image')->icon('heroicon-o-photo')->columnSpan(3)->schema([
+                    Infolists\Components\ImageEntry::make('image_path')->hiddenLabel()->disk(AtlasImage::DISK)->height(420)
+                        ->extraImgAttributes(['style' => 'max-width:100%;object-fit:contain;border-radius:.75rem']),
+                ]),
+                Infolists\Components\Section::make('Details')->icon('heroicon-o-information-circle')->columnSpan(2)->schema([
+                    Infolists\Components\TextEntry::make('title')->weight('bold'),
+                    Infolists\Components\TextEntry::make('diagnosis')->placeholder('—'),
+                    Infolists\Components\TextEntry::make('subject')->badge()->color('info')->placeholder('—'),
+                    Infolists\Components\TextEntry::make('system')->placeholder('—'),
+                    Infolists\Components\TextEntry::make('qbank.name')->label('Qbank')->placeholder('All Qbanks'),
+                    Infolists\Components\IconEntry::make('is_published')->label('Published')->boolean(),
+                    Infolists\Components\TextEntry::make('linked_mcqs')->label('Linked MCQs')
+                        ->state(fn (AtlasImage $record): int => DB::table('atlas_image_question')->where('atlas_image_id', $record->id)->count()),
+                ]),
+            ]),
+            Infolists\Components\Section::make('Findings and teaching points')->icon('heroicon-o-academic-cap')
+                ->schema([Infolists\Components\TextEntry::make('description')->hiddenLabel()->placeholder('No description yet.')]),
+            Infolists\Components\Section::make('Copyright')->icon('heroicon-o-shield-check')->columns(3)->schema([
+                Infolists\Components\TextEntry::make('source_name')->label('Source')->placeholder('—'),
+                Infolists\Components\TextEntry::make('source_url')->label('Source link')->url(fn (AtlasImage $record): ?string => $record->source_url)->openUrlInNewTab()->placeholder('—'),
+                Infolists\Components\TextEntry::make('license')->formatStateUsing(fn (string $state): string => AtlasImage::LICENSES[$state] ?? $state)
+                    ->badge()->color(fn (string $state): string => $state === 'unknown' ? 'danger' : 'gray'),
+                Infolists\Components\TextEntry::make('attribution')->placeholder('—')->columnSpan(2),
+                Infolists\Components\IconEntry::make('copyright_confirmed')->label('Rights confirmed')->boolean(),
+                Infolists\Components\TextEntry::make('confirmer.name')->label('Confirmed by')->placeholder('—'),
+                Infolists\Components\TextEntry::make('confirmed_at')->label('Confirmed on')->dateTime('j M Y')->placeholder('—'),
+            ]),
+        ]);
+    }
+
     public static function table(Table $table): Table
     {
         return $table->columns([
@@ -145,7 +184,7 @@ class AtlasImageResource extends Resource
             Tables\Filters\TernaryFilter::make('copyright_confirmed')->label('Copyright confirmed'),
             Tables\Filters\TernaryFilter::make('is_published')->label('Published'),
         ])->actions([
-            CrudActions::view(),
+            CrudActions::viewPage(self::class),
             Tables\Actions\EditAction::make(),
             Tables\Actions\DeleteAction::make(),
         ])->bulkActions([
@@ -165,6 +204,6 @@ class AtlasImageResource extends Resource
     /** @return array<string, PageRegistration> */
     public static function getPages(): array
     {
-        return ['index' => ManageAtlasImages::route('/')];
+        return ['index' => ManageAtlasImages::route('/'), 'view' => ViewAtlasImage::route('/{record}')];
     }
 }

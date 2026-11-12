@@ -3,11 +3,14 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\PastPaperResource\Pages\ManagePastPapers;
+use App\Filament\Resources\PastPaperResource\Pages\ViewPastPaper;
 use App\Filament\Support\CrudActions;
 use App\Models\PastPaper;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Forms\Get;
+use Filament\Infolists;
+use Filament\Infolists\Infolist;
 use Filament\Resources\Pages\PageRegistration;
 use Filament\Resources\Resource;
 use Filament\Tables;
@@ -60,6 +63,43 @@ class PastPaperResource extends Resource
         ]);
     }
 
+    /** The paper's own page (View). */
+    public static function infolist(Infolist $infolist): Infolist
+    {
+        return $infolist->schema([
+            Infolists\Components\Grid::make(3)->schema([
+                Infolists\Components\Section::make('Paper')->icon('heroicon-o-document-text')->columns(2)->columnSpan(2)->schema([
+                    Infolists\Components\TextEntry::make('title')->weight('bold')->columnSpanFull(),
+                    Infolists\Components\TextEntry::make('exam.name')->label('Exam')->badge()->color('gray'),
+                    Infolists\Components\TextEntry::make('slug')->copyable(),
+                    Infolists\Components\TextEntry::make('year'),
+                    Infolists\Components\TextEntry::make('sitting')->placeholder('Not set'),
+                    Infolists\Components\IconEntry::make('is_published')->label('Published')->boolean(),
+                    Infolists\Components\TextEntry::make('updated_at')->label('Last edited')->since(),
+                    Infolists\Components\TextEntry::make('description')->columnSpanFull()->placeholder('No description.'),
+                ]),
+                Infolists\Components\Section::make('Cover image')->icon('heroicon-o-photo')->columnSpan(1)->schema([
+                    Infolists\Components\ImageEntry::make('image_path')->hiddenLabel()->disk(PastPaper::IMAGE_DISK)->height(180)->placeholder('No cover image.'),
+                ]),
+            ]),
+            Infolists\Components\Section::make('MCQs')->icon('heroicon-o-queue-list')->columns(3)->schema([
+                Infolists\Components\TextEntry::make('mcq_total')->label('MCQs in the paper')
+                    ->state(fn (PastPaper $record): int => $record->questions()->count()),
+                Infolists\Components\TextEntry::make('mcq_live')->label('Published (students see them)')
+                    ->state(fn (PastPaper $record): int => $record->questions()->where('is_published', true)->count()),
+                Infolists\Components\TextEntry::make('mcq_link')->label('List')->state('Open the MCQs of this paper')->color('primary')
+                    ->url(fn (PastPaper $record): string => QuestionResource::getUrl('index', ['tableFilters' => ['past_paper' => ['value' => $record->id]]])),
+                Infolists\Components\TextEntry::make('mcq_subjects')->label('Subjects')->columnSpanFull()->badge()->color('info')
+                    ->state(fn (PastPaper $record): array => DB::table('questions')->join('categories', 'categories.id', '=', 'questions.category_id')
+                        ->where('questions.past_paper_id', $record->id)->whereNull('questions.deleted_at')
+                        ->groupBy('categories.name')->orderBy('categories.name')
+                        ->selectRaw('categories.name, count(*) as total')->get()
+                        ->map(fn (object $row): string => $row->name.' ('.$row->total.')')->all())
+                    ->placeholder('No MCQs yet.'),
+            ]),
+        ]);
+    }
+
     public static function table(Table $table): Table
     {
         return $table->columns([
@@ -82,7 +122,7 @@ class PastPaperResource extends Resource
                 ->url(fn (PastPaper $record): string => QuestionResource::getUrl('index', ['tableFilters' => ['past_paper' => ['value' => $record->id]]])),
             Tables\Actions\Action::make('upload')->label('Add MCQs (bulk upload)')->iconButton()->icon('heroicon-o-arrow-up-tray')->color('gray')
                 ->url('/admin/question-imports'),
-            CrudActions::view(),
+            CrudActions::viewPage(self::class),
             Tables\Actions\EditAction::make(),
             Tables\Actions\DeleteAction::make()->visible(self::deletable()),
             CrudActions::deleteWithContents(self::deletable(), 'title'),
@@ -97,7 +137,7 @@ class PastPaperResource extends Resource
     /** @return array<string, PageRegistration> */
     public static function getPages(): array
     {
-        return ['index' => ManagePastPapers::route('/')];
+        return ['index' => ManagePastPapers::route('/'), 'view' => ViewPastPaper::route('/{record}')];
     }
 
     /** @return \Closure(Model): bool Only a paper without MCQs (archived too) or uploads may go. */

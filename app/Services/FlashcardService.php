@@ -80,7 +80,7 @@ class FlashcardService
             $next = self::schedule($current === null ? null : (array) $current, $rating, now());
             DB::table('flashcard_reviews')->updateOrInsert(
                 ['user_id' => $user->id, 'flashcard_id' => $card->id],
-                [...$next, 'reviewed_at' => now()],
+                [...$next, 'answers' => (int) ($current->answers ?? 0) + 1, 'last_rating' => $rating, 'reviewed_at' => now()],
             );
         });
     }
@@ -151,6 +151,12 @@ class FlashcardService
             'category_id' => $question->category_id,
             'front' => $question->body,
             'back' => '**Answer: '.$question->correct_option.'. '.$answer.'**'.($more !== '' ? "\n\n".$more : ''),
+            // A topic examiners repeat is more high-yield.
+            'high_yield' => match (true) {
+                $question->repeat_count >= 3 => 'A++',
+                $question->repeat_count === 2 || $question->past_paper_id !== null => 'A+',
+                default => 'A',
+            },
             'is_published' => $question->is_published,
         ]);
     }

@@ -59,7 +59,7 @@ class AiTutor
 
     /**
      * A message to the Knowledge Tutor, with the earlier turns of the same
-     * conversation (kept in the browser, not stored). Counts towards the
+     * conversation (read from the saved conversation by TutorChatController). Counts towards the
      * daily limit; not cached, because the conversation is personal.
      *
      * @param  list<array{role: string, content: string}>  $history

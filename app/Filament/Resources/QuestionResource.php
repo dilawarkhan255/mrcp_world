@@ -3,15 +3,19 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\QuestionResource\Pages\ManageQuestions;
+use App\Filament\Resources\QuestionResource\Pages\ViewQuestion;
 use App\Filament\Support\CrudActions;
 use App\Models\AtlasImage;
 use App\Models\Flashcard;
 use App\Models\Question;
 use App\Services\FlashcardService;
 use App\Services\QuestionResources;
+use App\Support\QuestionContent;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Forms\Get;
+use Filament\Infolists;
+use Filament\Infolists\Infolist;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\PageRegistration;
 use Filament\Resources\Resource;
@@ -22,6 +26,8 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\HtmlString;
 use Illuminate\Validation\Rules\Unique;
 
 class QuestionResource extends Resource
@@ -175,6 +181,101 @@ class QuestionResource extends Resource
         ]);
     }
 
+    /** The MCQ's own page (View): everything about it, as a student sees it after answering. */
+    public static function infolist(Infolist $infolist): Infolist
+    {
+        $markdown = fn (string $field): \Closure => fn (Question $record): ?HtmlString => filled($record->getAttribute($field))
+            ? new HtmlString((string) QuestionContent::html((string) $record->getAttribute($field))) : null;
+
+        return $infolist->schema([
+            Infolists\Components\Section::make('Overview')->icon('heroicon-o-information-circle')->columns(4)->schema([
+                Infolists\Components\TextEntry::make('code')->copyable()->weight('bold'),
+                Infolists\Components\TextEntry::make('exam.name')->label('Exam')->badge()->color('gray'),
+                Infolists\Components\TextEntry::make('category.name')->label('Subject')->badge()->color('info'),
+                Infolists\Components\TextEntry::make('pastPaper.title')->label('Past paper')->placeholder('Main bank only'),
+                Infolists\Components\IconEntry::make('is_published')->label('Published')->boolean(),
+                Infolists\Components\IconEntry::make('is_demo')->label('Free demo')->boolean(),
+                Infolists\Components\TextEntry::make('needs_review')->label('Review')->badge()
+                    ->formatStateUsing(fn ($state): string => $state ? 'Needs review' : 'Checked')
+                    ->color(fn ($state): string => $state ? 'warning' : 'success'),
+                Infolists\Components\TextEntry::make('updated_at')->label('Last edited')->since(),
+            ]),
+            Infolists\Components\Section::make('Review note')->icon('heroicon-o-flag')
+                ->visible(fn (Question $record): bool => filled($record->review_note))
+                ->schema([Infolists\Components\TextEntry::make('review_note')->hiddenLabel()]),
+            Infolists\Components\Section::make('Question')->icon('heroicon-o-question-mark-circle')->schema([
+                Infolists\Components\TextEntry::make('body')->hiddenLabel()->state($markdown('body'))->prose(),
+                Infolists\Components\TextEntry::make('options')->label('Options')->state(fn (Question $record): HtmlString => self::optionsHtml($record)),
+            ]),
+            Infolists\Components\Section::make('Answer and explanation')->icon('heroicon-o-check-badge')->schema([
+                Infolists\Components\TextEntry::make('correct_option')->label('Correct answer')->badge()->color('success')
+                    ->state(fn (Question $record): string => $record->correct_option.'. '.(((array) $record->options)[$record->correct_option] ?? '')),
+                Infolists\Components\TextEntry::make('explanation')->state($markdown('explanation'))->prose()->placeholder('No explanation yet.'),
+                Infolists\Components\Grid::make(2)->schema([
+                    Infolists\Components\TextEntry::make('key_points')->label('Key points')->state($markdown('key_points'))->prose()->placeholder('—'),
+                    Infolists\Components\TextEntry::make('mnemonics')->label('Mnemonic')->state($markdown('mnemonics'))->prose()->placeholder('—'),
+                ]),
+            ]),
+            Infolists\Components\Section::make('References and learning resources')->icon('heroicon-o-book-open')->collapsible()->columns(2)->schema([
+                Infolists\Components\TextEntry::make('references')->label('Guideline references')->columnSpanFull()
+                    ->state(fn (Question $record): ?HtmlString => self::referencesHtml($record))->placeholder('No references yet.'),
+                Infolists\Components\TextEntry::make('textbookChapters.title')->label('Linked textbook chapters')->badge()->color('info')
+                    ->placeholder('None (the subject chapters are used)'),
+                Infolists\Components\TextEntry::make('atlasImages.title')->label('Linked atlas images')->badge()->color('info')->placeholder('None'),
+                Infolists\Components\TextEntry::make('image_search')->label('Image and video search term')->placeholder('—'),
+                Infolists\Components\TextEntry::make('youtube_url')->label('YouTube video')->url(fn (Question $record): ?string => $record->youtube_url)
+                    ->openUrlInNewTab()->placeholder('—'),
+            ]),
+            Infolists\Components\Section::make('Students')->icon('heroicon-o-chart-bar')->columns(3)->schema([
+                Infolists\Components\TextEntry::make('stats_attempts')->label('Answers so far')
+                    ->state(fn (Question $record): int => (int) self::stats($record)?->attempts),
+                Infolists\Components\TextEntry::make('stats_correct')->label('Answered correctly')
+                    ->state(function (Question $record): string {
+                        $stats = self::stats($record);
+
+                        return $stats !== null && $stats->attempts > 0 ? round($stats->correct / $stats->attempts * 100).'%' : '—';
+                    }),
+                Infolists\Components\TextEntry::make('source_reference')->label('Source')->placeholder('—'),
+            ]),
+        ]);
+    }
+
+    /** The stats row of an MCQ (refreshed by stats:refresh), read once per page. */
+    private static function stats(Question $record): ?object
+    {
+        return once(fn (): ?object => DB::table('question_stats')->where('question_id', $record->id)->first(['attempts', 'correct']));
+    }
+
+    /** The options, with the correct one marked. */
+    private static function optionsHtml(Question $record): HtmlString
+    {
+        $items = '';
+        foreach ((array) $record->options as $key => $text) {
+            $correct = (string) $key === (string) $record->correct_option;
+            $items .= '<li style="display:flex;gap:.6rem;align-items:flex-start;padding:.55rem .75rem;border-radius:.6rem;margin-bottom:.4rem;'
+                .($correct ? 'background:rgba(22,163,74,.10);border:1px solid rgba(22,163,74,.45);font-weight:600' : 'border:1px solid rgba(148,163,184,.35)').'">'
+                .'<span style="min-width:1.4rem;font-weight:700">'.e((string) $key).'.</span><span>'.e((string) $text).'</span>'
+                .($correct ? '<span style="margin-left:auto;color:#15803d;font-size:.8rem;white-space:nowrap">&#10003; Correct</span>' : '').'</li>';
+        }
+
+        return new HtmlString('<ul style="margin:0;padding:0;list-style:none">'.$items.'</ul>');
+    }
+
+    /** NICE / WHO / other references, linked when they have a link. */
+    private static function referencesHtml(Question $record): ?HtmlString
+    {
+        $items = '';
+        foreach ((array) $record->references as $reference) {
+            $title = e($reference['title']);
+            $url = (string) ($reference['url'] ?? '');
+            $items .= '<li style="margin-bottom:.35rem"><strong>'.e($reference['source']).'</strong> · '
+                .($url !== '' ? '<a href="'.e($url).'" target="_blank" rel="noopener" style="text-decoration:underline">'.$title.'</a>' : $title)
+                .(! empty($reference['year']) ? ' ('.e((string) $reference['year']).')' : '').'</li>';
+        }
+
+        return $items === '' ? null : new HtmlString('<ul style="margin:0;padding-left:1rem;list-style:disc">'.$items.'</ul>');
+    }
+
     public static function table(Table $table): Table
     {
         return $table->columns([
@@ -195,8 +296,7 @@ class QuestionResource extends Resource
             // Archived MCQs: show them to restore or delete them for good.
             Tables\Filters\TrashedFilter::make()->label('Archived'),
         ])->actions([
-            CrudActions::view()->modalWidth(MaxWidth::FiveExtraLarge)
-                ->mutateRecordDataUsing(fn (array $data, Question $record): array => [...$data, ...$record->only(['correct_option', 'explanation', 'key_points', 'mnemonics', 'references', 'youtube_url', 'image_links', 'image_search', 'image_search_sites', 'review_note'])]),
+            CrudActions::viewPage(self::class),
             Tables\Actions\EditAction::make()->modalWidth(MaxWidth::FiveExtraLarge)
                 ->mutateRecordDataUsing(fn (array $data, Question $record): array => [...$data, ...$record->only(['correct_option', 'explanation', 'key_points', 'mnemonics', 'references', 'youtube_url', 'image_links', 'image_search', 'image_search_sites', 'review_note'])]),
             Tables\Actions\Action::make('resolveReview')->iconButton()->label('Mark reviewed')->icon('heroicon-o-check')->color('success')
@@ -235,6 +335,6 @@ class QuestionResource extends Resource
     /** @return array<string, PageRegistration> */
     public static function getPages(): array
     {
-        return ['index' => ManageQuestions::route('/')];
+        return ['index' => ManageQuestions::route('/'), 'view' => ViewQuestion::route('/{record}')];
     }
 }

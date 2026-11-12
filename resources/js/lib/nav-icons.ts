@@ -6,6 +6,7 @@ import {
     FileClock,
     Folder,
     GraduationCap,
+    History,
     Images,
     Layers,
     LayoutGrid,
@@ -17,6 +18,7 @@ import {
     Sparkles,
     TrendingUp,
     Trophy,
+    Zap,
     type LucideIcon,
 } from 'lucide-vue-next';
 
@@ -30,6 +32,7 @@ const icons: Record<string, LucideIcon> = {
     FileClock,
     Folder,
     GraduationCap,
+    History,
     Images,
     Layers,
     LayoutGrid,
@@ -41,6 +44,7 @@ const icons: Record<string, LucideIcon> = {
     Sparkles,
     TrendingUp,
     Trophy,
+    Zap,
 };
 
 export function navIcon(name: string | undefined): LucideIcon | undefined {

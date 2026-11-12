@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\UserResource\Pages\ManageUsers;
+use App\Filament\Resources\UserResource\Pages\ViewUser;
 use App\Filament\Support\CrudActions;
 use App\Models\Subscription;
 use App\Models\User;
@@ -10,6 +11,8 @@ use App\Support\RoleGuard;
 use Closure;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Infolists;
+use Filament\Infolists\Infolist;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\PageRegistration;
 use Filament\Resources\Resource;
@@ -153,6 +156,60 @@ class UserResource extends Resource
         ]);
     }
 
+    /** The user's own page (View). */
+    public static function infolist(Infolist $infolist): Infolist
+    {
+        return $infolist->schema([
+            Infolists\Components\Section::make('Account')->icon('heroicon-o-user')->columns(4)->schema([
+                Infolists\Components\TextEntry::make('name')->weight('bold'),
+                Infolists\Components\TextEntry::make('email')->copyable(fn (): bool => self::showsFullEmail())
+                    ->formatStateUsing(fn (string $state): string => self::showsFullEmail() ? $state : self::mask($state)),
+                Infolists\Components\IconEntry::make('verified')->label('Email verified')->boolean()
+                    ->state(fn (User $record): bool => $record->email_verified_at !== null),
+                Infolists\Components\TextEntry::make('created_at')->label('Registered')->dateTime('j M Y, H:i'),
+                Infolists\Components\TextEntry::make('roles.name')->label('Roles')->badge()->placeholder('No role'),
+                Infolists\Components\TextEntry::make('leaderboard')->label('Leaderboard')
+                    ->state(fn (User $record): string => $record->leaderboard_opt_in ? 'Shown as '.($record->leaderboard_name ?: $record->name) : 'Not shown'),
+            ]),
+            Infolists\Components\Section::make('Subscriptions')->icon('heroicon-o-credit-card')->schema([
+                Infolists\Components\RepeatableEntry::make('subscriptions')->hiddenLabel()->columns(5)
+                    ->state(fn (User $record) => $record->subscriptions()->with(['qbank:id,name', 'plan:id,name'])->latest('id')->limit(20)->get())
+                    ->schema([
+                        Infolists\Components\TextEntry::make('qbank.name')->label('Qbank')->weight('bold'),
+                        Infolists\Components\TextEntry::make('plan.name')->label('Plan')->placeholder('—'),
+                        Infolists\Components\TextEntry::make('state')->label('Status')->badge()
+                            ->state(fn (Subscription $record): string => $record->stateLabel())
+                            ->color(fn (Subscription $record): string => $record->isCurrent() ? 'success' : 'gray'),
+                        Infolists\Components\TextEntry::make('ends_at')->label('Ends')->date('j M Y')->placeholder('—'),
+                        Infolists\Components\TextEntry::make('amount')->label('Paid')->placeholder('—')
+                            ->formatStateUsing(fn ($state, Subscription $record): string => strtoupper((string) ($record->currency ?: 'GBP')).' '.number_format((float) $state, 2)),
+                    ])->placeholder('No subscriptions.'),
+            ]),
+            Infolists\Components\Section::make('Practice')->icon('heroicon-o-chart-bar')->columns(4)->schema([
+                Infolists\Components\TextEntry::make('sessions_total')->label('Sessions')
+                    ->state(fn (User $record): int => (int) self::activity($record)?->sessions),
+                Infolists\Components\TextEntry::make('answered_total')->label('MCQs answered')
+                    ->state(fn (User $record): int => (int) self::activity($record)?->answered),
+                Infolists\Components\TextEntry::make('correct_rate')->label('Correct')
+                    ->state(function (User $record): string {
+                        $activity = self::activity($record);
+
+                        return $activity !== null && $activity->answered > 0 ? round($activity->correct / $activity->answered * 100).'%' : '—';
+                    }),
+                Infolists\Components\TextEntry::make('last_active')->label('Last practice')
+                    ->state(fn (User $record): ?string => self::activity($record)?->last_at)->since()->placeholder('Never'),
+            ]),
+        ]);
+    }
+
+    /** One user's practice totals, read once per page. */
+    private static function activity(User $record): ?object
+    {
+        return once(fn (): ?object => DB::table('practice_sessions')->where('user_id', $record->id)
+            ->selectRaw('count(*) as sessions, coalesce(sum(answered_count), 0) as answered, coalesce(sum(correct_count), 0) as correct, max(updated_at) as last_at')
+            ->first());
+    }
+
     public static function table(Table $table): Table
     {
         return $table->columns([
@@ -174,7 +231,7 @@ class UserResource extends Resource
             Tables\Filters\Filter::make('subscribed')->label('Has an active subscription')
                 ->query(fn (Builder $query) => $query->whereIn('id', Subscription::query()->current()->select('user_id'))),
         ])->actions([
-            CrudActions::view(),
+            CrudActions::viewPage(self::class),
             Tables\Actions\EditAction::make()
                 ->using(fn (User $record, array $data): User => self::saveAccount($record, $data)),
             Tables\Actions\Action::make('removeFromLeaderboard')->iconButton()->label('Remove from leaderboard')->icon('heroicon-o-trophy')->color('gray')
@@ -197,7 +254,7 @@ class UserResource extends Resource
     /** @return array<string, PageRegistration> */
     public static function getPages(): array
     {
-        return ['index' => ManageUsers::route('/')];
+        return ['index' => ManageUsers::route('/'), 'view' => ViewUser::route('/{record}')];
     }
 
     /** @return Closure(Model): bool Never your own account, nor one that uploaded MCQ imports (kept for the record). */
