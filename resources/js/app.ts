@@ -11,7 +11,7 @@ import { createInertiaApp } from '@inertiajs/vue3';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import type { DefineComponent } from 'vue';
 import { createApp, h } from 'vue';
-import { ZiggyVue } from '../../vendor/tightenco/ziggy';
+import { ZiggyVue } from 'ziggy-js';
 import ContentProtection from './components/ContentProtection.vue';
 import LogoGradientDefs from './components/LogoGradientDefs.vue';
 import { initializeTheme } from './composables/useAppearance';
